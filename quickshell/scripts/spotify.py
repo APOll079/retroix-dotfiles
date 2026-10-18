@@ -149,7 +149,17 @@ def access_token():
         tok = read_json("token.json") or tok
         if tok.get("expires_at", 0) > time.time():
             return tok["access_token"]
-        new = post_form(TOKEN_URL, {"grant_type": "refresh_token", "refresh_token": tok["refresh_token"], "client_id": client_id()})
+        try:
+            new = post_form(TOKEN_URL, {"grant_type": "refresh_token", "refresh_token": tok["refresh_token"], "client_id": client_id()})
+        except ApiError as e:
+            # Revoked or expired refresh token: the login is gone, not a passing error
+            if e.status == 400 and "invalid_grant" in str(e):
+                try:
+                    os.remove(path("token.json"))
+                except OSError:
+                    pass
+                raise ApiError("Not logged in", 401)
+            raise
         save_token(new, tok)
         return new["access_token"]
 
@@ -399,6 +409,9 @@ def handle(req):
         answer({"id": rid, "error": str(e), "status": e.status})
     except (IndexError, ValueError) as e:
         answer({"id": rid, "error": "bad arguments: %s" % e, "status": 400})
+    except Exception as e:
+        # Anything else must still answer, or the panel waits forever ("Loading...")
+        answer({"id": rid, "error": "%s: %s" % (type(e).__name__, e), "status": 0})
 
 
 def serve():
@@ -828,6 +841,9 @@ def main(argv):
         return 1
     except (IndexError, ValueError) as e:
         out({"error": "bad arguments: %s" % e, "status": 400})
+        return 1
+    except Exception as e:
+        out({"error": "%s: %s" % (type(e).__name__, e), "status": 0})
         return 1
     return 0
 

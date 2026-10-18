@@ -26,8 +26,7 @@ import tempfile
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # -I leaves the script's folder off sys.path
-import gtkgen  # noqa: E402
-import icongen  # noqa: E402
+# gtkgen / icongen need Pillow: imported in their own steps, so a missing Pillow only skips those
 
 REQUIRED = ("base", "shadow", "highlight", "accent", "text", "outline")
 RELOAD_TIMEOUT = 10  # seconds per reload command
@@ -275,6 +274,11 @@ def main():
 
 def gtk_theme(roles, no_reload):
     """The recoloured GTK theme (gtkgen.py): a new QsRetro folder next to the installed original."""
+    try:
+        import gtkgen
+    except ImportError as e:
+        print(f"  skipped    gtk theme ({e})")
+        return 0
     themes = os.path.expanduser("~/.local/share/themes")
     src = os.path.join(themes, gtkgen.SOURCE)
     dst = os.path.join(themes, gtkgen.NAME)
@@ -307,6 +311,11 @@ def gtk_theme(roles, no_reload):
 
 def icon_theme(roles):
     """The hue-shifted icon theme (icongen.py): a new QsRetroIcons folder next to RetroismIcons."""
+    try:
+        import icongen
+    except ImportError as e:
+        print(f"  skipped    icon theme ({e})")
+        return 0
     icons = os.path.expanduser("~/.local/share/icons")
     src = os.path.join(icons, icongen.SOURCE)
     dst = os.path.join(icons, icongen.NAME)
@@ -325,7 +334,12 @@ def icon_theme(roles):
 def reload_gtk(theme_changed, icons_changed):
     """Running GTK apps only re-read a theme when its name changes: flip it away and back."""
     gs = shutil.which("gsettings")
-    if not gs:
+    if not gs or not (theme_changed or icons_changed):
+        return
+    try:
+        import gtkgen
+        import icongen
+    except ImportError:
         return
     for key, name, away, changed in (("gtk-theme", gtkgen.NAME, "Adwaita", theme_changed),
                                       ("icon-theme", icongen.NAME, "hicolor", icons_changed)):

@@ -22,18 +22,24 @@ RowLayout {
             property SystemTrayItem item: modelData
             implicitWidth: Config.settings.bar.trayIconSize
             implicitHeight: Config.settings.bar.trayIconSize
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
             onClicked: event => {
                 switch (event.button) {
                 case Qt.LeftButton:
-                    if (item.hasMenu) {
+                    if (item.onlyMenu && item.hasMenu) {
                         menu.open();
+                    } else {
+                        item.activate();
                     }
                     break;
                 case Qt.RightButton:
                     if (item.hasMenu) {
                         menu.open();
                     }
+                    break;
+                case Qt.MiddleButton:
+                    item.secondaryActivate();
                     break;
                 }
 

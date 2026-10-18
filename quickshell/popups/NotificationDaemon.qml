@@ -113,10 +113,11 @@ Scope {
                     }
 
                     // Never shorter than the default, so short app timeouts don't flash by; paused
-                    // while you type a reply
+                    // while you type a reply or while the toast is past maxVisible. expireTimeout is
+                    // in seconds; 0 (never expire) and critical toasts stay until dismissed.
                     Timer {
-                        running: !notifItem.replyOpen
-                        interval: Math.max(notifItem.modelData.expireTimeout, MenuStyle.notificationTimeout)
+                        running: notifItem.visible && !notifItem.replyOpen && !notifItem.critical && notifItem.modelData.expireTimeout !== 0
+                        interval: notifItem.modelData.expireTimeout > 0 ? Math.max(notifItem.modelData.expireTimeout * 1000, MenuStyle.notificationTimeout) : MenuStyle.notificationTimeout
                         onTriggered: notifItem.close()
                     }
 
@@ -180,6 +181,7 @@ Scope {
                                     wrapMode: Text.Wrap
                                     elide: Text.ElideRight
                                     maximumLineCount: 6
+                                    textFormat: Text.PlainText
                                     text: notifItem.modelData.body
                                 }
                             }

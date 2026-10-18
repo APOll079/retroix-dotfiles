@@ -248,19 +248,33 @@ Item {
             }
         }
 
-        // Status: an error from hyprpaper, else the selected file, else the folder
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            textFormat: Text.PlainText
+        // Status: an error from hyprpaper (urgent icon, normal text: urgent text on base is
+        // unreadable), else the selected file, else the folder
+        RowLayout {
             Layout.fillWidth: true
-            elide: Text.ElideMiddle
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: WallpaperState.status !== "" ? Config.colors.urgent : MenuStyle.bevelDark
-            text: WallpaperState.status !== "" ? WallpaperState.status
-                : root.current !== "" ? (root.cursor + 1) + " / " + root.results.length + "   " + root.current + "   in " + root.tilde(WallpaperState.folder)
-                : root.tilde(WallpaperState.folder)
+            spacing: MenuStyle.gap
+            Text {
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                visible: WallpaperState.status !== ""
+                font.family: MenuStyle.iconFont
+                font.pixelSize: MenuStyle.iconSize
+                color: Config.colors.urgent
+                text: "error"
+            }
+            Text {
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                textFormat: Text.PlainText
+                Layout.fillWidth: true
+                elide: Text.ElideMiddle
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                color: WallpaperState.status !== "" ? Config.colors.text : MenuStyle.bevelDark
+                text: WallpaperState.status !== "" ? WallpaperState.status
+                    : root.current !== "" ? (root.cursor + 1) + " / " + root.results.length + "   " + root.current + "   in " + root.tilde(WallpaperState.folder)
+                    : root.tilde(WallpaperState.folder)
+            }
         }
     }
 }

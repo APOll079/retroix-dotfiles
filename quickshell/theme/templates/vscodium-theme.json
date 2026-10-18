@@ -5,7 +5,7 @@
         "foreground": "{{text}}",
         "descriptionForeground": "{{dark}}",
         "focusBorder": "{{select_bar}}",
-        "errorForeground": "{{urgent}}",
+        "errorForeground": "{{text}}",
         "widget.shadow": "#00000000",
         "selection.background": "{{select_bar}}",
 

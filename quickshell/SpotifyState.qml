@@ -142,7 +142,10 @@ Singleton {
     function refreshState() {
         if (!root.loggedIn)
             return;
-        root.run(["state"], v => {
+        root.run(["state"], (v, err) => {
+            // A failed poll keeps the last known player instead of blanking the panel
+            if (err)
+                return;
             root.player = v;
             root.progress = v ? v.progress : 0;
             const uri = v && v.track ? v.track.uri : "";

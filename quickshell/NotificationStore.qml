@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Services.Notifications
 
 // Notifications, newest first.
 // - items: the history (side panel). Each entry keeps the live notification (`notif`) so a
@@ -47,8 +48,8 @@ Singleton {
             if (old.notif)
                 old.notif.dismiss();
         root.items = list.slice(0, root.maxItems);
-        // Do Not Disturb: straight to the history, no toast
-        if (!Config.settings.notifications.dnd) {
+        // Do Not Disturb: straight to the history, no toast (critical ones still show)
+        if (!Config.settings.notifications.dnd || n.urgency === NotificationUrgency.Critical) {
             const sameApp = root.toasts.some(t => t.appName === n.appName);
             const c = Object.assign({}, root.toastCounts);
             c[n.appName] = sameApp ? (c[n.appName] || 1) + 1 : 1;

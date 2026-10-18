@@ -159,13 +159,22 @@ install_pacman() {
     mapfile -t svcpkgs < <(sed -e 's/#.*//' "$REPO/packages/services-dinit.txt" | awk 'NF >= 3 && $3 != "-" { print $3 }')
     mapfile -t pkgs < <(read_list "$REPO/packages/pacman.txt")
     pkgs+=("${svcpkgs[@]}")
+    if printf '%s\n' "${pkgs[@]}" | grep -qxE 'steam|wine' && ! grep -q '^\[multilib\]' /etc/pacman.conf; then
+        warn "[multilib] is not enabled in /etc/pacman.conf: steam and wine need it"
+    fi
     mapfile -t missing < <(pacman -T "${pkgs[@]}" 2>/dev/null)
     if (( ${#missing[@]} == 0 )); then
         note "all ${#pkgs[@]} installed"
         return
     fi
-    note "missing: ${missing[*]}"
-    run doas pacman -S --needed "${missing[@]}"
+    # Unknown names would make pacman refuse the whole list: warn and install the rest
+    local known=() p
+    for p in "${missing[@]}"; do
+        if pacman -Si "$p" >/dev/null 2>&1; then known+=("$p"); else warn "unknown package: $p (skipped)"; fi
+    done
+    (( ${#known[@]} )) || return
+    note "missing: ${known[*]}"
+    run doas pacman -S --needed "${known[@]}"
 }
 
 ensure_yay() {
@@ -201,9 +210,15 @@ install_aur() {
         run doas pacman -S --needed "${inrepo[@]}"
     fi
     if (( ${#fromaur[@]} )); then
-        note "from the AUR: ${fromaur[*]}"
         ensure_yay
-        run yay -S --needed "${fromaur[@]}"
+        local known=()
+        for p in "${fromaur[@]}"; do
+            # dry run without yay: can't check, keep the name
+            if ! have yay || yay -Si "$p" >/dev/null 2>&1; then known+=("$p"); else warn "unknown package: $p (skipped)"; fi
+        done
+        (( ${#known[@]} )) || return
+        note "from the AUR: ${known[*]}"
+        run yay -S --needed "${known[@]}"
     fi
 }
 
@@ -247,6 +262,11 @@ deploy() {
         [[ -d "$REPO/$d" ]] || continue
         while IFS= read -r -d '' f; do
             rel="${f#"$REPO"/}"
+            # settings.json holds your own choices: only copied when there is none yet
+            if [[ "$rel" == quickshell/settings.json && -e "$CONFIG/$rel" ]]; then
+                note "kept your $rel"
+                continue
+            fi
             # Files that need an absolute path (xdph.conf's picker, hyprlock.conf's images) have
             # @HOME@ in the repo; compare and copy the filled-in version, so an unchanged file
             # stays unchanged
