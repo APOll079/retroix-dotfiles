@@ -29,10 +29,11 @@ bash install.sh
 2. copies the configs to `~/.config` (files it overwrites are backed up to `~/config-backup-<date>/`);
 3. enables the dinit services listed in `packages/services-dinit.txt`;
 4. stops mako and dunst from grabbing notifications (Quickshell owns them);
-5. checks the locale is UTF-8.
+5. checks the locale is UTF-8;
+6. copies the GTK and icon themes from `themes/` and `icons/` to `~/.local/share` (only folders
+   that aren't there yet).
 
-It asks first before installing Flatpak apps, downloading the GTK and icon themes (default **yes**),
-linking the GTK theme, and setting up autologin with greetd plus locking at login (default **no**:
+It asks first before installing Flatpak apps, linking the GTK theme, and setting up autologin with greetd plus locking at login (default **no**:
 test `hyprlock` from a second TTY first).
 
 The lists in `packages/` are plain text: comment a line out with `#` to skip it. Each file has a
@@ -56,9 +57,10 @@ Bundled here: Liberation Sans (with its licence) and Material Symbols (the icons
 ## Themes and icons
 
 The GTK theme **ClassicPlatinumStreamlined** and the icon theme **RetroismIcons** come from
-[linux-retroism](https://github.com/diinki/linux-retroism) by diinki (MIT licence). They are not
-stored in this repo: `install.sh` downloads them from there into `~/.local/share/themes/` and
-`~/.local/share/icons/`. The GTK theme is then recoloured with the active palette into a copy called
+[linux-retroism](https://github.com/diinki/linux-retroism) by diinki (MIT licence, see
+`themes/LICENSE-linux-retroism`). They are stored unmodified in this repo (`themes/` and `icons/`,
+copied from upstream commit `255eb6a`); `install.sh` copies them into `~/.local/share/themes/` and
+`~/.local/share/icons/`, leaving a folder that is already there alone. The GTK theme is then recoloured with the active palette into a copy called
 `QsRetro` (the original is never touched), so GTK apps follow the theme manager too.
 
 ## App themes
