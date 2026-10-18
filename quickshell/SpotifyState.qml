@@ -336,9 +336,25 @@ Singleton {
         objects: Pipewire.nodes.values.filter(n => n.isStream)
     }
 
-    readonly property int sourceVolume: root.localVolume
-        ? Math.round(root.localStream.audio.volume * 100)
-        : (root.player && root.player.volume !== null && root.player.volume !== undefined ? root.player.volume : -1)
+    // The last PipeWire stream volume seen per local player: paused spotifyd (and the app, briefly)
+    // has no stream, and the slider must not fall back to Spotify's own volume (softvol 100) then
+    readonly property int liveLocalVolume: root.localVolume ? Math.round(root.localStream.audio.volume * 100) : -1
+    property int lastDaemonVolume: -1
+    property int lastAppVolume: -1
+    onLiveLocalVolumeChanged: {
+        if (root.liveLocalVolume < 0)
+            return;
+        if (root.daemonPlays)
+            root.lastDaemonVolume = root.liveLocalVolume;
+        else
+            root.lastAppVolume = root.liveLocalVolume;
+    }
+    // Spotify Connect volume only when it really plays on another device; -1 (slider disabled) when
+    // this PC's player has had no stream yet this session
+    readonly property bool remoteDevice: root.player !== null && !root.local && (root.player.device || "") !== ""
+    readonly property int sourceVolume: root.liveLocalVolume >= 0 ? root.liveLocalVolume
+        : root.remoteDevice ? (root.player.volume !== null && root.player.volume !== undefined ? root.player.volume : -1)
+        : root.daemonPlays ? root.lastDaemonVolume : root.lastAppVolume
     property int pendingVolume: -1         // set by the slider, cleared once the source agrees
     readonly property int volume: root.pendingVolume >= 0 ? root.pendingVolume : root.sourceVolume
 
