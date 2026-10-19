@@ -4,14 +4,15 @@ import QtQuick.Layouts
 import ".."
 
 // Session panel (Start menu > Power, or `qs ipc call session_<monitor> toggle`): every
-// Session.qml action plus your custom ones. Reboot and shutdown count down first
-// (settings.json "session.countdownSeconds") with Now / Cancel; the others ask Yes / Cancel.
+// Session.qml action plus your custom ones. Same policy as the side panel (Session.qml): Lock runs at
+// once, the rest ask with a verb button + Cancel. Only when settings.json "session.countdownSeconds"
+// is above 0 do Reboot and Shutdown count down first (Now / Cancel) instead of asking.
 PopupWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)
     required property var bar
     property var closeCallback: function() {}
-    property var pending: null       // action waiting for Yes
+    property var pending: null       // action waiting for its verb button
     property var counting: null      // action counting down
     property int remaining: 0
 
@@ -21,7 +22,7 @@ PopupWindow {
     implicitHeight: MenuStyle.chromeHeight + column.implicitHeight
     color: "transparent"
 
-    readonly property int total: Math.max(1, Config.settings.session.countdownSeconds)
+    readonly property int total: Math.max(0, Config.settings.session.countdownSeconds)
 
     PopupWindowFrame {
         windowTitle: "Session"
@@ -52,9 +53,9 @@ PopupWindow {
                             Layout.fillWidth: true
                             text: modelData.name
                             glyph: modelData.icon
-                            trailing: modelData.countdown ? root.total + " s" : ""
+                            trailing: modelData.countdown && root.total > 0 ? root.total + " s" : ""
                             onClicked: {
-                                if (modelData.countdown)
+                                if (modelData.countdown && root.total > 0)
                                     root.startCountdown(modelData);
                                 else if (modelData.confirm)
                                     root.pending = modelData;
@@ -79,14 +80,14 @@ PopupWindow {
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text
-                    text: root.pending ? root.pending.name + "?" : ""
+                    text: root.pending ? root.pending.prompt : ""
                 }
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: MenuStyle.pad
                     BevelButton {
                         Layout.fillWidth: true
-                        text: "Yes"
+                        text: root.pending ? root.pending.verb : ""
                         onClicked: root.run(root.pending)
                     }
                     BevelButton {

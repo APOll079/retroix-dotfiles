@@ -182,9 +182,9 @@ property string eqOutputMatch: ""
 property JsonObject wallpaper: JsonObject {
 property string folder: "~/Pictures/wallpapers"
 }
-// Session panel: countdown before reboot/shutdown, plus your own actions [{ "name", "icon", "cmd" }]
+// Session panel: optional countdown before reboot/shutdown (0 = off: confirm, then run), plus your own actions [{ "name", "icon", "cmd" }]
 property JsonObject session: JsonObject {
-property int countdownSeconds: 60
+property int countdownSeconds: 0
 property var customActions: []
 }
 onCurrentThemeChanged: {

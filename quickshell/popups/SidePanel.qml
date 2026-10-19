@@ -12,7 +12,7 @@ PanelWindow {
     property var closeCallback: function() {}
     // 0 = Home (audio + notifications), 1 = Calendar, 2 = Phone (KDE Connect)
     property int tab: 0
-    // Set while Reboot/Shutdown wait for confirmation
+    // The power action waiting for its verb button (Session.qml policy)
     property var pending: null
 
     // An Overlay-layer panel (not a popup of the bar), so Super+N over a fullscreen app gets the clicks
@@ -30,6 +30,26 @@ PanelWindow {
     implicitWidth: MenuStyle.widthMedium
     implicitHeight: MenuStyle.chromeHeight + column.implicitHeight
     color: "transparent"
+
+    // Tell the toast window this screen's Home tab is showing (no toasts there; see NotificationDaemon)
+    readonly property bool homeShowing: root.visible && root.tab === 0
+    onHomeShowingChanged: root.reportHome()
+    onScreenChanged: root.reportHome()
+    Component.onDestruction: {
+        if (root.screen)
+            root.setHome(root.screen.name, false);
+    }
+    function setHome(name, on) {
+        if (!!NotificationStore.homeOpenOn[name] === on)
+            return;
+        const m = Object.assign({}, NotificationStore.homeOpenOn);
+        m[name] = on;
+        NotificationStore.homeOpenOn = m;
+    }
+    function reportHome() {
+        if (root.screen)
+            root.setHome(root.screen.name, root.homeShowing);
+    }
 
     // Shared with the launcher and the session panel (Session.qml)
     readonly property var actions: Session.builtins
@@ -77,10 +97,10 @@ PanelWindow {
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text
-                    text: root.pending ? root.pending.name + "?" : ""
+                    text: root.pending ? root.pending.prompt : ""
                 }
                 BevelButton {
-                    text: "Yes"
+                    text: root.pending ? root.pending.verb : ""
                     onClicked: root.run(root.pending)
                 }
                 BevelButton {

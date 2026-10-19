@@ -28,6 +28,7 @@ ColumnLayout {
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
             color: Config.colors.text
+            textFormat: Text.PlainText
             text: Media.label
         }
     }
@@ -179,7 +180,7 @@ ColumnLayout {
     }
 
     PwObjectTracker {
-        objects: root.allStreams
+        objects: root.active ? root.allStreams : []
     }
 
     Text {
@@ -209,7 +210,7 @@ ColumnLayout {
             spacing: MenuStyle.pad
 
             Repeater {
-                model: root.appGroups
+                model: root.active ? root.appGroups : []
 
                 ColumnLayout {
                     id: streamRow
@@ -235,6 +236,7 @@ ColumnLayout {
                         font.family: MenuStyle.bodyFont
                         font.pixelSize: MenuStyle.fontSize
                         color: Config.colors.text
+                        textFormat: Text.PlainText
                         text: streamRow.modelData.name
                     }
 

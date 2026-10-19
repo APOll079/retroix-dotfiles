@@ -109,10 +109,12 @@ Singleton {
     onEeSinkChanged: {
         // EasyEffects (re)started: it may come back with an old bypass state
         root.lastEq = "";
+        bypass.tries = 0;
         eqSettle.restart();
     }
     onEqMatchChanged: {
         root.lastEq = "";
+        bypass.tries = 0;
         eqSettle.restart();
     }
     Timer {
@@ -129,6 +131,9 @@ Singleton {
             bypass.command = base ? [base, "-b", want] : ["sh", "-c",
                 "if flatpak info com.github.wwmm.easyeffects >/dev/null 2>&1; then exec flatpak run com.github.wwmm.easyeffects -b \"$1\"; "
                 + "elif command -v easyeffects >/dev/null; then exec easyeffects -b \"$1\"; else exit 127; fi", "sh", want];
+            // A run being replaced exits non-zero: onExited must not count that as a failure
+            if (bypass.running)
+                bypass.replacing = true;
             bypass.running = false;
             bypass.running = true;
         }
@@ -136,8 +141,13 @@ Singleton {
     Process {
         id: bypass
         property int tries: 0
+        property bool replacing: false
         // Failed (EasyEffects busy starting, not installed): forget what was sent and try again
         onExited: code => {
+            if (bypass.replacing) {
+                bypass.replacing = false;
+                return;
+            }
             if (code === 0) {
                 bypass.tries = 0;
                 return;

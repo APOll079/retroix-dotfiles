@@ -21,9 +21,12 @@ ColumnLayout {
     property string status: ""
 
     readonly property var current: root.devices.find(d => d.id === root.selectedId) || root.devices[0] || null
-    readonly property bool busy: cmdProc.running
+    readonly property bool busy: cmdProc.running || clipProc.running
+    property bool confirmUnpair: false
 
+    onCurrentChanged: root.confirmUnpair = false
     onActiveChanged: {
+        root.confirmUnpair = false;
         if (active) {
             root.status = "";
             root.refresh();
@@ -78,13 +81,19 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         spacing: MenuStyle.gap
+        visible: !root.confirmUnpair
         BevelButton {
             Layout.fillWidth: true
             text: root.current && root.current.paired ? "Unpair" : "Pair"
             glyph: "\ue157"
-            enabled: root.current !== null && !root.busy
+            enabled: root.current !== null && !root.busy && (root.current.paired || root.current.reachable)
             focusPolicy: Qt.NoFocus
-            onClicked: root.run([root.current.paired ? "--unpair" : "--pair"], root.current.paired ? "Unpaired" : "Pairing request sent: accept it on the phone")
+            onClicked: {
+                if (root.current.paired)
+                    root.confirmUnpair = true;
+                else
+                    root.run(["--pair"], "Pairing request sent: accept it on the phone");
+            }
         }
         BevelButton {
             Layout.fillWidth: true
@@ -93,6 +102,36 @@ ColumnLayout {
             enabled: root.usable && !root.busy
             focusPolicy: Qt.NoFocus
             onClicked: root.run(["--ping"], "Pinged")
+        }
+    }
+    // Inline confirm, same shape as the side panel's power row
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: MenuStyle.gap
+        visible: root.confirmUnpair
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            textFormat: Text.PlainText
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: Config.colors.text
+            text: root.current ? "Unpair " + root.current.name + "?" : ""
+        }
+        BevelButton {
+            text: "Unpair"
+            focusPolicy: Qt.NoFocus
+            onClicked: {
+                root.confirmUnpair = false;
+                root.run(["--unpair"], "Unpaired");
+            }
+        }
+        BevelButton {
+            text: "Cancel"
+            focusPolicy: Qt.NoFocus
+            onClicked: root.confirmUnpair = false
         }
     }
     BevelButton {

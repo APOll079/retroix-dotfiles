@@ -38,6 +38,14 @@ Scope {
         }
     }
 
+    Connections {
+        target: NotificationStore
+        function onToastsChanged() {
+            if (notifWindow.homeOpen && NotificationStore.toasts.length > 0)
+                NotificationStore.dropToasts();
+        }
+    }
+
     PanelWindow {
         id: notifWindow
         color: "transparent"
@@ -45,7 +53,13 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: root.replying > 0 ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-        visible: NotificationStore.toasts.length > 0
+        // No toast on a monitor whose side panel Home tab is open: the history is right there.
+        // (The notification stays in the store; toasts that show up meanwhile are dropped.)
+        readonly property bool homeOpen: notifWindow.screen ? !!NotificationStore.homeOpenOn[notifWindow.screen.name]
+            : Object.keys(NotificationStore.homeOpenOn).some(k => NotificationStore.homeOpenOn[k])
+        onHomeOpenChanged: if (homeOpen) NotificationStore.dropToasts()
+
+        visible: NotificationStore.toasts.length > 0 && !notifWindow.homeOpen
 
         // Monitor: a named output, "focused" (Hyprland's focused monitor), or "" for the default
         screen: {
@@ -115,8 +129,12 @@ Scope {
                     // Never shorter than the default, so short app timeouts don't flash by; paused
                     // while you type a reply or while the toast is past maxVisible. expireTimeout is
                     // in seconds; 0 (never expire) and critical toasts stay until dismissed.
+                    HoverHandler {
+                        id: hover
+                    }
+
                     Timer {
-                        running: notifItem.visible && !notifItem.replyOpen && !notifItem.critical && notifItem.modelData.expireTimeout !== 0
+                        running: notifItem.visible && !hover.hovered && !notifItem.replyOpen && !notifItem.critical && notifItem.modelData.expireTimeout !== 0
                         interval: notifItem.modelData.expireTimeout > 0 ? Math.max(notifItem.modelData.expireTimeout * 1000, MenuStyle.notificationTimeout) : MenuStyle.notificationTimeout
                         onTriggered: notifItem.close()
                     }
@@ -132,7 +150,8 @@ Scope {
                     }
 
                     PopupWindowFrame {
-                        windowTitle: notifItem.count > 1 ? notifItem.modelData.summary + "  (" + notifItem.count + ")" : notifItem.modelData.summary
+                        // App name (+ how many arrived from it meanwhile); the summary is the first body line
+                        windowTitle: (notifItem.modelData.appName || notifItem.modelData.summary) + (notifItem.count > 1 ? " \u00b7 " + notifItem.count : "")
                         active: false
                         windowTitleIcon: ""
                         titleColor: notifItem.critical ? Config.colors.urgent : "transparent"
@@ -171,18 +190,37 @@ Scope {
                                     fillMode: Image.PreserveAspectFit
                                     source: notifItem.iconSource
                                 }
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    font.hintingPreference: Font.PreferFullHinting
+                                ColumnLayout {
                                     Layout.fillWidth: true
-                                    font.family: MenuStyle.bodyFont
-                                    font.pixelSize: MenuStyle.fontSize
-                                    color: Config.colors.text
-                                    wrapMode: Text.Wrap
-                                    elide: Text.ElideRight
-                                    maximumLineCount: 6
-                                    textFormat: Text.PlainText
-                                    text: notifItem.modelData.body
+                                    spacing: 2
+                                    Text {
+                                        renderType: Text.NativeRendering
+                                        font.hintingPreference: Font.PreferFullHinting
+                                        Layout.fillWidth: true
+                                        visible: text !== "" && notifItem.modelData.appName !== ""
+                                        font.family: MenuStyle.titleFont
+                                        font.pixelSize: MenuStyle.fontSize
+                                        color: Config.colors.text
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 2
+                                        wrapMode: Text.Wrap
+                                        textFormat: Text.PlainText
+                                        text: notifItem.modelData.summary
+                                    }
+                                    Text {
+                                        renderType: Text.NativeRendering
+                                        font.hintingPreference: Font.PreferFullHinting
+                                        Layout.fillWidth: true
+                                        visible: text !== ""
+                                        font.family: MenuStyle.bodyFont
+                                        font.pixelSize: MenuStyle.fontSize
+                                        color: Config.colors.text
+                                        wrapMode: Text.Wrap
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 6
+                                        textFormat: Text.PlainText
+                                        text: notifItem.modelData.body
+                                    }
                                 }
                             }
 

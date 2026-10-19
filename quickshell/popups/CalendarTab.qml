@@ -171,7 +171,7 @@ ColumnLayout {
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 1
-                        color: model.today ? Config.colors.accent : "transparent"
+                        color: model.today ? MenuStyle.selectBar : "transparent"
                     }
                     Text {
                         renderType: Text.NativeRendering
@@ -179,7 +179,7 @@ ColumnLayout {
                         anchors.centerIn: parent
                         font.family: MenuStyle.bodyFont
                         font.pixelSize: MenuStyle.fontSize
-                        color: model.today ? Config.colors.base : (model.month === grid.month ? Config.colors.text : Config.colors.shadow)
+                        color: model.today ? MenuStyle.selectText : (model.month === grid.month ? Config.colors.text : Config.colors.shadow)
                         text: model.day
                     }
                 }

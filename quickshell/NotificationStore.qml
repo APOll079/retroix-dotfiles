@@ -18,6 +18,8 @@ Singleton {
     id: root
 
     readonly property int maxItems: 50
+    // Saved history older than this is dropped (on restore and on save)
+    readonly property int historyMaxAgeDays: 7
     property var items: []
     property var toasts: []
     property int nextId: 1
@@ -25,6 +27,9 @@ Singleton {
     property int unread: 0
     property var toastCounts: ({})
     property bool restored: false
+    // Screen name -> true while that screen's side panel shows the Home tab (SidePanel keeps it
+    // current; replace the object so bindings notice). The toast window stays hidden there.
+    property var homeOpenOn: ({})
 
     function add(n) {
         var entry = {
@@ -67,6 +72,12 @@ Singleton {
         root.hideToast(n);
     }
 
+    // Drop every toast (the history keeps the notifications)
+    function dropToasts() {
+        root.toasts = [];
+        root.toastCounts = {};
+    }
+
     function hideToast(n) {
         root.toasts = root.toasts.filter(t => t !== n);
         if (n && !root.toasts.some(t => t.appName === n.appName)) {
@@ -99,11 +110,18 @@ Singleton {
             saveTimer.restart();
     }
 
+    readonly property real historyMaxAgeMs: root.historyMaxAgeDays * 86400000
+
+    function validTime(t) {
+        return t instanceof Date && !isNaN(t.getTime());
+    }
+
     Timer {
         id: saveTimer
         interval: 1000
         onTriggered: {
-            historyAdapter.items = root.items.map(e => ({
+            const cutoff = Date.now() - root.historyMaxAgeMs;
+            const list = root.items.filter(e => !root.validTime(e.time) || e.time.getTime() >= cutoff).map(e => ({
                 appName: e.appName,
                 summary: e.summary,
                 body: e.body,
@@ -111,32 +129,56 @@ Singleton {
                 appIcon: e.appIcon,
                 // Only real files survive a restart (in-memory images are gone)
                 image: /^(\/|file:)/.test(e.image || "") ? e.image : "",
-                time: e.time.toISOString()
+                time: (root.validTime(e.time) ? e.time : new Date()).toISOString()
             }));
-            historyFile.writeAdapter();
+            if (historyFile.save(JSON.stringify({ items: list }, null, 2) + "\n"))
+                chmod.running = true;
         }
+    }
+
+    // The history holds message text: keep the file private (setText creates it with the default mode)
+    Process {
+        id: chmod
+        command: ["chmod", "600", "--", String(historyFile.path).replace(/^file:\/\//, "")]
     }
 
     function restore() {
         if (root.restored)
             return;
-        const old = (historyAdapter.items || []).map(e => ({
-            key: root.nextId++,
-            notif: null,
-            vesktop: /vesktop|discord/i.test(e.appName || ""),
-            appName: e.appName || "",
-            summary: e.summary || "",
-            body: e.body || "",
-            urgency: e.urgency || 0,
-            appIcon: e.appIcon || "",
-            image: e.image || "",
-            time: new Date(e.time)
-        }));
-        root.items = root.items.concat(old).slice(0, root.maxItems);
+        try {
+            // (the adapter hands back a list wrapper, not a JS Array: Array.isArray is false for it)
+            const src = Array.from(historyAdapter.items || []);
+            const cutoff = Date.now() - root.historyMaxAgeMs;
+            const old = [];
+            for (const e of src) {
+                if (!e || typeof e !== "object")
+                    continue;
+                let t = new Date(e.time);
+                if (!root.validTime(t))
+                    t = new Date();
+                else if (t.getTime() < cutoff)
+                    continue;
+                old.push({
+                    key: root.nextId++,
+                    notif: null,
+                    vesktop: /vesktop|discord/i.test(String(e.appName || "")),
+                    appName: String(e.appName || ""),
+                    summary: String(e.summary || ""),
+                    body: String(e.body || ""),
+                    urgency: Number(e.urgency) || 0,
+                    appIcon: String(e.appIcon || ""),
+                    image: String(e.image || ""),
+                    time: t
+                });
+            }
+            root.items = root.items.concat(old).slice(0, root.maxItems);
+        } catch (err) {
+            console.warn("[NotificationStore] could not restore the history: " + err);
+        }
         root.restored = true;
     }
 
-    FileView {
+    GuardedFileView {
         id: historyFile
         path: Quickshell.statePath("notifications.json")
         printErrors: false

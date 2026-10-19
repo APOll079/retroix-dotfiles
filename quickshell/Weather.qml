@@ -10,7 +10,8 @@ Singleton {
 
     readonly property var cfg: Config.settings.weather
     property bool ok: false
-    property bool failed: false   // the last fetch gave nothing usable (retried every weatherRetry)
+    property bool failed: false   // the last fetch gave nothing usable (retried after weatherRetry, doubling up to weatherRefresh)
+    property int failures: 0      // consecutive failed fetches (retry backoff)
     property string place: ""
     property int temp: 0
     property int feels: 0
@@ -41,36 +42,54 @@ Singleton {
         id: fetch
         stdout: StdioCollector {
             onStreamFinished: {
-                let d = null;
-                try { d = JSON.parse(text); } catch (e) { d = null; }
-                if (!d || !d.current_condition) {
+                // Parse into locals first, so a partial answer never leaves half-updated properties
+                let r = null;
+                try {
+                    const d = JSON.parse(text);
+                    const metric = root.cfg.metric;
+                    const c = d.current_condition[0];
+                    const a = d.nearest_area ? d.nearest_area[0] : null;
+                    r = {
+                        place: root.cfg.location !== "" ? root.cfg.location : (a ? a.areaName[0].value : ""),
+                        temp: Number(metric ? c.temp_C : c.temp_F),
+                        feels: Number(metric ? c.FeelsLikeC : c.FeelsLikeF),
+                        desc: c.weatherDesc[0].value,
+                        icon: root.glyph(c.weatherCode),
+                        days: d.weather.map(w => ({
+                            name: Qt.formatDate(new Date(w.date + "T12:00:00"), "ddd"),
+                            lo: Number(metric ? w.mintempC : w.mintempF),
+                            hi: Number(metric ? w.maxtempC : w.maxtempF),
+                            icon: root.glyph(w.hourly[4].weatherCode),
+                            desc: w.hourly[4].weatherDesc[0].value
+                        }))
+                    };
+                } catch (e) {
+                    r = null;
+                }
+                if (!r) {
                     root.ok = false;
                     root.failed = true;
+                    // 60 s, doubling per failure in a row, up to the normal refresh interval
+                    retry.interval = Math.min(MenuStyle.weatherRefresh, MenuStyle.weatherRetry * Math.pow(2, root.failures));
+                    root.failures += 1;
                     retry.restart();
                     return;
                 }
-                const metric = root.cfg.metric;
-                const c = d.current_condition[0];
-                const a = d.nearest_area ? d.nearest_area[0] : null;
-                root.place = root.cfg.location !== "" ? root.cfg.location : (a ? a.areaName[0].value : "");
-                root.temp = Number(metric ? c.temp_C : c.temp_F);
-                root.feels = Number(metric ? c.FeelsLikeC : c.FeelsLikeF);
-                root.desc = c.weatherDesc[0].value;
-                root.icon = root.glyph(c.weatherCode);
-                root.days = d.weather.map(w => ({
-                    name: Qt.formatDate(new Date(w.date + "T12:00:00"), "ddd"),
-                    lo: Number(metric ? w.mintempC : w.mintempF),
-                    hi: Number(metric ? w.maxtempC : w.maxtempF),
-                    icon: root.glyph(w.hourly[4].weatherCode),
-                    desc: w.hourly[4].weatherDesc[0].value
-                }));
+                root.place = r.place;
+                root.temp = r.temp;
+                root.feels = r.feels;
+                root.desc = r.desc;
+                root.icon = r.icon;
+                root.days = r.days;
                 root.ok = true;
                 root.failed = false;
+                root.failures = 0;
+                retry.stop();
             }
         }
     }
 
-    // A failed fetch (offline at login, wttr.in down) tries again soon instead of in 30 minutes
+    // A failed fetch (offline at login, wttr.in down) tries again soon instead of in 30 minutes, backing off
     Timer {
         id: retry
         interval: MenuStyle.weatherRetry
