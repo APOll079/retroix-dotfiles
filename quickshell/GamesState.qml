@@ -57,6 +57,17 @@ Singleton {
             adapter.custom = adapter.custom.map(e => e.name === game.title ? Object.assign({}, e, { lastPlayed: Math.floor(Date.now() / 1000) }) : e);
     }
 
+    // A scan that hangs (stale mount) is stopped after 30 s; onExited then starts any pending rerun
+    Timer {
+        id: watchdog
+        interval: 30000
+        running: proc.running
+        onTriggered: {
+            console.warn("scripts/games.py did not finish in 30 s; stopping it");
+            proc.running = false;
+        }
+    }
+
     Process {
         id: proc
         command: ["python3", "-I", Quickshell.shellDir + "/scripts/games.py", "--custom", root.file, "--cache", Quickshell.statePath("games-cache.json")]
@@ -80,15 +91,11 @@ Singleton {
         }
     }
 
-    FileView {
+    // GuardedFileView: a games.json that doesn't parse is kept as .bad-<time> and never overwritten
+    GuardedFileView {
         path: root.file
         printErrors: false
-        onAdapterUpdated: writeAdapter()
         onSaved: root.refresh()
-        onLoadFailed: error => {
-            if (error == FileViewError.FileNotFound)
-                writeAdapter();
-        }
         JsonAdapter {
             id: adapter
             property var custom: []

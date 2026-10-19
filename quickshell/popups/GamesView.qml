@@ -151,6 +151,7 @@ Item {
                                     font.family: MenuStyle.titleFont
                                     font.pixelSize: parent.width / 2
                                     color: cell.isCurrent ? Config.colors.text : MenuStyle.selectText
+                                    textFormat: Text.PlainText
                                     text: cell.modelData.title.charAt(0).toUpperCase()
                                 }
                             }
@@ -169,6 +170,7 @@ Item {
                             font.family: MenuStyle.bodyFont
                             font.pixelSize: MenuStyle.fontSize
                             color: cell.isCurrent ? MenuStyle.selectText : Config.colors.text
+                            textFormat: Text.PlainText
                             text: cell.modelData.title
                         }
                         FocusRect {
@@ -285,6 +287,7 @@ Item {
                 font.family: MenuStyle.bodyFont
                 font.pixelSize: MenuStyle.fontSize
                 color: root.current ? Config.colors.text : MenuStyle.bevelDark
+                textFormat: Text.PlainText
                 text: root.current ? root.current.title + " - " + root.sourceName(root.current) : root.results.length + " games"
             }
         }
@@ -302,6 +305,7 @@ Item {
                 font.family: MenuStyle.bodyFont
                 font.pixelSize: MenuStyle.fontSize
                 color: Config.colors.text
+                textFormat: Text.PlainText
                 text: root.optionsFor ? root.optionsFor.title : ""
             }
             BevelButton {

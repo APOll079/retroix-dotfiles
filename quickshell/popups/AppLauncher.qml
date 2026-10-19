@@ -31,7 +31,8 @@ PanelWindow {
     property string category: "all"
     property var results: []
     property var optionsFor: null         // DesktopEntry whose options are showing
-    property string confirmKey: ""        // session action waiting for a second Enter
+    property string confirmKey: ""        // session action / "Clear all" waiting for a second Enter
+    property bool keepArm: false          // true while the list is rebuilt around an armed row
     property var uninstallFor: null       // { name, kind, pkg }: uninstall waiting for its confirm
     readonly property int hiddenCount: Array.from(Utils.AppSearch.list).filter(e => LauncherState.isHidden(e.id)).length
 
@@ -211,6 +212,7 @@ PanelWindow {
                                 font.family: MenuStyle.bodyFont
                                 font.pixelSize: MenuStyle.fontSize
                                 color: root.previewText === "" ? MenuStyle.bevelDark : Config.colors.text
+                                textFormat: Text.PlainText
                                 text: root.previewText === "" ? "Nothing selected" : root.previewText
                             }
                         }
@@ -230,6 +232,7 @@ PanelWindow {
                             font.family: MenuStyle.bodyFont
                             font.pixelSize: MenuStyle.fontSize
                             color: MenuStyle.bevelDark
+                            textFormat: Text.PlainText
                             text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
                         }
 
@@ -238,7 +241,13 @@ PanelWindow {
                             anchors.fill: parent
                             model: root.results
                             currentIndex: 0
-                            onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                            onCurrentIndexChanged: {
+                                positionViewAtIndex(currentIndex, ListView.Contain);
+                                // Moving the cursor off an armed row disarms it
+                                const r = root.results[currentIndex];
+                                if (root.confirmKey !== "" && !root.keepArm && (!r || r.key !== root.confirmKey))
+                                    root.disarm();
+                            }
                             flickableDirection: Flickable.VerticalFlick
                             boundsBehavior: Flickable.DragOverBounds
                             maximumFlickVelocity: 3500
@@ -255,7 +264,13 @@ PanelWindow {
                                 marked: !!modelData.pinned
                                 onClicked: root.activate(index)
                                 // Clipboard: the preview follows the pointer too
-                                onHoveredChanged: if (hovered && root.mode === "clipboard") appsView.currentIndex = index
+                                onHoveredChanged: {
+                                    if (hovered && root.mode === "clipboard")
+                                        appsView.currentIndex = index;
+                                    // The pointer leaving an armed row disarms it
+                                    else if (!hovered && modelData.key && modelData.key === root.confirmKey)
+                                        root.disarm();
+                                }
 
                                 // Right-click: the app's options
                                 TapHandler {
@@ -269,6 +284,19 @@ PanelWindow {
                             }
                         }
                     }
+                }
+
+                // Clipboard keys, one dim line like the Games bottom row
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    Layout.fillWidth: true
+                    visible: root.mode === "clipboard"
+                    elide: Text.ElideRight
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: MenuStyle.bevelDark
+                    text: root.clipLines.length + (root.clipLines.length === 1 ? " entry" : " entries") + " · Enter copies · Del removes (Shift+Del while typing) · Down to the end for Clear all"
                 }
             }
         }
@@ -285,7 +313,9 @@ PanelWindow {
         let handled = true;
         switch (event.key) {
         case Qt.Key_Escape:
-            if (games) {
+            if (root.confirmKey !== "") {
+                root.disarm();
+            } else if (games) {
                 if (gamesView.goBack())
                     break;
                 if (searchInput.text !== "")
@@ -370,7 +400,29 @@ PanelWindow {
         appsView.currentIndex = Math.max(0, Math.min(index || 0, list.length - 1));
     }
 
-    function rebuild() {
+    // Arm / disarm a row that needs a second Enter; the list is rebuilt around the cursor
+    function arm(key) {
+        root.confirmKey = key;
+        root.keepArm = true;
+        const i = appsView.currentIndex;
+        root.rebuild();
+        appsView.currentIndex = i;
+        root.keepArm = false;
+    }
+
+    function disarm() {
+        if (root.confirmKey === "")
+            return;
+        root.confirmKey = "";
+        root.keepArm = true;
+        const i = appsView.currentIndex;
+        root.rebuild();
+        appsView.currentIndex = i;
+        root.keepArm = false;
+    }
+
+    // keep: stay on the current row (clamped) instead of jumping back to the first
+    function rebuild(keep) {
         if (root.mode === "games")
             return;
         if (root.optionsFor)
@@ -379,7 +431,7 @@ PanelWindow {
         if (root.mode === "windows" || q.startsWith(","))
             return root.setResults(root.windowItems(root.mode === "windows" ? q : q.slice(1).trim()), root.mode === "windows" && q === "" ? 1 : 0);
         if (root.mode === "clipboard")
-            return root.setResults(root.clipItems(q), 0);
+            return root.setResults(root.clipItems(q), keep ? appsView.currentIndex : 0);
 
         const items = [];
         const calc = Utils.Calc.evaluate(q);
@@ -439,28 +491,27 @@ PanelWindow {
             .map(r => root.appItem(r.entry));
     }
 
-    // Session actions by name or a common synonym; a second Enter confirms
+    // Session actions by name or a whole synonym. A row shows only when the typed text IS the name
+    // (or a synonym), never a prefix: "res" (GNOME Resources) used to put Reboot on top and
+    // res + Enter + Enter rebooted. Lock runs on one Enter; the others ask for a second Enter.
     readonly property var sessionWords: ({ sleep: "Suspend", restart: "Reboot", poweroff: "Shutdown", "power off": "Shutdown", logout: "Log out", quit: "Log out" })
     function sessionItems(q) {
         const l = q.toLowerCase();
-        if (l.length < 3)
+        if (l === "")
             return [];
-        return Session.all.filter(a => a.name.toLowerCase().startsWith(l)
-                || Object.keys(root.sessionWords).some(w => w.startsWith(l) && root.sessionWords[w] === a.name))
+        return Session.all.filter(a => a.name.toLowerCase() === l || root.sessionWords[l] === a.name)
             .map(a => ({
-                title: root.confirmKey === a.name ? a.name + "? Press Enter again" : a.name,
+                title: root.confirmKey === a.name ? a.name + " now? Enter again · Esc cancels" : a.name,
                 sub: a.confirm ? "Session" : "Custom action",
                 glyph: a.icon,
                 key: a.name,
                 run: () => {
                     // A custom action with confirm: false runs on one Enter only when its full name was typed
                     if ((a.confirm || l !== a.name.toLowerCase()) && root.confirmKey !== a.name) {
-                        root.confirmKey = a.name;
-                        const i = appsView.currentIndex;
-                        root.rebuild();
-                        appsView.currentIndex = i;
+                        root.arm(a.name);
                         return;
                     }
+                    root.confirmKey = "";
                     Session.run(a);
                     root.closeCallback();
                 }
@@ -504,18 +555,17 @@ PanelWindow {
         // Clear all: last row, a second Enter (or click) confirms
         if (l === "" && root.clipLines.length > 0)
             items.push({
-                title: root.confirmKey === "clip-wipe" ? "Clear all? Press Enter again" : "Clear all",
+                title: root.confirmKey === "clip-wipe" ? "Clear all now? Enter again · Esc cancels" : "Clear all",
                 glyph: "\ue872",
                 key: "clip-wipe",
                 run: () => {
                     if (root.confirmKey !== "clip-wipe") {
-                        root.confirmKey = "clip-wipe";
-                        const i = appsView.currentIndex;
-                        root.rebuild();
-                        appsView.currentIndex = i;
+                        root.arm("clip-wipe");
                         return;
                     }
                     root.confirmKey = "";
+                    root.clipLines = [];
+                    root.rebuild();
                     clipEdit.command = ["sh", "-c", "cliphist wipe; cd \"$1\" 2>/dev/null && rm -f -- *", "sh", root.clipCacheDir];
                     clipEdit.running = true;
                 }
@@ -527,6 +577,9 @@ PanelWindow {
     function deleteClip(c) {
         if (clipEdit.running)
             return;
+        // Drop it from the list at once and stay on the same row; the real list is re-read quietly after
+        root.clipLines = root.clipLines.filter(x => x.id !== c.id);
+        root.rebuild(true);
         clipEdit.command = ["sh", "-c", "printf '%s\\t%s\\n' \"$1\" \"$2\" | cliphist delete; cd \"$3\" 2>/dev/null && rm -f -- \"$1\".*", "sh", c.id, c.text, root.clipCacheDir];
         clipEdit.running = true;
     }
@@ -642,18 +695,15 @@ PanelWindow {
                     const m = t.match(/^\[\[ binary data (\S+ \S+) (png|jpe?g|gif|webp|bmp) (\d+x\d+) \]\]$/i);
                     return { id: l.slice(0, tab), text: t, ext: m ? m[2].toLowerCase() : "", info: m ? m[2].toLowerCase() + " " + m[3] + "  " + m[1] : "" };
                 });
-                root.rebuild();
+                root.rebuild(true);
             }
         }
     }
 
-    // Delete / wipe, then list again
+    // Delete / wipe, then list again (without emptying the list meanwhile)
     Process {
         id: clipEdit
-        onExited: {
-            root.clipLines = [];
-            clipProc.running = true;
-        }
+        onExited: clipProc.running = true
     }
 
     // --- clipboard preview ---
@@ -661,6 +711,7 @@ PanelWindow {
     // next time, newest clipCacheMax files only), text straight from `cliphist decode` (first 4000 bytes).
     readonly property string clipCacheDir: Quickshell.cachePath("clipboard")
     readonly property int clipCacheMax: 50
+    readonly property int clipCacheMaxKb: 102400     // and at most 100 MB in total
     readonly property var previewClip: root.mode === "clipboard" && root.results[appsView.currentIndex] ? (root.results[appsView.currentIndex].clip || null) : null
     property string previewImage: ""
     property string previewText: ""
@@ -675,7 +726,9 @@ PanelWindow {
         previewProc.clipId = c.id;
         if (c.ext) {
             previewProc.path = root.clipCacheDir + "/" + c.id + "." + c.ext;
-            previewProc.command = ["sh", "-c", "d=$(dirname \"$2\"); mkdir -p \"$d\"; [ -s \"$2\" ] || cliphist decode \"$1\" > \"$2\"; touch \"$2\"; cd \"$d\" 2>/dev/null && ls -1t | tail -n +$(($3 + 1)) | xargs -r rm -f --", "sh", c.id, previewProc.path, String(root.clipCacheMax)];
+            // decode to .tmp, then mv: a cut-short decode never leaves a truncated cache entry. Then prune by count, then by size
+            // (oldest first, never the last file); cd first so the removals can only touch the cache dir
+            previewProc.command = ["sh", "-c", "d=$(dirname \"$2\"); mkdir -p \"$d\"; [ -s \"$2\" ] || { cliphist decode \"$1\" > \"$2.tmp\" && mv -f \"$2.tmp\" \"$2\" || rm -f \"$2.tmp\"; }; [ -e \"$2\" ] && touch \"$2\"; cd \"$d\" 2>/dev/null || exit 0; ls -1t | tail -n +$(($3 + 1)) | xargs -r rm -f --; while [ \"$(du -sk . | cut -f1)\" -gt \"$4\" ] && [ \"$(ls -1 | wc -l)\" -gt 1 ]; do ls -1t | tail -n 1 | xargs -r rm -f --; done", "sh", c.id, previewProc.path, String(root.clipCacheMax), String(root.clipCacheMaxKb)];
         } else {
             previewProc.path = "";
             previewProc.command = ["sh", "-c", "cliphist decode \"$1\" | head -c 4000", "sh", c.id];
