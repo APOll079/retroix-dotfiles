@@ -11,14 +11,41 @@ ColumnLayout {
     required property var panel
     spacing: MenuStyle.spotifyColumnGap
 
-    component Chip: BevelButton {
+    // A chip is flat text, no bevel (tabs are the raised things): dim when off, normal when hovered, normal
+    // with an accent underline when on. It sizes to its text.
+    component Chip: Item {
+        id: chip
         property bool on: false
+        property string text: ""
         signal picked()
         implicitHeight: MenuStyle.spotifyChipHeight
-        implicitWidth: implicitContentWidth + leftPadding + rightPadding
-        checked: on
-        focusPolicy: Qt.NoFocus
-        onClicked: picked()
+        implicitWidth: label.implicitWidth + 2 * MenuStyle.pad
+        Text {
+            id: label
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            textFormat: Text.PlainText
+            anchors.centerIn: parent
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: chip.on || chipHover.hovered ? Config.colors.text : MenuStyle.bevelDark
+            text: chip.text
+        }
+        Rectangle {
+            visible: chip.on
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: MenuStyle.spotifyChipUnderline
+            color: MenuStyle.selectBar
+        }
+        HoverHandler {
+            id: chipHover
+            cursorShape: Qt.PointingHandCursor
+        }
+        TapHandler {
+            onTapped: chip.picked()
+        }
     }
 
     // Back row: an opened item / the search results / the playlist picker

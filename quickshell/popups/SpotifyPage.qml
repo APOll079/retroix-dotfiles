@@ -57,7 +57,7 @@ Item {
                     renderType: Text.NativeRendering
                     font.hintingPreference: Font.PreferFullHinting
                     anchors.horizontalCenter: parent.horizontalCenter
-                    y: tab.sel ? 4 : 2
+                    y: Math.round((tab.height - implicitHeight) / 2) + (tab.sel ? 1 : 0)
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text

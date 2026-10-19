@@ -90,8 +90,8 @@ Singleton {
     readonly property int spotifyClickGuard: 350    // ms after opening something during which clicks are ignored
     readonly property int spotifyColumnGap: 4       // between the drawer's rows (the rest of the menus use pad)
     readonly property int spotifyCompactRow: 24     // the drawer's seek / transport / volume / search rows and its icon buttons
-    readonly property int spotifyTabHeight: 24      // the Win95 tab strip (the selected tab is 1px taller and joins the page)
-    readonly property int spotifyChipHeight: 22     // chips: smaller than tabs and buttons
+    readonly property int spotifyTabHeight: 28      // the Win95 tab strip (the selected tab is 1px taller and joins the page)
+    readonly property int spotifyChipHeight: 20     // chips: smaller than tabs and buttons
     readonly property int spotifyStatusHeight: 18   // the status bar at the bottom of the drawer
     readonly property int spotifyPagePad: 3         // inside the tab page's bevel
     readonly property int spotifyRecentCount: 6     // covers in the Recent strip (they size to fill the width)
@@ -103,6 +103,7 @@ Singleton {
     readonly property int spotifyThumb: 28          // the thumbnail in a list row (fills the 34 px row)
     readonly property int spotifyListHeader: 30     // the list header: name, count, Play, Shuffle
     readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
+    readonly property int spotifyChipUnderline: 2   // the active chip's accent underline
     readonly property int spotifyTitleSize: 16      // the now-playing title when it fits on one line (Monaco hints cleanly at 16)
     readonly property int spotifyTransportSide: 32  // previous / next: squares; play is twice as wide
     readonly property int spotifyPlayHeight: 36     // play / pause: taller than the buttons beside it

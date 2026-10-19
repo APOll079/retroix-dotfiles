@@ -127,6 +127,11 @@ PanelWindow {
     }
     // The list is empty because it is still on its way: the list shows placeholder rows
     readonly property bool loadingList: root.items.length === 0 && !root.lyricsMode && ["Loading...", "Searching..."].includes(root.emptyText())
+    // Pins only mean something when the rows shown are a mix of pinned and unpinned
+    readonly property bool pinsMixed: {
+        const rows = root.items.filter(i => i.kind !== "searchrow" && i.kind !== "heading" && i.kind !== "more");
+        return rows.some(i => i.pinned === true) && rows.some(i => i.pinned !== true);
+    }
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
     readonly property bool useGrid: SpotifyState.grid && !root.addMode && !root.songList && !root.searchMode

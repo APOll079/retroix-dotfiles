@@ -19,6 +19,7 @@ SunkenField {
         function onStackChanged() { listFade.restart(); }
     }
     id: listArea
+    flat: true      // the page around it is the one frame
     Layout.fillWidth: true
     Layout.fillHeight: true
     padding: MenuStyle.spotifyInset
@@ -207,7 +208,7 @@ SunkenField {
                 accentTitle: row.isTrack && row.playing
                 trailing: row.isTrack ? panel.clock(row.modelData.duration) : ""
                 trailingDim: true
-                marked: !row.isTrack && (row.playing || row.modelData.pinned === true)
+                marked: !row.isTrack && (row.playing || (row.modelData.pinned === true && panel.pinsMixed))
                 markGlyph: row.playing ? "\ue050" : "\uf10d"
                 subtext: row.modelData.sub
                 iconSource: row.isTrack && row.playing ? "" : (row.modelData.image || "")
@@ -262,6 +263,7 @@ SunkenField {
             width: grid.cellWidth
             height: grid.cellHeight
             entry: modelData
+            showPin: panel.pinsMixed
             hideSub: modelData.kind === "artist" && panel.libraryKind === "artist" && panel.view === null
             selected: index === listView.currentIndex
             canPlay: !panel.addMode && modelData.kind !== "folder" && modelData.kind !== "searchrow"
