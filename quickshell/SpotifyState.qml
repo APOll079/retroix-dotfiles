@@ -193,8 +193,15 @@ Singleton {
 
     // --- control ---
 
+    // A control already changed its state on screen; the answer either confirms it (the next poll) or
+    // undoes it (the error is on the status bar and the real state is read back at once)
     function after(args) {
-        root.run(args, () => refreshSoon.restart());
+        root.run(args, (v, err) => {
+            if (err)
+                root.refreshState();
+            else
+                refreshSoon.restart();
+        });
     }
 
     function play(context, trackUri) {
@@ -214,7 +221,10 @@ Singleton {
                 root.player = Object.assign({}, root.player, { playing: !root.player.playing });
             refreshSoon.restart();
         } else {
-            root.after([root.player && root.player.playing ? "pause" : "resume"]);
+            const play = !(root.player && root.player.playing);
+            if (root.player)
+                root.player = Object.assign({}, root.player, { playing: play });
+            root.after([play ? "resume" : "pause"]);
         }
     }
 

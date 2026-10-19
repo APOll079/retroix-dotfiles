@@ -97,6 +97,9 @@ Singleton {
     readonly property int spotifyRecentCount: 6     // covers in the Recent strip (they size to fill the width)
     readonly property int spotifyLyricsCover: 32    // the cover in the compact lyrics header
     readonly property int spotifyNoteMs: 3000       // how long a short message stays on the status bar
+    readonly property int spotifyWheelStep: 5       // the mouse wheel on the volume row: percent per notch
+    readonly property int spotifySeekStepMs: 5000   // the mouse wheel on the seek bar: ms per notch
+    readonly property int spotifyCrossfade: 150     // ms: a new cover fades in over the old one (0 = instant)
     readonly property int spotifyPollMs: 2000
     readonly property int spotifyTickMs: 1000
     readonly property int spotifyVolumeStep: 300    // ms between Spotify volume calls while dragging (another device)

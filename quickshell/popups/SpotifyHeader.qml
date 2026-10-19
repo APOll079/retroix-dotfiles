@@ -46,18 +46,44 @@ RowLayout {
         Layout.preferredWidth: header.coverSize
         Layout.preferredHeight: header.coverSize
         padding: MenuStyle.spotifyInset
+        // The cover crossfades: the new one loads invisible over the old one and fades in when it is ready
+        readonly property string wanted: SpotifyState.track ? SpotifyState.track.image : (panel.lastTrack ? panel.lastTrack.image : "")
+        onWantedChanged: {
+            coverBack.source = wanted === "" ? "" : cover.source;
+            cover.opacity = 0;
+            cover.source = wanted;
+        }
+        Component.onCompleted: cover.source = wanted
+        Image {
+            id: coverBack
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+        }
         Image {
             id: cover
             anchors.fill: parent
-            source: SpotifyState.track ? SpotifyState.track.image : (panel.lastTrack ? panel.lastTrack.image : "")
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+            opacity: 0
+            onStatusChanged: {
+                if (status === Image.Ready)
+                    coverFade.restart();
+            }
+            NumberAnimation {
+                id: coverFade
+                target: cover
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: MenuStyle.spotifyCrossfade
+            }
         }
         Text {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             anchors.centerIn: parent
-            visible: cover.status !== Image.Ready
+            visible: cover.status !== Image.Ready && coverBack.status !== Image.Ready
             font.family: MenuStyle.iconFont
             font.pixelSize: header.compact ? MenuStyle.iconSize : MenuStyle.spotifyTileIcon
             color: MenuStyle.bevelDark
