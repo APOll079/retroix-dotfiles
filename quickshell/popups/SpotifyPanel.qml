@@ -462,28 +462,6 @@ PanelWindow {
                 }
             }
 
-            // Spotify's own volume, while it isn't at 100: turning it up only ever happens on a click
-            RowLayout {
-                Layout.fillWidth: true
-                visible: !root.lyricsMode && SpotifyState.ownVolume >= 0 && SpotifyState.ownVolume < 100
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
-                    text: "Spotify itself is capped at " + SpotifyState.ownVolume + "%"
-                }
-                BevelButton {
-                    text: "Set to 100"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.maxOwnVolume()
-                }
-            }
-
             Local.MenuSeparator {
                 Layout.fillWidth: true
                 visible: !root.lyricsMode && !root.addMode

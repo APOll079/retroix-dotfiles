@@ -340,7 +340,7 @@ Singleton {
     }
 
     // The last PipeWire stream volume seen per local player: paused spotifyd (and the app, briefly)
-    // has no stream, and the slider must not fall back to Spotify's own volume (softvol 100) then
+    // has no stream, and the slider must not fall back to the player's Spotify-side volume then
     readonly property int liveLocalVolume: root.localVolume ? Math.round(root.localStream.audio.volume * 100) : -1
     property int lastDaemonVolume: -1
     property int lastAppVolume: -1
@@ -364,16 +364,6 @@ Singleton {
     onSourceVolumeChanged: {
         if (root.pendingVolume >= 0 && root.sourceVolume === root.pendingVolume && !volumeHold.running)
             root.pendingVolume = -1;
-    }
-
-    // Spotify's own volume stage (the app's slider / spotifyd's), shown under our slider while this PC
-    // plays and it isn't at 100. The panel never changes it by itself (an automatic merge made
-    // things louder once): only the Max button does, because you clicked it.
-    readonly property int ownVolume: root.localVolume && root.player.volume !== null && root.player.volume !== undefined ? root.player.volume : -1
-    function maxOwnVolume() {
-        root.serve("volume", [100]);
-        if (root.player)
-            root.player = Object.assign({}, root.player, { volume: 100 });
     }
 
     // Speaker button: mute (remembering the level), click again to restore it
