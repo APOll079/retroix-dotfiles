@@ -65,7 +65,7 @@ Stable and unlikely to break: the Python scripts, grim, wl-copy, cliphist, PipeW
 
 ## Safety net
 
-- **Before changing anything**, copy the whole folder: `cp -r ~/qs-test ~/qs-test.bak`. Better: `cd ~/qs-test && git init && git add -A && git commit -m "working"`. With git, `git diff` shows what you changed and `git checkout <file>` undoes it. (Not set up yet.)
+- **Before changing anything**, commit what works: `cd ~/qs-test && git add -A && git commit -m "working"` (the folder is a git repo). `git diff` shows what you changed since, `git checkout <file>` undoes a file, `git log` lists the saved points.
 - The deployed copy in `~/.config` is a second backup of your last good state.
 
 ## Games

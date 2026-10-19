@@ -298,6 +298,11 @@ enable_services() {
     while read -r scope name pkg; do
         # greetd is the login manager: only the autologin step (which asks) turns it on
         [[ "$name" == greetd ]] && continue
+        # nfs-mounts only mounts /mnt/disk1 and /mnt/disk2: only where fstab has them
+        if [[ "$name" == nfs-mounts ]] && ! grep -qsE '[[:space:]]/mnt/disk[12][[:space:]]' /etc/fstab; then
+            note "user nfs-mounts: /mnt/disk1 and /mnt/disk2 are not in /etc/fstab, not enabled"
+            continue
+        fi
         enable_service "$scope" "$name"
     done < <(sed -e 's/#.*//' "$REPO/packages/services-dinit.txt" | awk 'NF >= 2')
 }

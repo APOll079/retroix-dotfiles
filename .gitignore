@@ -14,6 +14,8 @@ btop/themes/current.theme
 bottom/
 fastfetch/
 hypremoji/
+# written by quickshell/WallpaperState.qml (the lock screen's per-monitor wallpaper)
+hypr/hyprlock-wallpaper.conf
 
 # --- proprietary fonts: install them yourself (see README) ---
 quickshell/fonts/Monaco.ttf

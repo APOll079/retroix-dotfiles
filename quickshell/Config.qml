@@ -134,7 +134,7 @@ JsonAdapter {
 id: settingsJsonAdapter
 property JsonObject settings: JsonObject {
 property bool militaryTimeClockFormat: true
-property string systemProfileImageSource: "/home/username/Pictures/system_profile_picture.png"
+property string systemProfileImageSource: ""
 property string currentTheme: "default"
 property JsonObject execCommands: JsonObject {
 property string terminal: "kitty"
