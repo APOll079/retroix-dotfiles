@@ -45,8 +45,14 @@ PopupWindow {
         return "";
     }
 
+    // Last pairing failure, shown on the status line until the next pair
+    property string pairError: ""
+    // The status line: no adapter, else a failed pair
+    readonly property string statusText: root.adapter === null ? "No Bluetooth adapter" : root.pairError
+
     // Pair, then trust (auto-reconnect) and connect once BlueZ reports it paired
     function pairDevice(d) {
+        root.pairError = "";
         d.pair();
         pairWatch.device = d;
     }
@@ -59,6 +65,13 @@ PopupWindow {
             if (pairWatch.device && pairWatch.device.paired) {
                 pairWatch.device.trusted = true;
                 pairWatch.device.connect();
+                pairWatch.device = null;
+            }
+        }
+        // BlueZ stopped pairing without it being paired: say so (PIN devices end up here, no agent)
+        function onPairingChanged() {
+            if (pairWatch.device && !pairWatch.device.pairing && !pairWatch.device.paired) {
+                root.pairError = "Pairing " + root.label(pairWatch.device) + " failed";
                 pairWatch.device = null;
             }
         }
@@ -100,6 +113,32 @@ PopupWindow {
                         if (root.adapter.discovering)
                             scanStop.restart();
                     }
+                }
+            }
+
+            // Status: no adapter, or the last pairing failure (urgent icon, normal text)
+            RowLayout {
+                Layout.fillWidth: true
+                visible: root.statusText !== ""
+                spacing: MenuStyle.gap
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    font.family: MenuStyle.iconFont
+                    font.pixelSize: MenuStyle.iconSize
+                    color: Config.colors.urgent
+                    text: "error"
+                }
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.text
+                    text: root.statusText
                 }
             }
 

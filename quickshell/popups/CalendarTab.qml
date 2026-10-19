@@ -23,7 +23,17 @@ ColumnLayout {
         }
     }
 
-    // Weather (Weather.qml): now, then the next days
+    // Weather (Weather.qml): now, then the next days; a plain line while it can't be fetched
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        Layout.fillWidth: true
+        visible: !Weather.ok && Weather.failed
+        font.family: MenuStyle.bodyFont
+        font.pixelSize: MenuStyle.fontSize
+        color: MenuStyle.bevelDark
+        text: "Weather unavailable"
+    }
     SunkenField {
         Layout.fillWidth: true
         visible: Weather.ok

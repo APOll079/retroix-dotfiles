@@ -30,6 +30,14 @@ ColumnLayout {
         }
     }
 
+    // While the tab is open: re-read the devices (a phone coming into range, a pair accepted on it)
+    Timer {
+        interval: MenuStyle.phoneRefresh
+        running: root.active
+        repeat: true
+        onTriggered: root.refresh()
+    }
+
     SunkenField {
         Layout.fillWidth: true
         implicitHeight: Math.max(MenuStyle.rowHeight * 3, deviceColumn.implicitHeight + 4)
@@ -201,11 +209,12 @@ ColumnLayout {
         }
     }
 
-    // Clipboard text to the phone: read it with wl-paste, then share it as text
+    // Clipboard text to the phone: read it with wl-paste, then share it as text. Only sent (and
+    // "Clipboard sent") when wl-paste gave some text and kdeconnect-cli succeeded.
     Process {
         id: clipProc
         property string deviceId: ""
-        command: ["sh", "-c", "wl-paste -n --type text 2>/dev/null | kdeconnect-cli -d \"$1\" --share-text \"$(cat)\"", "sh", clipProc.deviceId]
+        command: ["sh", "-c", "t=$(wl-paste -n --type text 2>/dev/null) && [ -n \"$t\" ] && kdeconnect-cli -d \"$1\" --share-text \"$t\"", "sh", clipProc.deviceId]
         onExited: code => root.status = code === 0 ? "Clipboard sent" : "Could not send the clipboard (is it text?)"
     }
 }

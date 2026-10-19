@@ -10,6 +10,7 @@ Singleton {
 
     readonly property var cfg: Config.settings.weather
     property bool ok: false
+    property bool failed: false   // the last fetch gave nothing usable (retried every weatherRetry)
     property string place: ""
     property int temp: 0
     property int feels: 0
@@ -44,6 +45,8 @@ Singleton {
                 try { d = JSON.parse(text); } catch (e) { d = null; }
                 if (!d || !d.current_condition) {
                     root.ok = false;
+                    root.failed = true;
+                    retry.restart();
                     return;
                 }
                 const metric = root.cfg.metric;
@@ -62,8 +65,16 @@ Singleton {
                     desc: w.hourly[4].weatherDesc[0].value
                 }));
                 root.ok = true;
+                root.failed = false;
             }
         }
+    }
+
+    // A failed fetch (offline at login, wttr.in down) tries again soon instead of in 30 minutes
+    Timer {
+        id: retry
+        interval: MenuStyle.weatherRetry
+        onTriggered: root.refresh()
     }
 
     Timer {

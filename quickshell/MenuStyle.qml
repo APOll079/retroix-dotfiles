@@ -128,6 +128,9 @@ Singleton {
     readonly property real idleDimOpacity: 0.5
     // Weather refresh (wttr.in), ms
     readonly property int weatherRefresh: 1800000
+    readonly property int weatherRetry: 60000           // after a failed fetch
+    // Phone tab: device list re-read while it is open, ms
+    readonly property int phoneRefresh: 5000
     readonly property int notificationListRows: 6
     // Home tab: the Applications volume list scrolls after this height (about five apps)
     readonly property int audioAppsMaxHeight: 240
