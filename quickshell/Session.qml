@@ -12,11 +12,11 @@ Singleton {
 
     // confirm: asks first; verb: the confirm button; prompt: the question
     readonly property var builtins: [
-        { name: "Suspend", icon: "", cmd: "loginctl suspend", confirm: true, countdown: false, verb: "Suspend", prompt: "Suspend now?" },
-        { name: "Lock", icon: "", cmd: "pidof hyprlock || hyprlock", confirm: false, countdown: false, verb: "Lock", prompt: "" },
-        { name: "Log out", icon: "", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true, countdown: false, verb: "Log out", prompt: "Log out of Hyprland?" },
-        { name: "Reboot", icon: "", cmd: "loginctl reboot", confirm: true, countdown: true, verb: "Reboot", prompt: "Reboot now?" },
-        { name: "Shutdown", icon: "", cmd: "loginctl poweroff", confirm: true, countdown: true, verb: "Shut down", prompt: "Shut down the computer?" }
+        { name: "Suspend", icon: "\uef44", cmd: "loginctl suspend", confirm: true, countdown: false, verb: "Suspend", prompt: "Suspend now?" },
+        { name: "Lock", icon: "\ue897", cmd: "pidof hyprlock || hyprlock", confirm: false, countdown: false, verb: "Lock", prompt: "" },
+        { name: "Log out", icon: "\ue9ba", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true, countdown: false, verb: "Log out", prompt: "Log out of Hyprland?" },
+        { name: "Reboot", icon: "\ue5d5", cmd: "loginctl reboot", confirm: true, countdown: true, verb: "Reboot", prompt: "Reboot now?" },
+        { name: "Shutdown", icon: "\uf418", cmd: "loginctl poweroff", confirm: true, countdown: true, verb: "Shut down", prompt: "Shut down the computer?" }
     ]
 
     // Your own actions from settings.json: [{ "name", "icon" (glyph, optional), "cmd" }]
