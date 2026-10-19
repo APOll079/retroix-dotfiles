@@ -561,6 +561,9 @@ def cmd_state():
             "artists": ", ".join(a.get("name", "") for a in t.get("artists", [])),
             "album": album.get("name", ""), "image": image(album.get("images"), 300),
             "duration": t.get("duration_ms", 0),
+            # the artist / album names in the drawer's header open these
+            "artist_uri": ((t.get("artists") or [{}])[0] or {}).get("uri", ""),
+            "album_uri": album.get("uri", ""),
         } if t else None,
     }
 

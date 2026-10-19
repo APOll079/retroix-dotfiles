@@ -39,3 +39,8 @@ SpotifyNav 1.0 SpotifyNav.qml
 SpotifyLyricsView 1.0 SpotifyLyricsView.qml
 SpotifyList 1.0 SpotifyList.qml
 SpotifyStatusBar 1.0 SpotifyStatusBar.qml
+SpotifyHint 1.0 SpotifyHint.qml
+SpotifyPage 1.0 SpotifyPage.qml
+SpotifySearch 1.0 SpotifySearch.qml
+SpotifyRecent 1.0 SpotifyRecent.qml
+SpotifyMoreMenu 1.0 SpotifyMoreMenu.qml

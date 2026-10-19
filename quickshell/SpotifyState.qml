@@ -282,13 +282,24 @@ Singleton {
 
     // Grid or rows in the library tabs, remembered
     property alias grid: viewAdapter.grid
+    property alias recentOpen: viewAdapter.recentOpen
     GuardedFileView {
         path: Quickshell.statePath("spotify-view.json")
         printErrors: false
         JsonAdapter {
             id: viewAdapter
             property bool grid: false
+            property bool recentOpen: true        // the Recent strip is expanded
         }
+    }
+
+    // The status bar's "Reload library": read the library / folder files again and ask Spotify for the lists
+    function reloadLibrary() {
+        libraryFile.reload();
+        folderFile.reload();
+        for (const k of ["playlists", "artists", "albums", "liked"])
+            root.loadList(k, true);
+        root.refreshAll();
     }
 
     // --- playlist folders ---

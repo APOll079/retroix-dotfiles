@@ -61,12 +61,13 @@ Item {
             color: MenuStyle.bevelDark
             text: {
                 switch (root.entry.kind) {
-                case "folder": return "";
-                case "artist": return "";
-                case "album": return "";
-                case "liked": return "";
-                case "track": return "";
-                default: return "";
+                case "folder": return "\ue2c7";
+                case "artist": return "\ue7fd";
+                case "album": return "\ue019";
+                case "liked": return "\ue87d";
+                case "track": return "\ue405";
+                case "searchrow": return "\ue8b6";
+                default: return "\ue03d";
                 }
             }
         }
@@ -124,7 +125,7 @@ Item {
                 font.family: MenuStyle.iconFont
                 font.pixelSize: MenuStyle.iconSize
                 color: root.lit ? MenuStyle.selectText : Config.colors.text
-                text: ""
+                text: "\uf10d"
             }
             Text {
                 renderType: Text.NativeRendering
@@ -155,7 +156,7 @@ Item {
         anchors.bottom: cover.bottom
         anchors.margins: MenuStyle.gap
         visible: root.lit && root.canPlay
-        glyph: ""
+        glyph: "\ue037"
         focusPolicy: Qt.NoFocus
         onClicked: root.playRequested()
     }

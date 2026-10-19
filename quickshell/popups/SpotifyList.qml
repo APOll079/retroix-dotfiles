@@ -65,7 +65,7 @@ SunkenField {
             readonly property bool isHeading: modelData.kind === "heading"
             readonly property bool sel: index === listView.currentIndex
             readonly property bool playing: panel.isPlaying(modelData)
-            readonly property bool showPlay: !panel.addMode && !isTrack && !isHeading && modelData.kind !== "more" && modelData.kind !== "folder" && (rowHover.hovered || sel)
+            readonly property bool showPlay: !panel.addMode && !isTrack && !isHeading && modelData.kind !== "more" && modelData.kind !== "searchrow" && modelData.kind !== "folder" && (rowHover.hovered || sel)
             width: listView.width
             height: isHeading ? MenuStyle.rowHeight : MenuStyle.spotifyRowHeight
 
@@ -164,7 +164,7 @@ SunkenField {
             height: grid.cellHeight
             entry: modelData
             selected: index === listView.currentIndex
-            canPlay: !panel.addMode && modelData.kind !== "folder"
+            canPlay: !panel.addMode && modelData.kind !== "folder" && modelData.kind !== "searchrow"
             onActivated: {
                 panel.setCursor(index);
                 panel.activate(modelData);

@@ -12,22 +12,22 @@ import "." as Local
 // left screen edge, full height, no title bar; only its right and bottom edges get a 1px outline.
 // A layer-shell panel (like the bar), not a popup: popups get nudged 4px inside the screen edge.
 //
-// Top: now playing (cover, seek bar, shuffle / previous / play / next / repeat, like, add to playlist,
-// volume). Then Recent (the last 8 albums / playlists / artists you played from). Then the tabs:
-// - Library: Spotify's Your Library (pins first) with chips All / Playlists / Artists / Albums;
-//   Playlists shows your folders in Spotify's order.
+// Top: now playing (cover, title / artist / album, like / add / lyrics, seek, transport, volume), then one
+// filter / search box, then the tabs Library | Liked (Win95 tabs joined to the page below). The page holds:
+// - Library: Spotify's Your Library (pins first) with chips All / Playlists / Albums / Artists, and the
+//   Recent strip (collapsible); Playlists shows your folders in Spotify's order.
 // - Liked: Liked Songs.
-// - Search: all of Spotify, separate from the library. Type, then Enter: songs, albums, artists and
-//   playlists (10 each) under headings, chips All / Songs / Albums / Artists / Playlists narrow it.
-//   The query and results stay for the session (tab switches, Back). Chip All shows 4 per type
-//   (Artists first) and a "More ..." row. Songs play in their album; playlists you don't own are
-//   play-only.
-// - Lyrics: the whole drawer for synced lyrics, with a slim transport strip at the bottom.
+// Typing filters the list; its top row "Search Spotify for ..." (or Enter) shows Spotify's results in place
+// (under a Back header, chips All / Playlists / Albums / Artists / Songs): chip All shows 4 per type
+// (Artists first) and a "More ..." row; songs play in their album; playlists you don't own are play-only.
+// The lyrics are a view the header button (or Ctrl+L) switches to: the whole drawer for synced lyrics, with
+// a compact header and a slim transport strip. A status bar at the bottom shows the state, messages, errors
+// and hover hints, and has the "..." menu (reload, change client ID, log out).
 // Lists show as rows or cover tiles (the view button, remembered). A click opens (a folder, an
 // album's / your playlist's songs, an artist's albums, Liked Songs); Back returns to where you were.
 // The play button (hover / selected, or Shift+Enter) plays without opening.
 // Keys: type to filter, arrows move (Left / Right too in the grid), Enter opens, Shift+Enter plays,
-// Space plays / pauses (empty filter), Escape steps back, then closes.
+// Space plays / pauses (empty filter), Ctrl+L lyrics, Escape steps back, then closes.
 // Data and control: SpotifyState.qml + scripts/spotify.py. First run asks for the client ID of your
 // Spotify developer app, then logs in through the browser once.
 PanelWindow {
@@ -36,9 +36,10 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    property string tab: "library"         // library | liked | search | lyrics
+    property string tab: "library"         // library | liked
+    property bool lyricsOn: false          // the lyrics view (the header button, Ctrl+L)
     property string libraryKind: "all"     // Library chip: all | playlist | artist | album
-    property string searchQuery: ""        // Search tab: the last query sent
+    property string searchQuery: ""        // the last query sent to Spotify
     property var searchResults: []         // its rows (spotify.py search)
     property string searchKind: "all"      // Search chip: all | track | album | artist | playlist
     property bool searchLoading: false
@@ -50,6 +51,9 @@ PanelWindow {
     property var songMenu: null            // right-clicked song: its action row shows in the status line
     property string note: ""               // short feedback line
     property bool confirmLogout: false
+    property bool confirmClient: false     // log out and change the client ID (asked on the status bar)
+    property bool menuOpen: false          // the status bar's "..." menu
+    property string hint: ""               // what the control under the pointer does (the status bar shows it)
     property bool editClient: false        // setup page: typing a new client ID
     property real openedAt: 0              // when something was last opened (double-click guard)
     property real shownAt: 0               // when the drawer opened (focus-change grace period)
@@ -59,10 +63,11 @@ PanelWindow {
     readonly property string statusError: SpotifyState.error !== "" ? SpotifyState.error : (root.searchMode ? root.searchError : "")
     readonly property bool remote: SpotifyState.player !== null && !SpotifyState.local
     readonly property var lastTrack: SpotifyState.lastPlayed ? SpotifyState.lastPlayed.track : null
-    readonly property bool lyricsMode: root.tab === "lyrics" && !root.addMode && root.stack.length === 0
-    readonly property bool searchMode: root.tab === "search" && !root.addMode && root.stack.length === 0
+    readonly property bool lyricsMode: root.lyricsOn && !root.addMode
+    // Spotify search results are shown in place, as the top of the view stack
+    readonly property bool searchMode: root.view !== null && root.view.kind === "search" && !root.addMode
     // Items that moved into the component files; the logic below still uses them by these names
-    readonly property var filterInput: nav.box
+    readonly property var filterInput: search
     readonly property var clientInput: setup.input
     readonly property var listView: spotifyList.view
     readonly property var lyricsView: spotifyList.lyricsView
@@ -82,20 +87,24 @@ PanelWindow {
         if (root.addMode)
             return (SpotifyState.lists.playlists || []).filter(p => p.openable);
         if (root.view)
-            return root.view.kind === "liked" ? (SpotifyState.lists.liked || []) : (root.view.items || []);
+            return root.view.kind === "liked" ? (SpotifyState.lists.liked || [])
+                : root.view.kind === "search" ? root.searchRows() : (root.view.items || []);
         if (root.tab === "library")
             return root.libraryRows();
         if (root.tab === "liked")
             return SpotifyState.lists.liked || [];
-        if (root.tab === "search")
-            return root.searchRows();
         return [];
     }
     readonly property var items: {
-        const q = filterInput.text.trim().toLowerCase();
-        return root.baseItems
+        const text = filterInput.text.trim();
+        const q = text.toLowerCase();
+        const rows = root.baseItems
             .filter(i => root.searchMode || q === "" || (i.name + " " + i.sub).toLowerCase().includes(q))
             .map(i => root.pinned[i.uri] && !i.pinned ? Object.assign({}, i, { pinned: true }) : i);
+        // Typed text: the top row takes it to Spotify's own search (results in place, Back returns)
+        if (text !== "" && !root.addMode && !root.searchMode)
+            rows.unshift({ kind: "searchrow", uri: "searchrow", query: text, name: "Search Spotify for '" + text + "'", sub: "", image: "" });
+        return rows;
     }
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
@@ -158,9 +167,19 @@ PanelWindow {
         root.focusKeys();
     }
     onItemsChanged: Qt.callLater(root.afterItems)
+    // A short message goes away by itself
+    Timer {
+        id: noteTimer
+        interval: MenuStyle.spotifyNoteMs
+        onTriggered: root.note = ""
+    }
+    onNoteChanged: {
+        if (root.note !== "")
+            noteTimer.restart();
+    }
     onStackChanged: root.songMenu = null
 
-    // Keys where there's no filter box to type in (Lyrics, the login page): Escape and Space
+    // Keys where there's no filter box to type in (the lyrics, the login page): Escape, Space, Ctrl+L, "/" and Ctrl+F
     Item {
         id: keyCatcher
         Keys.onPressed: event => {
@@ -169,6 +188,10 @@ PanelWindow {
                     root.closeCallback();
             } else if (event.key === Qt.Key_Space && SpotifyState.loggedIn) {
                 SpotifyState.togglePlay();
+            } else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier) && SpotifyState.loggedIn) {
+                root.toggleLyrics();
+            } else if ((event.key === Qt.Key_Slash || (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier))) && SpotifyState.loggedIn) {
+                root.lyricsOn = false;      // leaving the lyrics hands the keyboard back to the box
             } else {
                 return;
             }
@@ -195,9 +218,9 @@ PanelWindow {
             anchors.fill: parent
             anchors.margins: MenuStyle.pad
             visible: SpotifyState.loggedIn
-            spacing: MenuStyle.pad
+            spacing: MenuStyle.spotifyColumnGap
 
-            SpotifyHeader { Layout.fillWidth: true; panel: root }
+            SpotifyHeader { panel: root }
 
             SpotifyTransport { Layout.fillWidth: true; panel: root }
 
@@ -206,48 +229,38 @@ PanelWindow {
                 visible: !root.lyricsMode && !root.addMode
             }
 
-            // Recent: the same tiles as the library grid, 4 per row; a click opens, the play button plays
-            GridLayout {
+            SpotifySearch { id: search; panel: root }
+
+            // The tabs and the page they join: chips / Back row, Recent, the list
+            SpotifyPage {
                 Layout.fillWidth: true
-                columns: MenuStyle.spotifyGridColumns
-                columnSpacing: 0
-                rowSpacing: 0
-                visible: !root.addMode && !root.lyricsMode && SpotifyState.recent.length > 0
-                Repeater {
-                    model: SpotifyState.recent
-                    CoverTile {
-                        required property var modelData
+                Layout.fillHeight: true
+                panel: root
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: MenuStyle.spotifyColumnGap
+                    SpotifyNav {
                         Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        Layout.preferredHeight: implicitHeight
-                        entry: Object.assign({}, modelData, { pinned: root.pinned[modelData.uri] === true })
-                        showSub: false
-                        canPlay: true
-                        onActivated: root.activate(modelData)
-                        onPlayRequested: SpotifyState.play(modelData.kind === "liked" ? "liked" : modelData.uri)
+                        visible: !root.lyricsMode && (root.addMode || root.view !== null || root.tab === "library")
+                        panel: root
                     }
+                    SpotifyRecent { Layout.fillWidth: true; panel: root }
+                    SpotifyList { id: spotifyList; Layout.fillWidth: true; Layout.fillHeight: true; panel: root }
                 }
             }
-
-            Local.MenuSeparator {
-                Layout.fillWidth: true
-                visible: !root.addMode && !root.lyricsMode
-            }
-
-            // Tabs, chips / opened item's header, artist summary and the filter box
-            SpotifyNav { id: nav; Layout.fillWidth: true; panel: root }
-
-            SpotifyList { id: spotifyList; Layout.fillWidth: true; Layout.fillHeight: true; panel: root }
 
             // Lyrics: a slim transport strip stays, so the drawer is never a dead end
             SpotifyButtons {
                 Layout.fillWidth: true
                 visible: root.lyricsMode
                 full: false
+                panel: root
             }
 
             SpotifyStatusBar { Layout.fillWidth: true; panel: root }
         }
+
+        SpotifyMoreMenu { panel: root }
     }
 
 
@@ -271,6 +284,7 @@ PanelWindow {
         case "album": return "\ue019";
         case "folder": return "\ue2c7";
         case "liked": return "\ue87d";
+        case "searchrow": return "\ue8b6";
         default: return "\ue03d";
         }
     }
@@ -380,8 +394,9 @@ PanelWindow {
 
     function showTab(key) {
         root.tab = key;
+        root.lyricsOn = false;
         root.stack = [];
-        filterInput.text = key === "search" ? root.searchQuery : "";
+        filterInput.text = "";
         root.setCursor(0);
         root.wantPlaying = key === "liked";
         Qt.callLater(root.afterItems);
@@ -478,7 +493,7 @@ PanelWindow {
 
     // Play without opening (the play buttons, Shift+Enter)
     function playItem(item) {
-        if (!item || item.kind === "folder" || item.kind === "heading" || item.kind === "more")
+        if (!item || item.kind === "folder" || item.kind === "heading" || item.kind === "more" || item.kind === "searchrow")
             return;
         SpotifyState.play(item.kind === "liked" ? "liked" : item.uri);
     }
@@ -487,6 +502,10 @@ PanelWindow {
     function activate(item, fromKeys) {
         if (!item || item.kind === "heading")
             return;
+        if (item.kind === "searchrow") {
+            root.openSearch(item.query);
+            return;
+        }
         if (item.kind === "more") {
             // "More songs (10)": the same as clicking that chip
             root.searchKind = item.moreKind;
@@ -506,7 +525,8 @@ PanelWindow {
             return;
         }
         if (item.kind === "track") {
-            const ctx = root.view ? root.view.uri : (root.tab === "liked" ? "liked" : "");
+            // (a search hit has no context of its own: it plays in its album)
+            const ctx = root.searchMode ? "" : (root.view ? root.view.uri : (root.tab === "liked" ? "liked" : ""));
             if (ctx)
                 SpotifyState.play(ctx, item.uri);
             else if (root.searchMode && item.album_uri)
@@ -567,7 +587,27 @@ PanelWindow {
         return rows;
     }
 
-    // Enter on the Search tab: send what is typed; an answer for an older query is dropped
+    // "Search Spotify" (the list's top row): the results open in place on the view stack, with Back
+    function openSearch(text) {
+        const q = text.trim();
+        if (q === "")
+            return;
+        root.push({ title: "Search: " + q, uri: "search:" + q, kind: "search", items: [], loading: false });
+        filterInput.text = q;       // the box keeps the query: edit it and press Enter to search again
+        root.runSearch();
+    }
+
+    function toggleLyrics() {
+        root.lyricsOn = !root.lyricsOn;
+    }
+
+    // Open an album / artist / playlist by uri (the names in the header)
+    function openUri(kind, uri, name, image) {
+        if (uri)
+            root.activate({ kind: kind, uri: uri, name: name || "", sub: "", image: image || "", openable: true }, true);
+    }
+
+    // Enter inside the results: send what is typed; an answer for an older query is dropped
     function runSearch() {
         const q = filterInput.text.trim();
         const before = root.searchQuery;
@@ -609,6 +649,10 @@ PanelWindow {
             root.toggleAddMode();
             return true;
         }
+        if (root.lyricsOn) {
+            root.lyricsOn = false;
+            return true;
+        }
         if (root.stack.length > 0) {
             const top = root.stack[root.stack.length - 1];
             root.stack = root.stack.slice(0, -1);
@@ -623,7 +667,10 @@ PanelWindow {
         root.addMode = false;
         root.stack = [];
         root.note = "";
+        root.hint = "";
+        root.menuOpen = false;
         root.confirmLogout = false;
+        root.confirmClient = false;
         root.editClient = false;
         filterInput.text = root.searchMode ? root.searchQuery : "";
         root.wantPlaying = root.tab === "liked";
@@ -636,6 +683,8 @@ PanelWindow {
 
     function closeMenu() {
         root.visible = false;
+        root.menuOpen = false;
+        root.hint = "";
         // A search error is for this visit only; an answer still on its way is dropped
         root.searchError = "";
         root.searchLoading = false;

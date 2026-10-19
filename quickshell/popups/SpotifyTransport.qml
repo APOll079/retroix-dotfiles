@@ -5,11 +5,12 @@ import ".."
 // Qt Controls has its own MenuSeparator; ours is reached through Local
 import "." as Local
 
-// Seek bar, transport buttons and the like / add to playlist / volume row (hidden in the lyrics view,
-// where a slim SpotifyButtons strip stays).
+// Seek bar, transport buttons and the volume row (hidden in the lyrics view, where a slim SpotifyButtons
+// strip stays). Like and add-to-playlist live in the header with the other track actions.
 ColumnLayout {
+    id: transport
     required property var panel
-    spacing: MenuStyle.pad
+    spacing: MenuStyle.spotifyColumnGap
     visible: !panel.lyricsMode
 
     // Seek bar (same height as the volume slider below): click to jump
@@ -28,7 +29,7 @@ ColumnLayout {
         SegmentBar {
             id: seekBar
             Layout.fillWidth: true
-            implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
+            implicitHeight: MenuStyle.spotifyCompactRow
             value: SpotifyState.track && SpotifyState.track.duration > 0 ? SpotifyState.progress / SpotifyState.track.duration : 0
             // Glides between the once-a-second ticks instead of jumping
             Behavior on value {
@@ -54,32 +55,24 @@ ColumnLayout {
     SpotifyButtons {
         Layout.fillWidth: true
         full: true
+        panel: transport.panel
     }
 
-    // Like, add to playlist, volume
+    // Volume: the speaker mutes
     RowLayout {
         Layout.fillWidth: true
         visible: !panel.lyricsMode
         spacing: MenuStyle.gap
         BevelButton {
-            glyph: SpotifyState.liked ? "\ue87d" : "\ue87e"
-            glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
-            enabled: SpotifyState.track !== null
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.toggleLike()
-        }
-        BevelButton {
-            glyph: "\ue03b"
-            checked: panel.addMode
-            enabled: SpotifyState.track !== null
-            focusPolicy: Qt.NoFocus
-            onClicked: panel.toggleAddMode()
-        }
-        BevelButton {
+            implicitHeight: MenuStyle.spotifyCompactRow
             glyph: SpotifyState.volume === 0 ? "\ue04f" : "\ue050"
             enabled: SpotifyState.volume >= 0
             focusPolicy: Qt.NoFocus
             onClicked: SpotifyState.toggleMute()
+            SpotifyHint {
+                panel: transport.panel
+                text: SpotifyState.volume < 0 ? "Volume shows once this PC plays" : (SpotifyState.volume === 0 ? "Unmute" : "Mute")
+            }
         }
         RetroSlider {
             id: volumeSlider
@@ -87,6 +80,7 @@ ColumnLayout {
             from: 0
             to: 100
             stepSize: 1
+            implicitHeight: MenuStyle.spotifyCompactRow
             enabled: SpotifyState.volume >= 0
             // Every change (drag, click, release) goes straight to SpotifyState, which decides
             // where it goes (PipeWire here, Spotify for another device) and what to show

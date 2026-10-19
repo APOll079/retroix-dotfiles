@@ -88,6 +88,15 @@ Singleton {
     readonly property int spotifyInset: 2           // padding inside the drawer's sunken fields and tiles
     readonly property int spotifyTileIcon: 32       // placeholder icon on a cover without art
     readonly property int spotifyClickGuard: 350    // ms after opening something during which clicks are ignored
+    readonly property int spotifyColumnGap: 4       // between the drawer's rows (the rest of the menus use pad)
+    readonly property int spotifyCompactRow: 24     // the drawer's seek / transport / volume / search rows and its icon buttons
+    readonly property int spotifyTabHeight: 24      // the Win95 tab strip (the selected tab is 1px taller and joins the page)
+    readonly property int spotifyChipHeight: 22     // chips: smaller than tabs and buttons
+    readonly property int spotifyStatusHeight: 18   // the status bar at the bottom of the drawer
+    readonly property int spotifyPagePad: 3         // inside the tab page's bevel
+    readonly property int spotifyRecentCount: 6     // covers in the Recent strip (they size to fill the width)
+    readonly property int spotifyLyricsCover: 32    // the cover in the compact lyrics header
+    readonly property int spotifyNoteMs: 3000       // how long a short message stays on the status bar
     readonly property int spotifyPollMs: 2000
     readonly property int spotifyTickMs: 1000
     readonly property int spotifyVolumeStep: 300    // ms between Spotify volume calls while dragging (another device)
