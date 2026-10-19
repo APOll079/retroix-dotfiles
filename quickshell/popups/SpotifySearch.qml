@@ -20,6 +20,10 @@ SearchBox {
             panel.closeCallback();
     }
     onKeyPressed: event => {
+        if (panel.globalKey(event)) {
+            event.accepted = true;
+            return;
+        }
         const cols = panel.useGrid ? MenuStyle.spotifyGridColumnsLibrary : 1;
         const empty = search.text === "";
         const cur = panel.listView.currentIndex;
@@ -47,8 +51,6 @@ SearchBox {
             const it = panel.items[cur];
             if (it && it.kind === "track" && !panel.addMode)
                 panel.openSongMenu(it, panel.listView.itemAtIndex(cur));
-        } else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier)) {
-            panel.toggleLyrics();
         } else if (event.key === Qt.Key_Space && empty) {
             SpotifyState.togglePlay();
         } else {

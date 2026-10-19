@@ -46,3 +46,5 @@ SpotifyRecent 1.0 SpotifyRecent.qml
 SpotifyMoreMenu 1.0 SpotifyMoreMenu.qml
 SpotifyListHeader 1.0 SpotifyListHeader.qml
 SpotifyRowMenu 1.0 SpotifyRowMenu.qml
+SpotifyReasonHost 1.0 SpotifyReasonHost.qml
+SpotifyTooltip 1.0 SpotifyTooltip.qml

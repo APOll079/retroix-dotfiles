@@ -166,23 +166,31 @@ RowLayout {
         RowLayout {
             Layout.fillWidth: true
             spacing: MenuStyle.gap
-            BevelButton {
-                implicitHeight: MenuStyle.spotifyCompactRow
-                glyph: SpotifyState.liked ? "\ue87d" : "\ue87e"
-                glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
-                enabled: SpotifyState.track !== null
-                focusPolicy: Qt.NoFocus
-                onClicked: SpotifyState.toggleLike()
-                SpotifyHint { panel: header.panel; text: SpotifyState.liked ? "Remove from Liked Songs" : "Like this song" }
+            SpotifyReasonHost {
+                panel: header.panel
+                reason: SpotifyState.track === null ? "Like: nothing is playing" : ""
+                BevelButton {
+                    implicitHeight: MenuStyle.spotifyCompactRow
+                    glyph: SpotifyState.liked ? "\ue87d" : "\ue87e"
+                    glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
+                    enabled: SpotifyState.track !== null
+                    focusPolicy: Qt.NoFocus
+                    onClicked: SpotifyState.toggleLike()
+                    SpotifyHint { panel: header.panel; text: SpotifyState.liked ? "Remove from Liked Songs (Ctrl+S)" : "Like this song (Ctrl+S)" }
+                }
             }
-            BevelButton {
-                implicitHeight: MenuStyle.spotifyCompactRow
-                glyph: "\ue03b"
-                checked: panel.addMode
-                enabled: SpotifyState.track !== null
-                focusPolicy: Qt.NoFocus
-                onClicked: panel.toggleAddMode()
-                SpotifyHint { panel: header.panel; text: "Add this song to a playlist" }
+            SpotifyReasonHost {
+                panel: header.panel
+                reason: SpotifyState.track === null ? "Add to playlist: nothing is playing" : ""
+                BevelButton {
+                    implicitHeight: MenuStyle.spotifyCompactRow
+                    glyph: "\ue03b"
+                    checked: panel.addMode
+                    enabled: SpotifyState.track !== null
+                    focusPolicy: Qt.NoFocus
+                    onClicked: panel.toggleAddMode()
+                    SpotifyHint { panel: header.panel; text: "Add this song to a playlist" }
+                }
             }
             BevelButton {
                 implicitHeight: MenuStyle.spotifyCompactRow

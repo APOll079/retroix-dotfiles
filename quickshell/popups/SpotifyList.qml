@@ -10,6 +10,7 @@ import "." as Local
 SunkenField {
     required property var panel
     readonly property var view: listView
+    readonly property var gridView: grid
     readonly property var lyricsView: lyrics.view
     // The list fades in when the tab or the opened item changes
     Connections {
@@ -122,9 +123,28 @@ SunkenField {
             readonly property bool isHeading: modelData.kind === "heading"
             readonly property bool sel: index === listView.currentIndex
             readonly property bool playing: panel.isPlaying(modelData)
+            // The title is cut off: the full name (and artist) shows on hover
+            readonly property real titleRoom: width - 4 * MenuStyle.pad - (isTrack ? MenuStyle.spotifyThumb + clockWidth.width + MenuStyle.pad : MenuStyle.iconSize + MenuStyle.iconSize)
+            readonly property bool elided: !isHeading && titleWidth.width > titleRoom
             readonly property bool showPlay: !panel.addMode && !isTrack && !isHeading && modelData.kind !== "more" && modelData.kind !== "searchrow" && modelData.kind !== "folder" && (rowHover.hovered || sel)
             width: listView.width
             height: isHeading ? MenuStyle.rowHeight : MenuStyle.spotifyRowHeight
+            TextMetrics {
+                id: titleWidth
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                text: row.modelData.name || ""
+            }
+            TextMetrics {
+                id: clockWidth
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                text: "00:00"
+            }
+            SpotifyHint {
+                panel: listArea.panel
+                text: row.elided ? row.modelData.name + (row.modelData.sub ? "  -  " + row.modelData.sub : "") : ""
+            }
 
             // Search results: a plain dim heading over each group, with an etched line
             Item {

@@ -13,18 +13,22 @@ RowLayout {
     spacing: MenuStyle.gap
     readonly property bool shuffleOn: SpotifyState.player !== null && SpotifyState.player.shuffle
     readonly property string repeatMode: SpotifyState.player ? SpotifyState.player.repeat : "off"
-    BevelButton {
+    SpotifyReasonHost {
         visible: buttons.full
-        implicitHeight: MenuStyle.spotifyCompactRow
-        glyph: "\ue043"
-        glyphColor: buttons.shuffleOn ? MenuStyle.barOnGlyph : "transparent"
-        checked: buttons.shuffleOn
-        enabled: SpotifyState.player !== null
-        focusPolicy: Qt.NoFocus
-        onClicked: SpotifyState.toggleShuffle()
-        SpotifyHint {
-            panel: buttons.panel
-            text: buttons.shuffleOn ? "Shuffle: on" : "Shuffle: off"
+        panel: buttons.panel
+        reason: SpotifyState.player === null ? "Shuffle: nothing is playing" : ""
+        BevelButton {
+            implicitHeight: MenuStyle.spotifyCompactRow
+            glyph: "\ue043"
+            glyphColor: buttons.shuffleOn ? MenuStyle.barOnGlyph : "transparent"
+            checked: buttons.shuffleOn
+            enabled: SpotifyState.player !== null
+            focusPolicy: Qt.NoFocus
+            onClicked: SpotifyState.toggleShuffle()
+            SpotifyHint {
+                panel: buttons.panel
+                text: buttons.shuffleOn ? "Shuffle: on" : "Shuffle: off"
+            }
         }
     }
     BevelButton {
@@ -54,18 +58,22 @@ RowLayout {
         onClicked: SpotifyState.next()
         SpotifyHint { panel: buttons.panel; text: "Next" }
     }
-    BevelButton {
+    SpotifyReasonHost {
         visible: buttons.full
-        implicitHeight: MenuStyle.spotifyCompactRow
-        glyph: buttons.repeatMode === "track" ? "\ue041" : "\ue040"
-        glyphColor: buttons.repeatMode !== "off" ? MenuStyle.barOnGlyph : "transparent"
-        checked: buttons.repeatMode !== "off"
-        enabled: SpotifyState.player !== null
-        focusPolicy: Qt.NoFocus
-        onClicked: SpotifyState.cycleRepeat()
-        SpotifyHint {
-            panel: buttons.panel
-            text: buttons.repeatMode === "off" ? "Repeat: off" : (buttons.repeatMode === "track" ? "Repeat: one song" : "Repeat: all")
+        panel: buttons.panel
+        reason: SpotifyState.player === null ? "Repeat: nothing is playing" : ""
+        BevelButton {
+            implicitHeight: MenuStyle.spotifyCompactRow
+            glyph: buttons.repeatMode === "track" ? "\ue041" : "\ue040"
+            glyphColor: buttons.repeatMode !== "off" ? MenuStyle.barOnGlyph : "transparent"
+            checked: buttons.repeatMode !== "off"
+            enabled: SpotifyState.player !== null
+            focusPolicy: Qt.NoFocus
+            onClicked: SpotifyState.cycleRepeat()
+            SpotifyHint {
+                panel: buttons.panel
+                text: buttons.repeatMode === "off" ? "Repeat: off" : (buttons.repeatMode === "track" ? "Repeat: one song" : "Repeat: all")
+            }
         }
     }
     BevelButton {

@@ -54,6 +54,9 @@ PanelWindow {
     property bool confirmClient: false     // log out and change the client ID (asked on the status bar)
     property bool menuOpen: false          // the status bar's "..." menu
     property string hint: ""               // what the control under the pointer does (the status bar shows it)
+    property var tip: null                 // the tooltip: { text, item } (SpotifyHint sets it after a pause)
+    property bool restored: false          // the remembered view was applied (once per start)
+    property var pendingRestore: null      // { index, y }: the cursor and scroll position to put back once the list is there
     property bool editClient: false        // setup page: typing a new client ID
     property real openedAt: 0              // when something was last opened (double-click guard)
     property real shownAt: 0               // when the drawer opened (focus-change grace period)
@@ -70,6 +73,7 @@ PanelWindow {
     readonly property var filterInput: search
     readonly property var clientInput: setup.input
     readonly property var listView: spotifyList.view
+    readonly property var scroller: root.useGrid ? spotifyList.gridView : spotifyList.view
     readonly property var lyricsView: spotifyList.lyricsView
     readonly property var view: root.stack.length > 0 ? root.stack[root.stack.length - 1] : null
     readonly property var likedRow: ({ kind: "liked", uri: "liked", name: "Liked Songs", sub: "Playlist", image: "", openable: true })
@@ -190,23 +194,32 @@ PanelWindow {
         interval: MenuStyle.spotifyNoteMs
         onTriggered: root.note = ""
     }
+    Timer {
+        id: restoreTimer
+        interval: MenuStyle.spotifyRestoreMs
+        onTriggered: root.pendingRestore = null
+    }
     onNoteChanged: {
         if (root.note !== "")
             noteTimer.restart();
     }
     onStackChanged: root.rowMenu = null
 
-    // Keys where there's no filter box to type in (the lyrics, the login page): Escape, Space, Ctrl+L, "/" and Ctrl+F
+    // Keys where there's no filter box to type in (the lyrics, the login page): the shared ones (globalKey), Escape, Space, Left / Right (seek, in the lyrics), "/" and Ctrl+F
     Item {
         id: keyCatcher
         Keys.onPressed: event => {
+            if (SpotifyState.loggedIn && root.globalKey(event)) {
+                event.accepted = true;
+                return;
+            }
             if (event.key === Qt.Key_Escape) {
                 if (!root.goBack())
                     root.closeCallback();
+            } else if (root.lyricsMode && (event.key === Qt.Key_Left || event.key === Qt.Key_Right)) {
+                root.seekBy(event.key === Qt.Key_Left ? -MenuStyle.spotifySeekStepMs : MenuStyle.spotifySeekStepMs);
             } else if (event.key === Qt.Key_Space && SpotifyState.loggedIn) {
                 SpotifyState.togglePlay();
-            } else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier) && SpotifyState.loggedIn) {
-                root.toggleLyrics();
             } else if ((event.key === Qt.Key_Slash || (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier))) && SpotifyState.loggedIn) {
                 root.lyricsOn = false;      // leaving the lyrics hands the keyboard back to the box
             } else {
@@ -279,6 +292,7 @@ PanelWindow {
 
         SpotifyMoreMenu { panel: root }
         SpotifyRowMenu { id: rowMenuView; panel: root }
+        SpotifyTooltip { panel: root }
     }
 
 
@@ -337,6 +351,16 @@ PanelWindow {
     // After the list changed: cursor onto the playing song once (an album / playlist / Liked just
     // opened), and off a heading when a new search replaced the rows (the view resets its cursor)
     function afterItems() {
+        // (the list resets its cursor whenever its model is replaced, so the saved place is put back on every
+        // change for a moment, until restoreTimer says the list has settled)
+        if (root.pendingRestore && root.items.length > root.pendingRestore.index) {
+            const r = root.pendingRestore;
+            root.wantPlaying = false;
+            root.setCursor(r.index);
+            Qt.callLater(() => root.scroller.contentY = r.y);
+            restoreTimer.restart();
+            return;
+        }
         if (root.wantPlaying && root.items.length > 0) {
             root.wantPlaying = false;
             const i = root.items.findIndex(x => x.kind === "track" && root.isPlaying(x));
@@ -391,6 +415,47 @@ PanelWindow {
         listView.currentIndex = Math.max(0, Math.min(j, root.items.length - 1));
     }
 
+    function seekBy(ms) {
+        const t = SpotifyState.track;
+        if (t)
+            SpotifyState.seek(Math.max(0, Math.min(t.duration, SpotifyState.progress + ms)));
+    }
+
+    // The keys that work everywhere in the drawer (the filter box and the key catcher both ask first):
+    // Alt+Left back, Ctrl+Tab the tabs, Ctrl+Left / Right previous / next, Ctrl+Shift+Left / Right seek,
+    // Ctrl+Up / Down volume, Ctrl+S like, Ctrl+L lyrics. True when the key was one of them.
+    function globalKey(event) {
+        const ctrl = (event.modifiers & Qt.ControlModifier) !== 0;
+        const shift = (event.modifiers & Qt.ShiftModifier) !== 0;
+        const alt = (event.modifiers & Qt.AltModifier) !== 0;
+        if (alt && event.key === Qt.Key_Left) {
+            root.goBack();
+        } else if (ctrl && (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab)) {
+            root.showTab(root.tab === "library" ? "liked" : "library");
+        } else if (ctrl && shift && (event.key === Qt.Key_Left || event.key === Qt.Key_Right)) {
+            root.seekBy(event.key === Qt.Key_Left ? -MenuStyle.spotifySeekStepMs : MenuStyle.spotifySeekStepMs);
+        } else if (ctrl && event.key === Qt.Key_Left) {
+            SpotifyState.previous();
+        } else if (ctrl && event.key === Qt.Key_Right) {
+            SpotifyState.next();
+        } else if (ctrl && (event.key === Qt.Key_Up || event.key === Qt.Key_Down)) {
+            if (SpotifyState.volume >= 0)
+                SpotifyState.setVolume(Math.max(0, Math.min(100, SpotifyState.volume + (event.key === Qt.Key_Up ? 1 : -1) * MenuStyle.spotifyWheelStep)));
+            else
+                root.note = "Volume shows once this PC plays";
+        } else if (ctrl && event.key === Qt.Key_S) {
+            if (SpotifyState.track)
+                SpotifyState.toggleLike();
+            else
+                root.note = "Nothing is playing";
+        } else if (ctrl && event.key === Qt.Key_L) {
+            root.toggleLyrics();
+        } else {
+            return false;
+        }
+        return true;
+    }
+
     // Keyboard goes to the filter box where there is one, else to the key catcher (Lyrics, login)
     function focusKeys() {
         if (!root.visible)
@@ -411,6 +476,7 @@ PanelWindow {
     }
 
     function showTab(key) {
+        root.pendingRestore = null;
         root.tab = key;
         root.lyricsOn = false;
         root.stack = [];
@@ -703,6 +769,7 @@ PanelWindow {
     }
 
     function push(entry) {
+        root.pendingRestore = null;
         entry.fromIndex = listView.currentIndex;
         entry.fromFilter = filterInput.text;
         root.openedAt = Date.now();
@@ -747,6 +814,19 @@ PanelWindow {
         root.editClient = false;
         filterInput.text = root.searchMode ? root.searchQuery : "";
         root.wantPlaying = root.tab === "liked";
+        // The first time after a start: the tab, chip, filter text, selection and scroll position it was left at
+        if (!root.restored) {
+            root.restored = true;
+            const p = SpotifyState.savedPlace || {};
+            if (["library", "liked"].includes(p.tab))
+                root.tab = p.tab;
+            if (["all", "playlist", "album", "artist"].includes(p.kind))
+                root.libraryKind = p.kind;
+            filterInput.text = typeof p.filter === "string" ? p.filter : "";
+            root.wantPlaying = root.tab === "liked";
+            if (p.index > 0 || p.scrollY !== 0)
+                root.pendingRestore = { index: Number(p.index) || 0, y: Number(p.scrollY) || 0 };
+        }
         Qt.callLater(root.afterItems);
         root.shownAt = Date.now();
         root.visible = true;
@@ -755,6 +835,19 @@ PanelWindow {
     }
 
     function closeMenu() {
+        // Remember where it was left (the filter, cursor and scroll only at the top level of a tab)
+        if (root.restored && !root.addMode) {
+            const top = root.stack.length === 0;
+            SpotifyState.savedPlace = {
+                tab: root.tab,
+                kind: root.libraryKind,
+                filter: top ? filterInput.text : "",
+                index: top ? Math.max(0, listView.currentIndex) : 0,
+                scrollY: top ? scroller.contentY : 0
+            };
+        }
+        root.tip = null;
+        root.rowMenu = null;
         root.visible = false;
         root.menuOpen = false;
         root.hint = "";

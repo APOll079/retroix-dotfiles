@@ -66,6 +66,8 @@ ColumnLayout {
             }
             SpotifyHint { panel: transport.panel; text: "Seek (the wheel: 5 s)" }
         }
+        // a disabled slider gets no hover: the row says why
+        SpotifyHint { panel: transport.panel; text: SpotifyState.track === null ? "Seek: nothing is playing" : "" }
         Text {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
@@ -146,6 +148,7 @@ ColumnLayout {
             color: Config.colors.text
             text: SpotifyState.volume >= 0 ? SpotifyState.volume + "%" : ""
         }
+        SpotifyHint { panel: transport.panel; text: SpotifyState.volume < 0 ? "Volume shows once this PC plays" : "" }
         WheelHandler {
             acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
             onWheel: event => {

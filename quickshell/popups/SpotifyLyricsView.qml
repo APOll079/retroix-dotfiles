@@ -5,9 +5,12 @@ import ".."
 // Qt Controls has its own MenuSeparator; ours is reached through Local
 import "." as Local
 
-// The lyrics: the current line sits on the accent bar, kept at the reading spot; click a line to jump there.
-// Also shows why there are none (another device, no player, no synced lyrics).
+// The lyrics: sung lines in the shadow colour, the current line on the accent bar (kept at the reading spot),
+// the coming ones in normal text. Scrolling by hand pauses the following for a few seconds; click a line
+// to jump there (the status bar says so). Also shows why there are none (another device, no player,
+// no synced lyrics).
 Item {
+    id: lyricsRoot
     required property var panel
     readonly property var view: lyricsView
     anchors.fill: parent
@@ -33,12 +36,27 @@ Item {
         anchors.fill: parent
         visible: panel.lyricsMode && !panel.remote
         model: Lyrics.lines
+        // Scrolled by hand: stop following for spotifyLyricsHold, then carry on from the current line
+        property bool follow: true
+        onMovementStarted: {
+            follow = false;
+            resume.restart();
+        }
+        Timer {
+            id: resume
+            interval: MenuStyle.spotifyLyricsHold
+            onTriggered: {
+                lyricsView.follow = true;
+                lyricsView.currentIndex = Lyrics.index;
+            }
+        }
         // Set from Lyrics.onIndexChanged below: a plain binding gets overwritten when the
         // model changes, and then the view stops following the song
         Connections {
             target: Lyrics
             function onIndexChanged() {
-                lyricsView.currentIndex = Lyrics.index;
+                if (lyricsView.follow)
+                    lyricsView.currentIndex = Lyrics.index;
             }
             function onLinesChanged() {
                 lyricsView.currentIndex = Lyrics.index;
@@ -73,17 +91,18 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 x: MenuStyle.pad
                 width: parent.width - 2 * MenuStyle.pad
-                wrapMode: Text.Wrap
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 horizontalAlignment: Text.AlignHCenter
                 font.family: MenuStyle.bodyFont
                 font.pixelSize: MenuStyle.lyricsFontSize
-                color: lyricRow.current ? MenuStyle.selectText : (lyricRow.index < Lyrics.index ? MenuStyle.bevelDark : Config.colors.text)
+                color: lyricRow.current ? MenuStyle.selectText : (lyricRow.index < Lyrics.index ? Config.colors.shadow : Config.colors.text)
                 text: lyricRow.modelData.text === "" ? "♪" : lyricRow.modelData.text
             }
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: panel.seekLyric(lyricRow.modelData.t)
+                SpotifyHint { panel: lyricsRoot.panel; text: "Click to jump to this line"; tooltip: false }
             }
         }
     }
