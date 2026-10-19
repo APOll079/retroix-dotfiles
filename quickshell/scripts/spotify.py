@@ -66,6 +66,9 @@ SCOPES = " ".join([
     "playlist-read-private", "playlist-read-collaborative", "playlist-modify-public", "playlist-modify-private",
 ])
 LIKED_LIMIT = 1000        # Liked Songs: first N tracks (50 per request)
+PLAYLIST_LIMIT = 500      # a playlist's first N tracks (big ones would take dozens of requests)
+RETRY_MAX_WAIT = 5        # 429: wait and retry once when Retry-After is at most this many seconds
+RECENT_TTL = 24 * 3600    # Recent: cached name / cover per context for this long (recent-cache.json)
 LOGIN_TIMEOUT = 180       # seconds to finish the browser login
 
 
@@ -234,7 +237,14 @@ def api(method, endpoint, query=None, body=None, allow_empty=True):
         headers["Content-Type"] = "application/json"
     elif method in ("PUT", "POST"):
         headers["Content-Length"] = "0"
-    status, raw = send(method, url, data, headers)
+    status, raw, retry = send(method, url, data, headers)
+    # Rate limited: one retry after a short Retry-After, else say how long to wait
+    if status == 429:
+        if retry <= RETRY_MAX_WAIT:
+            time.sleep(max(retry, 1))
+            status, raw, retry = send(method, url, data, headers)
+        if status == 429:
+            raise ApiError("Spotify rate limit: try again in %d s" % max(retry, 1), 429)
     if status >= 400:
         text = raw.decode(errors="replace")
         try:
@@ -252,15 +262,22 @@ KEEPALIVE = False
 _LOCAL = threading.local()          # one kept-alive connection per serve() thread
 
 
+def retry_after(headers):
+    try:
+        return int(headers.get("Retry-After") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def send(method, url, data, headers):
-    """One HTTP request -> (status, body bytes)."""
+    """One HTTP request -> (status, body bytes, Retry-After seconds or 0)."""
     if not KEEPALIVE:
         req = urllib.request.Request(url, data=data, method=method, headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=15) as r:
-                return r.status, r.read()
+                return r.status, r.read(), 0
         except urllib.error.HTTPError as e:
-            return e.code, e.read()
+            return e.code, e.read(), retry_after(e.headers)
         except urllib.error.URLError as e:
             raise ApiError("No connection: %s" % e.reason, 0)
     u = urllib.parse.urlparse(url)
@@ -272,7 +289,7 @@ def send(method, url, data, headers):
                 conn = _LOCAL.conn = http.client.HTTPSConnection(u.netloc, timeout=15)
             conn.request(method, target, body=data, headers=headers)
             r = conn.getresponse()
-            return r.status, r.read()
+            return r.status, r.read(), retry_after(r.headers)
         except (http.client.HTTPException, OSError) as e:
             # The server closed the idle connection: reconnect once
             if conn is not None:
@@ -530,6 +547,11 @@ def cmd_liked(uri):
 
 def cmd_recent():
     plays = api("GET", "/me/player/recently-played", {"limit": 50}) or {}
+    # Names / covers per context: one request each, so they're kept for RECENT_TTL
+    cache = (read_json("recent-cache.json", {}) if not FIXTURE else {}) or {}
+    if not isinstance(cache, dict):
+        cache = {}
+    now = int(time.time())
     seen, out_items = set(), []
     uid = None
     for p in plays.get("items", []):
@@ -543,6 +565,13 @@ def cmd_recent():
             continue
         seen.add(uri)
         entry = {"kind": kind, "uri": uri, "name": "", "sub": "", "image": ""}
+        hit = cache.get(uri)
+        if isinstance(hit, dict) and hit.get("at", 0) > now - RECENT_TTL:
+            entry.update(hit["entry"])
+            out_items.append(entry)
+            if len(out_items) == 8:
+                break
+            continue
         try:
             if kind == "album":
                 album = t.get("album") or {}
@@ -564,8 +593,14 @@ def cmd_recent():
             continue
         if entry["name"]:
             out_items.append(entry)
+            cache[uri] = {"at": now, "entry": entry}
         if len(out_items) == 8:
             break
+    if not FIXTURE:
+        try:
+            write_private("recent-cache.json", {k: v for k, v in cache.items() if isinstance(v, dict) and v.get("at", 0) > now - RECENT_TTL})
+        except OSError:
+            pass
     return out_items
 
 
@@ -617,7 +652,7 @@ def cmd_open(uri):
             tracks.append(item)
         return {"kind": "tracks", "items": tracks}
     if kind == "playlist":
-        items = paged("/playlists/%s/items" % uri_id(uri), {"limit": 50})
+        items = paged("/playlists/%s/items" % uri_id(uri), {"limit": 50}, PLAYLIST_LIMIT)
         return {"kind": "tracks", "items": [x for x in (track_item(i.get("item") or i.get("track")) for i in items) if x]}
     if kind == "artist":
         # Since 2026, development-mode apps get "Invalid limit" above ARTIST_PAGE on this endpoint:

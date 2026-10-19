@@ -1020,6 +1020,9 @@ PanelWindow {
                 return "Loading...";
             if (root.view.kind === "artist")
                 return "Spotify didn't list this artist's albums. Play above still works.";
+            // Not in the playlist list yet: it may still be one of yours, so no "you don't own it" yet
+            if (root.view.blocked && root.view.kind === "playlist" && SpotifyState.loading.playlists)
+                return "Loading...";
             if (root.view.blocked)
                 return root.view.kind === "folder" ? "Open the Spotify app once (with this panel open) to load what's in this folder."
                     : "Spotify only lists the songs of playlists you own. Press Play to start it.";
