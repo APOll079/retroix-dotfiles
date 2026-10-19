@@ -36,7 +36,7 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    property string tab: "library"         // library | liked
+    property string tab: "library"         // library | liked | queue
     property bool lyricsOn: false          // the lyrics view (the header button, Ctrl+L)
     property string libraryKind: "all"     // Library chip: all | playlist | artist | album
     property string searchQuery: ""        // the last query sent to Spotify
@@ -55,6 +55,7 @@ PanelWindow {
     property bool menuOpen: false          // the status bar's "..." menu
     property string hint: ""               // what the control under the pointer does (the status bar shows it)
     property var tip: null                 // the tooltip: { text, item } (SpotifyHint sets it after a pause)
+    property string queueFor: ""           // the track the queue tab was last loaded for
     property bool restored: false          // the remembered view was applied (once per start)
     property var pendingRestore: null      // { index, y }: the cursor and scroll position to put back once the list is there
     property bool editClient: false        // setup page: typing a new client ID
@@ -97,6 +98,8 @@ PanelWindow {
             return root.libraryRows();
         if (root.tab === "liked")
             return SpotifyState.lists.liked || [];
+        if (root.tab === "queue")
+            return root.queueRows();
         return [];
     }
     readonly property var items: {
@@ -175,6 +178,16 @@ PanelWindow {
             const w = Hyprland.focusedWorkspace;
             if (w && w.monitor && w.monitor.name === root.screen.name)
                 root.focusLeft();
+        }
+    }
+    // The queue follows the song: when the track changes while its tab is showing, ask again
+    Connections {
+        target: SpotifyState
+        function onTrackChanged() {
+            const uri = SpotifyState.track ? SpotifyState.track.uri : "";
+            if (uri !== root.queueFor && root.visible && root.tab === "queue" && SpotifyState.loggedIn)
+                SpotifyState.loadQueue();
+            root.queueFor = uri;
         }
     }
     // Logging in (or the status check finishing) after the drawer opened: load the tab now
@@ -405,6 +418,9 @@ PanelWindow {
         }
         if (root.tab === "liked")
             return SpotifyState.loading.liked ? "Loading..." : "No liked songs";
+        if (root.tab === "queue")
+            return SpotifyState.queueError !== "" ? "Queue unavailable: " + SpotifyState.queueError
+                : SpotifyState.queueLoading ? "Loading..." : "Nothing is queued";
         const need = root.libraryKind === "all" ? ["playlists", "artists", "albums"] : [root.libraryKind + "s"];
         return need.some(k => SpotifyState.loading[k]) ? "Loading..." : "Empty";
     }
@@ -436,7 +452,7 @@ PanelWindow {
         if (alt && event.key === Qt.Key_Left) {
             root.goBack();
         } else if (ctrl && (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab)) {
-            root.showTab(root.tab === "library" ? "liked" : "library");
+            root.showTab({ library: "liked", liked: "queue", queue: "library" }[root.tab] || "library");
         } else if (ctrl && shift && (event.key === Qt.Key_Left || event.key === Qt.Key_Right)) {
             root.seekBy(event.key === Qt.Key_Left ? -MenuStyle.spotifySeekStepMs : MenuStyle.spotifySeekStepMs);
         } else if (ctrl && event.key === Qt.Key_Left) {
@@ -478,6 +494,8 @@ PanelWindow {
             ["playlists", "artists", "albums"].forEach(k => SpotifyState.loadList(k, force));
         else if (root.tab === "liked")
             SpotifyState.loadList("liked", force);
+        else if (root.tab === "queue")
+            SpotifyState.loadQueue();
     }
 
     function showTab(key) {
@@ -510,6 +528,21 @@ PanelWindow {
     function saveClient() {
         SpotifyState.setClient(clientInput.text.trim());
         root.editClient = false;
+    }
+
+    // Queue tab: "Now playing" with the song, then "Next up" with what is queued (same rows as any song list)
+    function queueRows() {
+        // Refused: no rows, so the list area says why (emptyText)
+        if (SpotifyState.queueError !== "")
+            return [];
+        const q = SpotifyState.queueData;
+        const now = q && q.now ? q.now : SpotifyState.track;
+        const rows = [];
+        if (now)
+            rows.push({ kind: "heading", uri: "heading:now", name: "Now playing", sub: "", image: "" }, now);
+        if (q && q.items.length > 0)
+            rows.push({ kind: "heading", uri: "heading:next", name: "Next up", sub: "", image: "" }, ...q.items);
+        return rows;
     }
 
     function plural(n, word) {
@@ -757,7 +790,11 @@ PanelWindow {
 
     // Middle-click / "Add to queue": plays next
     function queueSong(song) {
-        SpotifyState.queue(song.uri, ok => root.note = ok ? song.name + " plays next" : "Couldn't queue " + song.name);
+        SpotifyState.queue(song.uri, ok => {
+            root.note = ok ? "Added to queue: " + song.name : "Couldn't add to the queue: " + song.name;
+            if (ok && root.tab === "queue")
+                SpotifyState.loadQueue();
+        });
     }
 
     function toggleLyrics() {
@@ -842,7 +879,7 @@ PanelWindow {
         if (!root.restored) {
             root.restored = true;
             const p = SpotifyState.savedPlace || {};
-            if (["library", "liked"].includes(p.tab))
+            if (["library", "liked", "queue"].includes(p.tab))
                 root.tab = p.tab;
             if (["all", "playlist", "album", "artist"].includes(p.kind))
                 root.libraryKind = p.kind;

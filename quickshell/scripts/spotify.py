@@ -534,8 +534,9 @@ def track_item(t):
     album = t.get("album") or {}
     return {
         "kind": "track", "uri": t.get("uri", ""), "name": t.get("name", ""),
-        "sub": ", ".join(a.get("name", "") for a in t.get("artists", [])),
-        "image": image(album.get("images")), "duration": t.get("duration_ms", 0),
+        # (a podcast episode has no artists: its show names it)
+        "sub": ", ".join(a.get("name", "") for a in t.get("artists", [])) or (t.get("show") or {}).get("name", ""),
+        "image": image(album.get("images") or (t.get("images") if not album else None)), "duration": t.get("duration_ms", 0),
         "album_uri": album.get("uri", ""), "album_name": album.get("name", ""),
         # for the row menu's "Go to artist"
         "artist_uri": ((t.get("artists") or [{}])[0] or {}).get("uri", ""),
@@ -544,6 +545,14 @@ def track_item(t):
 
 
 # --- commands ---
+
+def cmd_queue_list():
+    """The queue: what plays now and what is next (GET /me/player/queue). Development-mode apps may be refused
+    this endpoint; the error text goes to the panel, which still shows the tab."""
+    q = api("GET", "/me/player/queue") or {}
+    return {"now": track_item(q.get("currently_playing")),
+            "items": [x for x in (track_item(t) for t in (q.get("queue") or [])) if x]}
+
 
 def cmd_state():
     p = api("GET", "/me/player", {"additional_types": "track,episode"})
@@ -919,6 +928,8 @@ def dispatch(cmd, args):
         api("POST", "/playlists/%s/items" % uri_id(args[0]), body={"uris": [args[1]]})
         return ok
     if cmd == "queue":
+        if not args:                      # no song: list the queue
+            return cmd_queue_list()
         player("POST", "/me/player/queue", {"uri": args[0]})
         return ok
     raise ApiError("unknown command " + cmd, 400)

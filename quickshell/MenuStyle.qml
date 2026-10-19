@@ -108,6 +108,7 @@ Singleton {
     readonly property int spotifyTransportSide: 32  // previous / next: squares; play is twice as wide
     readonly property int spotifyPlayHeight: 36     // play / pause: taller than the buttons beside it
     readonly property int spotifyPlayGlyph: 24      // its icon
+    readonly property int spotifyEmptyBigChars: 28  // empty / error messages up to this long use the 16 px size, longer ones 12
     readonly property int spotifyTipMs: 600        // ms the pointer rests on a control before its tooltip shows (the status bar shows it at once)
     readonly property int spotifyRestoreMs: 1500    // ms the remembered cursor / scroll position is put back while the list settles after opening
     readonly property int spotifyLyricsHold: 3000   // ms the lyrics stay where you scrolled before they follow the song again

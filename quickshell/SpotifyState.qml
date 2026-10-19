@@ -507,6 +507,26 @@ Singleton {
         root.run(["queue", uri], v => callback && callback(v !== null));
     }
 
+    // The queue tab: { now, items } from `queue` with no argument; queueError is the reason when Spotify
+    // refused (the tab still opens and says so)
+    property var queueData: null
+    property string queueError: ""
+    property bool queueLoading: false
+    function loadQueue() {
+        root.queueLoading = true;
+        root.run(["queue"], (v, err) => {
+            root.queueLoading = false;
+            if (v) {
+                root.queueData = v;
+                root.queueError = "";
+            } else {
+                root.queueData = null;
+                root.queueError = err || "no answer from Spotify";
+                root.error = "Queue unavailable: " + root.queueError;
+            }
+        });
+    }
+
     // Is this song in Liked Songs? (the row menu shows Like or Remove from Liked Songs)
     function isLiked(uri, callback) {
         root.run(["liked", uri], v => callback(v === true));

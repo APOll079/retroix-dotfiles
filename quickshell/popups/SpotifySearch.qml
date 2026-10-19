@@ -13,7 +13,7 @@ SearchBox {
     implicitHeight: MenuStyle.spotifyCompactRow
     visible: !panel.lyricsMode
     placeholder: panel.searchMode ? "Edit, then Enter to search again"
-        : (panel.view ? "Filter" : (panel.tab === "liked" ? "Filter Liked Songs" : "Filter library")) + " · Enter searches Spotify"
+        : (panel.view ? "Filter" : (panel.tab === "liked" ? "Filter Liked Songs" : panel.tab === "queue" ? "Filter the queue" : "Filter library")) + " · Enter searches Spotify"
     onEdited: panel.setCursor(0)
     onEscaped: {
         if (!panel.goBack())

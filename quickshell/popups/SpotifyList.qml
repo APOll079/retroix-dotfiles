@@ -80,7 +80,7 @@ SunkenField {
         wrapMode: Text.Wrap
         visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
         font.family: MenuStyle.bodyFont
-        font.pixelSize: MenuStyle.fontSize
+        font.pixelSize: text.length <= MenuStyle.spotifyEmptyBigChars ? MenuStyle.spotifyTitleSize : MenuStyle.fontSize
         color: MenuStyle.bevelDark
         text: panel.emptyText()
     }
@@ -214,6 +214,18 @@ SunkenField {
                 iconSource: row.isTrack && row.playing ? "" : (row.modelData.image || "")
                 glyph: row.isTrack && row.playing ? "\ue050" : panel.kindGlyph(row.modelData.kind)
                 onClicked: panel.clickItem(row.index, row.modelData, row.isTrack && listView.justMoved())
+            }
+            // A song: "Add to queue" on hover (it covers the duration; middle-click does the same)
+            BevelButton {
+                anchors.right: parent.right
+                anchors.rightMargin: MenuStyle.pad
+                anchors.verticalCenter: parent.verticalCenter
+                visible: row.isTrack && !panel.addMode && panel.tab !== "queue" && (rowHover.hovered || row.sel)
+                implicitHeight: MenuStyle.spotifyCompactRow
+                glyph: "\ue03c"
+                focusPolicy: Qt.NoFocus
+                onClicked: panel.queueSong(row.modelData)
+                SpotifyHint { panel: listArea.panel; text: "Add to queue (middle-click)" }
             }
             BevelButton {
                 id: playButton

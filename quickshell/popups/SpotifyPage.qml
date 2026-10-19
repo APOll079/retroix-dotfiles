@@ -36,7 +36,7 @@ Item {
         z: 1
         spacing: -1
         Repeater {
-            model: [{ key: "library", text: "Library" }, { key: "liked", text: "Liked" }]
+            model: [{ key: "library", text: "Library" }, { key: "liked", text: "Liked" }, { key: "queue", text: "Queue" }]
             Item {
                 id: tab
                 required property var modelData
