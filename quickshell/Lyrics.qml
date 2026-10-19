@@ -60,6 +60,13 @@ Singleton {
             root.lines = found;
     }
 
+    // Network failure: no lyrics for now, but nothing cached, so the track is tried again next time
+    function failed() {
+        delete root.cache[fetch.pendingKey];
+        if (fetch.pendingKey === root.key)
+            root.lines = [];
+    }
+
     Process {
         id: fetch
         property string pendingKey: ""
@@ -76,6 +83,12 @@ Singleton {
         }
         stdout: StdioCollector {
             onStreamFinished: {
+                // curl failed (no answer at all): onExited reports it, nothing is cached
+                if (text.trim() === "") {
+                    fetch.searchNext = false;
+                    root.failed();
+                    return;
+                }
                 let data = null;
                 try { data = JSON.parse(text); } catch (e) { data = null; }
                 if (fetch.stage === "get") {
@@ -93,9 +106,9 @@ Singleton {
         }
         onExited: code => {
             if (code !== 0) {
-                // Network failure: remember "none" for this track rather than retrying
+                // Network failure: not cached as "none", so the track is tried again later
                 fetch.searchNext = false;
-                root.done([]);
+                root.failed();
             } else if (fetch.searchNext) {
                 fetch.searchNext = false;
                 if (fetch.pendingKey === root.key && root.player) {

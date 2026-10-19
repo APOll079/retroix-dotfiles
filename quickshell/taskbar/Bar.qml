@@ -258,6 +258,10 @@ taskbar.toggleMenu(appLauncher, Config.SystemPopup.AppLauncher, null, "keep");
 function clipboard() {
 taskbar.openLauncherMode("clipboard");
 }
+// Super+Tab: open windows in the launcher (type to filter, Enter focuses)
+function windows() {
+taskbar.openLauncherMode("windows");
+}
 }
 
 // Super+Q: close an open menu (or the snipping overlay) instead of the window behind it.

@@ -107,8 +107,9 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 var state = text.trim()
-                // Wired desktop: connected means Ethernet
-                if (state === "connected") {
+                // Wired desktop: connected means Ethernet ("connected (site only)" and
+                // "(local only)" too: the cable is up, only the internet check differs)
+                if (/^connected/.test(state)) {
                     root.netIconVal = "\ue627"
                     root.netText = "ETH"
                 } else {
@@ -119,12 +120,26 @@ Item {
         }
     }
 
-    // Wired desktop: the network state barely changes, so poll it slowly
+    // NetworkManager prints a line on every state change: check again at once
+    Process {
+        id: netMonitor
+        command: ["nmcli", "monitor"]
+        running: true
+        stdout: SplitParser {
+            onRead: _ => netProc.running = true
+        }
+    }
+
+    // Slow poll as a fallback; it also restarts the monitor if it stopped (NetworkManager restart)
     Timer {
         interval: 30000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: netProc.running = true
+        onTriggered: {
+            netProc.running = true
+            if (!netMonitor.running)
+                netMonitor.running = true
+        }
     }
 }

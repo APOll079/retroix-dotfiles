@@ -16,6 +16,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("flatpak run com.github.wwmm.easyeffects --gapplication-service")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("kdeconnectd")  -- phone link (Start > Phone)
+    hl.exec_cmd("xsettingsd")  -- GTK settings for XWayland apps (~/.config/xsettingsd/xsettingsd.conf)
     hl.exec_cmd("quickshell")
 
     -- Lock right after login, only if ~/.config/hypr/lock-at-login exists (install.sh creates it

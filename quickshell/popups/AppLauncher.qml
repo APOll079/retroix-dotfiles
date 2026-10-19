@@ -230,7 +230,7 @@ PanelWindow {
                             font.family: MenuStyle.bodyFont
                             font.pixelSize: MenuStyle.fontSize
                             color: MenuStyle.bevelDark
-                            text: root.mode === "clipboard" ? "Clipboard history is empty" : "No matches"
+                            text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
                         }
 
                         ListView {
@@ -275,6 +275,8 @@ PanelWindow {
     }
 
     // Keys from the search box. Escape: games step back / clear / close; options close; else close.
+    // Escape in the other tabs clears the search text first, then closes. In Clipboard, Delete (empty
+    // search) or Shift+Delete removes the highlighted entry.
     // Up / Down (and Left / Right in the games grid) move, Ctrl+Tab cycles the tabs, plain Tab
     // steps, Enter activates (Shift+Enter: the app's options). Everything else types.
     function handleKey(event) {
@@ -292,9 +294,18 @@ PanelWindow {
                     root.closeCallback();
             } else if (root.optionsFor) {
                 root.closeOptions();
+            } else if (searchInput.text !== "") {
+                searchInput.text = "";
             } else {
                 root.closeCallback();
             }
+            break;
+        case Qt.Key_Delete:
+            // Clipboard: Delete (with an empty search box) or Shift+Delete removes the highlighted entry
+            if (root.mode === "clipboard" && (searchInput.text === "" || (event.modifiers & Qt.ShiftModifier)) && root.results[appsView.currentIndex] && root.results[appsView.currentIndex].clip)
+                root.deleteClip(root.results[appsView.currentIndex].clip);
+            else
+                handled = false;
             break;
         case Qt.Key_Down:
             games ? gamesView.move(MenuStyle.gamesGridColumns) : root.step(1);
@@ -432,7 +443,7 @@ PanelWindow {
     readonly property var sessionWords: ({ sleep: "Suspend", restart: "Reboot", poweroff: "Shutdown", "power off": "Shutdown", logout: "Log out", quit: "Log out" })
     function sessionItems(q) {
         const l = q.toLowerCase();
-        if (l.length < 2)
+        if (l.length < 3)
             return [];
         return Session.all.filter(a => a.name.toLowerCase().startsWith(l)
                 || Object.keys(root.sessionWords).some(w => w.startsWith(l) && root.sessionWords[w] === a.name))
@@ -442,7 +453,8 @@ PanelWindow {
                 glyph: a.icon,
                 key: a.name,
                 run: () => {
-                    if (a.confirm && root.confirmKey !== a.name) {
+                    // A custom action with confirm: false runs on one Enter only when its full name was typed
+                    if ((a.confirm || l !== a.name.toLowerCase()) && root.confirmKey !== a.name) {
                         root.confirmKey = a.name;
                         const i = appsView.currentIndex;
                         root.rebuild();
@@ -477,7 +489,7 @@ PanelWindow {
 
     function clipItems(q) {
         const l = q.toLowerCase();
-        return root.clipLines
+        const items = root.clipLines
             .filter(c => l === "" || c.text.toLowerCase().includes(l))
             .map(c => ({
                 // Images list as "png 1920x1141  3 MiB"; the picture shows in the preview pane
@@ -489,6 +501,34 @@ PanelWindow {
                     root.closeCallback();
                 }
             }));
+        // Clear all: last row, a second Enter (or click) confirms
+        if (l === "" && root.clipLines.length > 0)
+            items.push({
+                title: root.confirmKey === "clip-wipe" ? "Clear all? Press Enter again" : "Clear all",
+                glyph: "\ue872",
+                key: "clip-wipe",
+                run: () => {
+                    if (root.confirmKey !== "clip-wipe") {
+                        root.confirmKey = "clip-wipe";
+                        const i = appsView.currentIndex;
+                        root.rebuild();
+                        appsView.currentIndex = i;
+                        return;
+                    }
+                    root.confirmKey = "";
+                    clipEdit.command = ["sh", "-c", "cliphist wipe; cd \"$1\" 2>/dev/null && rm -f -- *", "sh", root.clipCacheDir];
+                    clipEdit.running = true;
+                }
+            });
+        return items;
+    }
+
+    // One entry out of the history (cliphist delete takes the list line on stdin), its cached preview too
+    function deleteClip(c) {
+        if (clipEdit.running)
+            return;
+        clipEdit.command = ["sh", "-c", "printf '%s\\t%s\\n' \"$1\" \"$2\" | cliphist delete; cd \"$3\" 2>/dev/null && rm -f -- \"$1\".*", "sh", c.id, c.text, root.clipCacheDir];
+        clipEdit.running = true;
     }
 
     function optionsItems(entry) {
@@ -584,9 +624,15 @@ PanelWindow {
     }
 
     // cliphist list: "<id>\t<preview>" per line, newest first
+    property bool clipMissing: false
     Process {
         id: clipProc
-        command: ["cliphist", "list"]
+        command: ["sh", "-c", "command -v cliphist >/dev/null || exit 127; cliphist list"]
+        onExited: code => {
+            root.clipMissing = code === 127;
+            if (root.clipMissing)
+                root.rebuild();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 root.clipLines = text.split("\n").filter(l => l.includes("\t")).map(l => {
@@ -601,10 +647,20 @@ PanelWindow {
         }
     }
 
+    // Delete / wipe, then list again
+    Process {
+        id: clipEdit
+        onExited: {
+            root.clipLines = [];
+            clipProc.running = true;
+        }
+    }
+
     // --- clipboard preview ---
     // The highlighted entry, decoded on demand: images into Quickshell's cache dir (kept for
-    // next time), text straight from `cliphist decode` (first 4000 bytes).
+    // next time, newest clipCacheMax files only), text straight from `cliphist decode` (first 4000 bytes).
     readonly property string clipCacheDir: Quickshell.cachePath("clipboard")
+    readonly property int clipCacheMax: 50
     readonly property var previewClip: root.mode === "clipboard" && root.results[appsView.currentIndex] ? (root.results[appsView.currentIndex].clip || null) : null
     property string previewImage: ""
     property string previewText: ""
@@ -619,7 +675,7 @@ PanelWindow {
         previewProc.clipId = c.id;
         if (c.ext) {
             previewProc.path = root.clipCacheDir + "/" + c.id + "." + c.ext;
-            previewProc.command = ["sh", "-c", "mkdir -p \"$(dirname \"$2\")\"; [ -s \"$2\" ] || cliphist decode \"$1\" > \"$2\"", "sh", c.id, previewProc.path];
+            previewProc.command = ["sh", "-c", "d=$(dirname \"$2\"); mkdir -p \"$d\"; [ -s \"$2\" ] || cliphist decode \"$1\" > \"$2\"; touch \"$2\"; cd \"$d\" 2>/dev/null && ls -1t | tail -n +$(($3 + 1)) | xargs -r rm -f --", "sh", c.id, previewProc.path, String(root.clipCacheMax)];
         } else {
             previewProc.path = "";
             previewProc.command = ["sh", "-c", "cliphist decode \"$1\" | head -c 4000", "sh", c.id];

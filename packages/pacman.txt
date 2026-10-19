@@ -12,6 +12,7 @@ xdg-desktop-portal-gtk      # file pickers
 quickshell                  # bar, menus, launcher, notifications, everything
 qt6-wayland                 # ? quickshell may pull it in already
 polkit-gnome                # autostart.lua starts its agent
+xsettingsd                  # GTK theme / icons / font for XWayland apps (xsettingsd/xsettingsd.conf; autostart.lua)
 greetd                      # login: starts Hyprland on tty1 (see install.sh autologin step)
 
 # --- tools the configs call ---

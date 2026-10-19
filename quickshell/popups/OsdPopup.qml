@@ -103,6 +103,8 @@ Scope {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        // Empty input region: clicks go through to whatever is under the OSD
+        mask: Region {}
 
         anchors {
             bottom: true

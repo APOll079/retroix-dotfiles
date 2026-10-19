@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """List installed games as one JSON array for the Games menu (popups/GamesMenu.qml).
 
-    python3 -I games.py [--steam-root DIR] [--custom FILE]
+    python3 -I games.py [--steam-root DIR] [--custom FILE] [--cache FILE]
 
 Sources:
   steam     installed games from every Steam library folder's appmanifest files
@@ -12,7 +12,8 @@ Sources:
 Each item: {id, title, source, launch: [argv], cwd, dir, art, lastPlayed}.
 Steam and shortcut games launch through `steam steam://rungameid/<id>`, so Steam (and Proton
 for shortcuts) does the work. Missing files are skipped quietly; this never raises on bad data,
-it just lists less. Steam's file formats are not documented by Valve: if art or a source stops
+it just lists less. A library folder that doesn't answer within LIB_TIMEOUT seconds (NAS off,
+stale NFS mount) is skipped and its games come from --cache (the last good scan of it). Steam's file formats are not documented by Valve: if art or a source stops
 showing up after a Steam update, this file is the place to look (see MAINTENANCE.md).
 """
 import argparse
@@ -20,6 +21,7 @@ import json
 import os
 import re
 import struct
+import subprocess
 
 HOME = os.path.expanduser("~")
 STEAM_ROOTS = [
@@ -31,6 +33,7 @@ STEAM_ROOTS = [
 TOOL_NAME = re.compile(r"^(Proton\b|Steam Linux Runtime|Steamworks Common)", re.I)
 ART_NAMES = ["library_600x900.jpg", "library_capsule.jpg", "header.jpg", "library_header.jpg"]
 ART_EXTS = [".png", ".jpg", ".jpeg", ".webp"]
+LIB_TIMEOUT = 5           # seconds a library folder gets to answer
 
 
 # --- Steam text VDF (appmanifest_*.acf, libraryfolders.vdf) ---
@@ -140,7 +143,19 @@ def steam_roots(override):
     return out
 
 
-def steam_games(root):
+def reachable(path):
+    """False when path doesn't answer within LIB_TIMEOUT. Probed in a child process: a stat hung
+    on a dead NFS server can be killed there, in this process it would hang the whole scan."""
+    try:
+        subprocess.run(["stat", "--", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=LIB_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return False
+    except OSError:
+        pass
+    return True
+
+
+def steam_games(root, cache):
     libs = {root}
     lf = parse_vdf(read_text(os.path.join(root, "steamapps", "libraryfolders.vdf")))
     for entry in (lf.get("libraryfolders") or lf).values():
@@ -148,11 +163,16 @@ def steam_games(root):
             libs.add(entry["path"])
     games = []
     for lib in sorted(libs):
+        # Other library folders may sit on a network drive: last good list when it doesn't answer
+        if lib != root and not reachable(lib):
+            games += cache.get(lib, [])
+            continue
         apps = os.path.join(lib, "steamapps")
         try:
             names = sorted(os.listdir(apps))
         except OSError:
             continue
+        found = []
         for fn in names:
             if not (fn.startswith("appmanifest_") and fn.endswith(".acf")):
                 continue
@@ -167,7 +187,7 @@ def steam_games(root):
             title = st.get("name", "")
             if not installed or not title or TOOL_NAME.search(title):
                 continue
-            games.append({
+            found.append({
                 "id": "steam:%d" % appid,
                 "title": title,
                 "source": "steam",
@@ -177,6 +197,8 @@ def steam_games(root):
                 "art": find_art_in(os.path.join(root, "appcache", "librarycache", str(appid))),
                 "lastPlayed": int(st.get("LastPlayed", "0") or 0),
             })
+        cache[lib] = found
+        games += found
     return games
 
 
@@ -255,16 +277,33 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--steam-root")
     ap.add_argument("--custom")
+    ap.add_argument("--cache")
     args = ap.parse_args()
+    cache = {}
+    if args.cache:
+        try:
+            cache = json.loads(read_text(args.cache) or "{}")
+        except ValueError:
+            cache = {}
+        if not isinstance(cache, dict):
+            cache = {}
     games, seen = [], set()
     for root in steam_roots(args.steam_root):
-        for g in steam_games(root) + shortcut_games(root):
+        for g in steam_games(root, cache) + shortcut_games(root):
             if g["id"] not in seen:
                 seen.add(g["id"])
                 games.append(g)
     games += [g for g in custom_games(args.custom) if g["id"] not in seen]
     games.sort(key=lambda g: (-g["lastPlayed"], g["title"].lower()))
-    print(json.dumps(games))
+    print(json.dumps(games), flush=True)
+    if args.cache:
+        try:
+            tmp = args.cache + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(cache, f)
+            os.replace(tmp, args.cache)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":

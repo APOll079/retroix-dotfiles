@@ -34,10 +34,13 @@ Singleton {
         adapter.hidden = hide ? rest.concat([id]) : rest;
     }
 
-    // Add (or replace, by name) an entry of the user's own: { name, command, dir, cover }
+    // Add an entry of the user's own: { name, command, dir, cover }. A name that is taken gets
+    // " (2)", " (3)", ... so an older entry is never replaced.
     function addCustom(entry) {
-        const rest = adapter.custom.filter(e => e.name !== entry.name);
-        adapter.custom = rest.concat([Object.assign({ lastPlayed: 0 }, entry)]);
+        let name = entry.name;
+        for (let n = 2; adapter.custom.some(e => e.name === name); n++)
+            name = entry.name + " (" + n + ")";
+        adapter.custom = adapter.custom.concat([Object.assign({ lastPlayed: 0 }, entry, { name: name })]);
     }
 
     function removeCustom(name) {
@@ -56,7 +59,7 @@ Singleton {
 
     Process {
         id: proc
-        command: ["python3", "-I", Quickshell.shellDir + "/scripts/games.py", "--custom", root.file]
+        command: ["python3", "-I", Quickshell.shellDir + "/scripts/games.py", "--custom", root.file, "--cache", Quickshell.statePath("games-cache.json")]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -65,10 +68,14 @@ Singleton {
                     console.warn("scripts/games.py gave no valid JSON: " + e);
                 }
                 root.loaded = true;
-                if (root.rerun) {
-                    root.rerun = false;
-                    proc.running = true;
-                }
+            }
+        }
+        // A refresh asked for during the run starts here: at stream end the process may still be
+        // running, and setting running = true then did nothing (the rerun was lost)
+        onExited: {
+            if (root.rerun) {
+                root.rerun = false;
+                proc.running = true;
             }
         }
     }
