@@ -11,6 +11,7 @@ RowLayout {
     required property var panel
     readonly property bool compact: panel.lyricsMode
     readonly property var track: SpotifyState.track
+    readonly property string titleText: header.track ? header.track.name : (panel.lastTrack ? "Last played: " + panel.lastTrack.name : "Nothing playing")
     readonly property int coverSize: compact ? MenuStyle.spotifyLyricsCover : MenuStyle.spotifyCoverSize
     Layout.fillWidth: true
     Layout.preferredHeight: coverSize
@@ -106,29 +107,39 @@ RowLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
         spacing: 0
+        // The biggest text in the drawer: 16 when the title fits on one line, else 12 bold (elided)
+        TextMetrics {
+            id: bigTitle
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.spotifyTitleSize
+            text: header.titleText
+        }
         Text {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             textFormat: Text.PlainText
             Layout.fillWidth: true
             elide: Text.ElideRight
-            font.family: MenuStyle.titleFont
-            font.pixelSize: MenuStyle.fontSize
-            font.bold: true
+            readonly property bool big: bigTitle.width <= column.width
+            font.family: big ? MenuStyle.bodyFont : MenuStyle.titleFont
+            font.pixelSize: big ? MenuStyle.spotifyTitleSize : MenuStyle.fontSize
+            font.bold: !big
             color: Config.colors.text
-            text: header.track ? header.track.name : (panel.lastTrack ? "Last played: " + panel.lastTrack.name : "Nothing playing")
+            text: header.titleText
         }
         LinkText {
             Layout.maximumWidth: column.width
             linked: header.track !== null && header.track.artist_uri !== ""
             text: header.track ? header.track.artists : (panel.lastTrack ? panel.lastTrack.sub : "Pick something below")
             onActivated: panel.openUri("artist", header.track.artist_uri, header.track.artists.split(", ")[0], "")
+            SpotifyHint { panel: header.panel; text: "Open the artist" }
         }
         LinkText {
             Layout.maximumWidth: column.width
             linked: header.track !== null && header.track.album_uri !== ""
-            text: header.track ? header.track.album : (panel.lastTrack ? "Play carries on here" : "")
+            text: header.track ? header.track.album : ""
             onActivated: panel.openUri("album", header.track.album_uri, header.track.album, header.track.image)
+            SpotifyHint { panel: header.panel; text: "Open the album" }
         }
         // Only while another device plays: where, and a button to bring it here
         Rectangle {
@@ -167,6 +178,7 @@ RowLayout {
             Layout.fillWidth: true
             spacing: MenuStyle.gap
             SpotifyReasonHost {
+                Layout.alignment: Qt.AlignVCenter
                 panel: header.panel
                 reason: SpotifyState.track === null ? "Like: nothing is playing" : ""
                 BevelButton {
@@ -200,7 +212,12 @@ RowLayout {
                 onClicked: panel.toggleLyrics()
                 SpotifyHint { panel: header.panel; text: "Lyrics (Ctrl+L)" }
             }
-            Item { Layout.fillWidth: true }
+            // right: speaker (mute), the slider filling what is left, the percent
+            Item { Layout.preferredWidth: MenuStyle.gap }
+            SpotifyVolume {
+                Layout.fillWidth: true
+                panel: header.panel
+            }
         }
     }
 

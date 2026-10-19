@@ -48,3 +48,4 @@ SpotifyListHeader 1.0 SpotifyListHeader.qml
 SpotifyRowMenu 1.0 SpotifyRowMenu.qml
 SpotifyReasonHost 1.0 SpotifyReasonHost.qml
 SpotifyTooltip 1.0 SpotifyTooltip.qml
+SpotifyVolume 1.0 SpotifyVolume.qml

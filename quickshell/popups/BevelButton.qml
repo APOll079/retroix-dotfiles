@@ -11,6 +11,7 @@ Button {
     property string glyph: ""
     // Optional colour for the glyph (e.g. the green liked heart); transparent = normal text colour
     property color glyphColor: "transparent"
+    property int glyphSize: MenuStyle.iconSize
     hoverEnabled: true
 
     implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
@@ -64,7 +65,7 @@ Button {
                 visible: root.glyph !== ""
                 color: root.glyphColor.a > 0 && root.enabled ? root.glyphColor : Config.colors.text
                 font.family: MenuStyle.iconFont
-                font.pixelSize: MenuStyle.iconSize
+                font.pixelSize: root.glyphSize
                 disabledLook: !root.enabled
                 text: root.glyph
             }

@@ -103,6 +103,10 @@ Singleton {
     readonly property int spotifyThumb: 28          // the thumbnail in a list row (fills the 34 px row)
     readonly property int spotifyListHeader: 30     // the list header: name, count, Play, Shuffle
     readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
+    readonly property int spotifyTitleSize: 16      // the now-playing title when it fits on one line (Monaco hints cleanly at 16)
+    readonly property int spotifyTransportSide: 32  // previous / next: squares; play is twice as wide
+    readonly property int spotifyPlayHeight: 36     // play / pause: taller than the buttons beside it
+    readonly property int spotifyPlayGlyph: 24      // its icon
     readonly property int spotifyTipMs: 600        // ms the pointer rests on a control before its tooltip shows (the status bar shows it at once)
     readonly property int spotifyRestoreMs: 1500    // ms the remembered cursor / scroll position is put back while the list settles after opening
     readonly property int spotifyLyricsHold: 3000   // ms the lyrics stay where you scrolled before they follow the song again
