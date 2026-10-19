@@ -100,6 +100,9 @@ Singleton {
     readonly property int spotifyWheelStep: 5       // the mouse wheel on the volume row: percent per notch
     readonly property int spotifySeekStepMs: 5000   // the mouse wheel on the seek bar: ms per notch
     readonly property int spotifyCrossfade: 150     // ms: a new cover fades in over the old one (0 = instant)
+    readonly property int spotifyThumb: 28          // the thumbnail in a list row (fills the 34 px row)
+    readonly property int spotifyListHeader: 30     // the list header: name, count, Play, Shuffle
+    readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
     readonly property int spotifyPollMs: 2000
     readonly property int spotifyTickMs: 1000
     readonly property int spotifyVolumeStep: 300    // ms between Spotify volume calls while dragging (another device)

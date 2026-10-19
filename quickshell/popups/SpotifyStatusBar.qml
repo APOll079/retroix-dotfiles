@@ -5,13 +5,12 @@ import ".."
 
 // The status bar (18 px): left, what is going on: errors (until the next good poll), short messages (a few
 // seconds), a confirm, a hover hint, else "Playing on This PC" (the state on an accent bar while another
-// device plays); right, the "..." menu. A right-clicked song's actions (queue, add, like) take the bar over
-// until the row menu replaces them.
+// device plays); right, the "..." menu.
 Item {
     id: bar
     required property var panel
     Layout.fillWidth: true
-    implicitHeight: panel.songMenu !== null ? MenuStyle.spotifyCompactRow + 2 : MenuStyle.spotifyStatusHeight
+    implicitHeight: MenuStyle.spotifyStatusHeight
 
     readonly property bool confirming: panel.confirmLogout || panel.confirmClient
     readonly property string message: panel.confirmLogout ? "Log out of Spotify here?"
@@ -26,7 +25,6 @@ Item {
 
     RowLayout {
         anchors.fill: parent
-        visible: panel.songMenu === null
         spacing: MenuStyle.gap
         Rectangle {
             Layout.fillWidth: true
@@ -81,61 +79,6 @@ Item {
             focusPolicy: Qt.NoFocus
             onClicked: panel.menuOpen = !panel.menuOpen
             SpotifyHint { panel: bar.panel; text: "More: log out, client ID, reload" }
-        }
-    }
-
-    // A right-clicked song's actions
-    RowLayout {
-        anchors.fill: parent
-        visible: panel.songMenu !== null
-        spacing: MenuStyle.gap
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: Config.colors.text
-            text: panel.songMenu ? panel.songMenu.name : ""
-        }
-        BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
-            text: "Queue"
-            glyph: "\ue03c"
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                const s = panel.songMenu;
-                panel.songMenu = null;
-                SpotifyState.queue(s.uri, ok => panel.note = ok ? s.name + " plays next" : "Couldn't queue " + s.name);
-            }
-        }
-        BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
-            glyph: "\ue03b"
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                const s = panel.songMenu;
-                panel.toggleAddMode({ uri: s.uri, name: s.name });
-            }
-        }
-        BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
-            glyph: "\ue87d"
-            glyphColor: MenuStyle.likedColor
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                const s = panel.songMenu;
-                panel.songMenu = null;
-                SpotifyState.likeSong(s.uri, ok => panel.note = ok ? "Liked " + s.name : "Couldn't like " + s.name);
-            }
-        }
-        BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
-            glyph: "\ue5cd"
-            focusPolicy: Qt.NoFocus
-            onClicked: panel.songMenu = null
         }
     }
 }

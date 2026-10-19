@@ -501,6 +501,31 @@ Singleton {
         root.run(["queue", uri], v => callback && callback(v !== null));
     }
 
+    // Is this song in Liked Songs? (the row menu shows Like or Remove from Liked Songs)
+    function isLiked(uri, callback) {
+        root.run(["liked", uri], v => callback(v === true));
+    }
+
+    // Take a song out of Liked Songs
+    function unlikeSong(uri, callback) {
+        root.run(["unlike", uri], v => {
+            if (v !== null && root.track && root.track.uri === uri)
+                root.liked = false;
+            const l = Object.assign({}, root.lists);
+            delete l.liked;
+            root.lists = l;
+            if (callback)
+                callback(v !== null);
+        });
+    }
+
+    // Shuffle on, then play this album / playlist / artist (the list header's Shuffle)
+    function playShuffled(context) {
+        if (root.player)
+            root.player = Object.assign({}, root.player, { shuffle: true });
+        root.run(["shuffle", "on"], () => root.play(context));
+    }
+
     // Like any song (the heart button likes the one playing)
     function likeSong(uri, callback) {
         root.run(["like", uri], v => {

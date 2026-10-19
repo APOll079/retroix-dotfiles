@@ -48,7 +48,7 @@ PanelWindow {
     property var stack: []                 // opened items: { title, uri, kind, items, loading, blocked, fromIndex }
     property bool addMode: false           // picking a playlist for "add to playlist"
     property var addTarget: null           // the song being added: { uri, name }
-    property var songMenu: null            // right-clicked song: its action row shows in the status line
+    property var rowMenu: null             // the song options menu: { song, top, bottom } (row edges in drawer coordinates)
     property string note: ""               // short feedback line
     property bool confirmLogout: false
     property bool confirmClient: false     // log out and change the client ID (asked on the status bar)
@@ -106,6 +106,23 @@ PanelWindow {
             rows.unshift({ kind: "searchrow", uri: "searchrow", query: text, name: "Search Spotify for '" + text + "'", sub: "", image: "" });
         return rows;
     }
+    // What the list header shows: an opened album / playlist / Liked Songs / the Liked tab (name, n songs,
+    // Play, Shuffle) or an artist's page (name, discography summary, Play); null elsewhere
+    readonly property var listHead: {
+        if (root.addMode || root.searchMode || root.lyricsMode)
+            return null;
+        const songs = root.baseItems.filter(i => i.kind === "track").length;
+        if (!root.view)
+            return root.tab === "liked" ? { title: "Liked Songs", uri: "liked", songs: true, count: songs } : null;
+        const v = root.view;
+        if (v.kind === "artist")
+            return { title: v.title, uri: v.uri, songs: false, summary: v.summary || "" };
+        if (v.kind === "liked" || v.kind === "album" || v.kind === "playlist")
+            return { title: v.title, uri: v.uri, songs: true, count: songs };
+        return null;
+    }
+    // The list is empty because it is still on its way: the list shows placeholder rows
+    readonly property bool loadingList: root.items.length === 0 && !root.lyricsMode && ["Loading...", "Searching..."].includes(root.emptyText())
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
     readonly property bool useGrid: SpotifyState.grid && !root.addMode && !root.songList && !root.searchMode
@@ -177,7 +194,7 @@ PanelWindow {
         if (root.note !== "")
             noteTimer.restart();
     }
-    onStackChanged: root.songMenu = null
+    onStackChanged: root.rowMenu = null
 
     // Keys where there's no filter box to type in (the lyrics, the login page): Escape, Space, Ctrl+L, "/" and Ctrl+F
     Item {
@@ -261,6 +278,7 @@ PanelWindow {
         }
 
         SpotifyMoreMenu { panel: root }
+        SpotifyRowMenu { id: rowMenuView; panel: root }
     }
 
 
@@ -408,7 +426,7 @@ PanelWindow {
     function toggleAddMode(target) {
         if (!root.addMode)
             root.addTarget = target || (SpotifyState.track ? { uri: SpotifyState.track.uri, name: SpotifyState.track.name } : null);
-        root.songMenu = null;
+        root.rowMenu = null;
         root.addMode = !root.addMode;
         // (leaving the picker on the Search tab brings the query back)
         filterInput.text = !root.addMode && root.searchMode ? root.searchQuery : "";
@@ -421,6 +439,40 @@ PanelWindow {
     function saveClient() {
         SpotifyState.setClient(clientInput.text.trim());
         root.editClient = false;
+    }
+
+    function plural(n, word) {
+        return n + " " + word + (n === 1 ? "" : "s");
+    }
+
+    // "Album · Artist" -> "Artist" (the tile shows the type by its cover and chip, so the caption is the detail)
+    function stripKind(sub) {
+        return (sub || "").replace(/^(Playlist|Album|Artist|Single|EP)\s*·\s*/, "");
+    }
+
+    // The first four playlist covers inside a folder (nested folders included), for its mosaic
+    function folderCovers(nodes) {
+        const known = SpotifyState.lists.playlists || [];
+        const out = [];
+        const walk = list => {
+            for (const x of list) {
+                if (out.length >= 4)
+                    return;
+                if (x.type === "folder") {
+                    walk(x.items);
+                } else {
+                    const k = known.find(p => p.uri === x.uri);
+                    if (k && k.image)
+                        out.push(k.image);
+                }
+            }
+        };
+        walk(nodes || []);
+        return out;
+    }
+
+    function countPlaylists(nodes) {
+        return (nodes || []).reduce((c, x) => c + (x.type === "folder" ? root.countPlaylists(x.items) : 1), 0);
     }
 
     // Library tab: Spotify's Your Library (pins first, the app's order) from the extension, else
@@ -436,14 +488,23 @@ PanelWindow {
             rows = SpotifyState.libraryItems.map(it => {
                 const kind = it.type === "collection" ? "liked" : it.type;
                 const row = { kind: kind, uri: kind === "liked" ? "liked" : it.uri, name: it.name, sub: it.sub, image: it.image, pinned: it.pinned, openable: true };
+                row.sub = root.stripKind(it.sub);
                 if (kind === "playlist") {
                     const k = known.find(p => p.uri === it.uri);
                     row.openable = k ? k.openable : false;
+                    if (k)
+                        row.sub = k.sub;
                     if (!row.image && k)
                         row.image = k.image;
-                }
-                if (kind === "folder")
+                } else if (kind === "artist") {
+                    row.sub = "Artist";
+                } else if (kind === "folder") {
                     row.children = root.findFolder(SpotifyState.folderTree || [], it.uri);
+                    if (row.children) {
+                        row.sub = root.plural(root.countPlaylists(row.children), "playlist");
+                        row.mosaic = root.folderCovers(row.children);
+                    }
+                }
                 return row;
             });
         } else {
@@ -473,10 +534,9 @@ PanelWindow {
     function folderRows(nodes, top) {
         const known = SpotifyState.lists.playlists || [];
         const rows = [];
-        const count = n => n.items.reduce((c, x) => c + (x.type === "folder" ? count(x) : 1), 0);
         for (const n of nodes) {
             if (n.type === "folder")
-                rows.push({ kind: "folder", uri: n.uri, name: n.name, sub: "Folder · " + count(n), image: "", openable: true, children: n.items, pinned: root.pinned[n.uri] === true });
+                rows.push({ kind: "folder", uri: n.uri, name: n.name, sub: root.plural(root.countPlaylists(n.items), "playlist"), image: "", mosaic: root.folderCovers(n.items), openable: true, children: n.items, pinned: root.pinned[n.uri] === true });
             else
                 rows.push(known.find(p => p.uri === n.uri) || { kind: "playlist", uri: n.uri, name: n.name, sub: "", image: "", openable: false });
         }
@@ -597,6 +657,19 @@ PanelWindow {
         root.runSearch();
     }
 
+    // The song options menu at its row (right-click, Menu key)
+    function openSongMenu(song, rowItem) {
+        if (!song || !rowItem)
+            return;
+        const p = rowItem.mapToItem(rowMenuView, 0, 0);
+        root.rowMenu = { song: song, top: p.y, bottom: p.y + rowItem.height };
+    }
+
+    // Middle-click / "Add to queue": plays next
+    function queueSong(song) {
+        SpotifyState.queue(song.uri, ok => root.note = ok ? song.name + " plays next" : "Couldn't queue " + song.name);
+    }
+
     function toggleLyrics() {
         root.lyricsOn = !root.lyricsOn;
     }
@@ -641,8 +714,8 @@ PanelWindow {
 
     // Back one step (to the row you opened it from); false when there was nothing to go back from
     function goBack() {
-        if (root.songMenu) {
-            root.songMenu = null;
+        if (root.rowMenu) {
+            root.rowMenu = null;
             return true;
         }
         if (root.addMode) {

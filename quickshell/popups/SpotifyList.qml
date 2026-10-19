@@ -30,6 +30,45 @@ SunkenField {
         panel: listArea.panel
     }
 
+    // Rows and tiles that are still on their way: dim placeholder bars instead of "Loading..."
+    Column {
+        anchors.fill: parent
+        anchors.topMargin: panel.listHead !== null ? MenuStyle.spotifyListHeader + MenuStyle.spotifyColumnGap : 0
+        visible: !panel.lyricsMode && panel.loadingList
+        Repeater {
+            model: Math.ceil(listArea.height / MenuStyle.spotifyRowHeight)
+            Item {
+                required property int index
+                width: listArea.width - 2 * MenuStyle.spotifyInset
+                height: MenuStyle.spotifyRowHeight
+                Rectangle {
+                    x: MenuStyle.pad
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: MenuStyle.spotifyThumb
+                    height: MenuStyle.spotifyThumb
+                    color: Config.colors.shadow
+                    opacity: 0.35
+                }
+                Rectangle {
+                    x: MenuStyle.pad + MenuStyle.spotifyThumb + MenuStyle.pad
+                    y: parent.height / 2 - MenuStyle.rowHeight / 2 + 2
+                    width: (parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.5 + 0.12 * ((index * 5) % 4))
+                    height: MenuStyle.gap + 2
+                    color: Config.colors.shadow
+                    opacity: 0.35
+                }
+                Rectangle {
+                    x: MenuStyle.pad + MenuStyle.spotifyThumb + MenuStyle.pad
+                    y: parent.height / 2 + MenuStyle.gap
+                    width: (parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.3 + 0.1 * ((index * 3) % 3))
+                    height: MenuStyle.gap + 2
+                    color: Config.colors.shadow
+                    opacity: 0.2
+                }
+            }
+        }
+    }
+
     Text {
         renderType: Text.NativeRendering
         font.hintingPreference: Font.PreferFullHinting
@@ -37,25 +76,43 @@ SunkenField {
         width: parent.width - 2 * MenuStyle.pad
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.Wrap
-        visible: !panel.lyricsMode && panel.items.length === 0
+        visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
         font.family: MenuStyle.bodyFont
         font.pixelSize: MenuStyle.fontSize
         color: MenuStyle.bevelDark
         text: panel.emptyText()
     }
 
+    // The list header (name, count, Play, Shuffle) for song lists and an artist's page
+    Component {
+        id: headComp
+        SpotifyListHeader {
+            panel: listArea.panel
+            width: parent ? parent.width : 0
+        }
+    }
+
     // Rows: the accent bar spans the whole row; the play button sits inside it, on hover
-    // or when selected (songs play on click, so they have none)
+    // or when selected. A song plays on click (no play button); right-click / the Menu key opens its
+    // options, middle-click queues it.
     ListView {
         id: listView
         anchors.fill: parent
         visible: !panel.lyricsMode && !panel.useGrid
         model: panel.items
+        header: panel.listHead !== null ? headComp : null
         currentIndex: 0
         // Results of an older query (a new one is typed or on its way) look old
         opacity: panel.searchMode && panel.searchResults.length > 0 && (panel.searchLoading || panel.filterInput.text.trim() !== panel.searchQuery) ? 0.5 : 1
         clip: true
         boundsBehavior: Flickable.StopAtBounds
+        // A click right after a scroll or flick only stops it (songs and tiles ignore it)
+        property real lastMoved: 0
+        readonly property bool justMoved: moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard
+        onMovingChanged: {
+            if (!moving)
+                lastMoved = Date.now();
+        }
         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
         delegate: Item {
             id: row
@@ -98,14 +155,20 @@ SunkenField {
             HoverHandler {
                 id: rowHover
             }
-            // Right-click a song: its actions (queue, add to playlist, like) in the status line
+            // Right-click a song: its options menu at the row
             TapHandler {
                 acceptedButtons: Qt.RightButton
                 enabled: row.isTrack && !panel.addMode
                 onTapped: {
                     panel.setCursor(row.index);
-                    panel.songMenu = row.modelData;
+                    panel.openSongMenu(row.modelData, row);
                 }
+            }
+            // Middle-click a song: it plays next
+            TapHandler {
+                acceptedButtons: Qt.MiddleButton
+                enabled: row.isTrack && !panel.addMode
+                onTapped: panel.queueSong(row.modelData)
             }
             MenuRow {
                 anchors.fill: parent
@@ -114,12 +177,20 @@ SunkenField {
                 rightPadding: row.showPlay ? MenuStyle.pad + playButton.width + MenuStyle.gap : MenuStyle.pad
                 selected: row.sel
                 text: row.modelData.name
-                marked: row.playing || row.modelData.pinned === true
+                // Songs: a thumbnail (a speaker while playing), the title in accent while playing, the
+                // length as a dim right-hand column. Containers: the pin / speaker sign.
+                iconBox: row.isTrack ? MenuStyle.spotifyThumb : MenuStyle.iconSize
+                accentTitle: row.isTrack && row.playing
+                trailing: row.isTrack ? panel.clock(row.modelData.duration) : ""
+                trailingDim: true
+                marked: !row.isTrack && (row.playing || row.modelData.pinned === true)
                 markGlyph: row.playing ? "\ue050" : "\uf10d"
-                subtext: row.isTrack ? row.modelData.sub + "  " + panel.clock(row.modelData.duration) : row.modelData.sub
-                iconSource: row.modelData.image || ""
-                glyph: panel.kindGlyph(row.modelData.kind)
+                subtext: row.modelData.sub
+                iconSource: row.isTrack && row.playing ? "" : (row.modelData.image || "")
+                glyph: row.isTrack && row.playing ? "\ue050" : panel.kindGlyph(row.modelData.kind)
                 onClicked: {
+                    if (row.isTrack && listView.justMoved)
+                        return;
                     panel.setCursor(row.index);
                     panel.activate(row.modelData);
                 }
@@ -146,11 +217,18 @@ SunkenField {
         anchors.fill: parent
         visible: !panel.lyricsMode && panel.useGrid
         model: panel.items
+        header: panel.listHead !== null ? headComp : null
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
         cellHeight: gridProbe.implicitHeight
         currentIndex: listView.currentIndex
+        property real lastMoved: 0
+        readonly property bool justMoved: moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard
+        onMovingChanged: {
+            if (!moving)
+                lastMoved = Date.now();
+        }
         onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
         CoverTile {
             id: gridProbe
@@ -163,9 +241,12 @@ SunkenField {
             width: grid.cellWidth
             height: grid.cellHeight
             entry: modelData
+            hideSub: modelData.kind === "artist" && panel.libraryKind === "artist" && panel.view === null
             selected: index === listView.currentIndex
             canPlay: !panel.addMode && modelData.kind !== "folder" && modelData.kind !== "searchrow"
             onActivated: {
+                if (grid.justMoved)
+                    return;
                 panel.setCursor(index);
                 panel.activate(modelData);
             }

@@ -536,7 +536,10 @@ def track_item(t):
         "kind": "track", "uri": t.get("uri", ""), "name": t.get("name", ""),
         "sub": ", ".join(a.get("name", "") for a in t.get("artists", [])),
         "image": image(album.get("images")), "duration": t.get("duration_ms", 0),
-        "album_uri": album.get("uri", ""),
+        "album_uri": album.get("uri", ""), "album_name": album.get("name", ""),
+        # for the row menu's "Go to artist"
+        "artist_uri": ((t.get("artists") or [{}])[0] or {}).get("uri", ""),
+        "artist_name": ((t.get("artists") or [{}])[0] or {}).get("name", ""),
     }
 
 
@@ -639,10 +642,12 @@ def cmd_playlists():
         if not p:
             continue
         own = (p.get("owner") or {}).get("id") == uid or bool(p.get("collaborative"))
-        count = (p.get("items") or p.get("tracks") or {}).get("total", 0)
+        total = (p.get("items") or p.get("tracks") or {}).get("total")
+        owner = (p.get("owner") or {}).get("display_name") or "someone else"
+        # your own: "n songs" (the owner when Spotify gave no count); someone else's: "by X" (play-only)
+        sub = ("%d song%s" % (total, "" if total == 1 else "s")) if own and total is not None else "by " + owner
         res.append({"kind": "playlist", "uri": p.get("uri", ""), "name": p.get("name", ""),
-                    "sub": ("%d songs" % count) if own else "by " + ((p.get("owner") or {}).get("display_name") or "someone else"),
-                    "image": image(p.get("images")), "openable": own})
+                    "sub": sub, "image": image(p.get("images")), "openable": own})
     return res
 
 

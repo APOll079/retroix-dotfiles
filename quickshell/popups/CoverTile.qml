@@ -13,6 +13,8 @@ Item {
     property var entry: ({})
     property bool selected: false
     property bool showSub: true
+    property bool hideSub: false    // keep the caption's second line empty (artists on the Artists chip)
+    readonly property bool hasMosaic: root.entry.mosaic !== undefined && root.entry.mosaic.length > 0
     property bool canPlay: entry.kind !== "folder"
     signal activated()
     signal playRequested()
@@ -44,6 +46,12 @@ Item {
         width: root.coverSize
         height: width
         padding: MenuStyle.spotifyInset
+        // No art: a dim tile (the shadow colour) with the icon, never a bright square
+        Rectangle {
+            anchors.fill: parent
+            visible: img.status !== Image.Ready
+            color: Config.colors.shadow
+        }
         Image {
             id: img
             anchors.fill: parent
@@ -51,14 +59,31 @@ Item {
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
         }
+        // A folder: its first four playlist covers as a 2 x 2 mosaic
+        Grid {
+            anchors.fill: parent
+            visible: root.hasMosaic
+            columns: 2
+            Repeater {
+                model: root.hasMosaic ? root.entry.mosaic.slice(0, 4) : []
+                Image {
+                    required property string modelData
+                    width: parent.width / 2
+                    height: parent.height / 2
+                    source: modelData
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
+            }
+        }
         Text {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             anchors.centerIn: parent
-            visible: img.status !== Image.Ready
+            visible: img.status !== Image.Ready && !root.hasMosaic
             font.family: MenuStyle.iconFont
             font.pixelSize: MenuStyle.spotifyTileIcon
-            color: MenuStyle.bevelDark
+            color: Config.colors.text
             text: {
                 switch (root.entry.kind) {
                 case "folder": return "\ue2c7";
@@ -93,6 +118,27 @@ Item {
         }
     }
 
+    // Pinned in Spotify: a small badge in the cover's top-right corner
+    Rectangle {
+        anchors.right: cover.right
+        anchors.top: cover.top
+        anchors.margins: MenuStyle.gap
+        visible: root.entry.pinned === true
+        width: MenuStyle.iconSize + MenuStyle.gap
+        height: width
+        color: MenuStyle.selectBar
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            anchors.centerIn: parent
+            font.family: MenuStyle.iconFont
+            font.pixelSize: MenuStyle.iconSize
+            color: MenuStyle.selectText
+            text: "\uf10d"
+        }
+    }
+
+    // The caption: the name, then one line by type (playlist: n songs, album: the artist, folder: n playlists)
     Column {
         x: MenuStyle.gap
         anchors.top: cover.bottom
@@ -111,34 +157,19 @@ Item {
             color: root.lit ? MenuStyle.selectText : Config.colors.text
             text: root.entry.name || ""
         }
-        // Pin (pinned in Spotify) + the type line
-        Row {
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            textFormat: Text.PlainText
             visible: root.showSub
             width: parent.width
             height: MenuStyle.rowHeight
-            spacing: MenuStyle.spotifyInset
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                anchors.verticalCenter: parent.verticalCenter
-                visible: root.entry.pinned === true
-                font.family: MenuStyle.iconFont
-                font.pixelSize: MenuStyle.iconSize
-                color: root.lit ? MenuStyle.selectText : Config.colors.text
-                text: "\uf10d"
-            }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                textFormat: Text.PlainText
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - (root.entry.pinned === true ? MenuStyle.iconSize + MenuStyle.spotifyInset : 0)
-                elide: Text.ElideRight
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: root.lit ? MenuStyle.selectText : MenuStyle.bevelDark
-                text: root.entry.sub || ""
-            }
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: root.lit ? MenuStyle.selectText : MenuStyle.bevelDark
+            text: root.hideSub ? "" : (root.entry.sub || "")
         }
     }
 

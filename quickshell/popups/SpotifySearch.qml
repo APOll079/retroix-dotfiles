@@ -45,8 +45,8 @@ SearchBox {
                 panel.activate(panel.items[cur], true);
         } else if (event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) {
             const it = panel.items[cur];
-            if (it && it.kind === "track")
-                panel.songMenu = it;
+            if (it && it.kind === "track" && !panel.addMode)
+                panel.openSongMenu(it, panel.listView.itemAtIndex(cur));
         } else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier)) {
             panel.toggleLyrics();
         } else if (event.key === Qt.Key_Space && empty) {

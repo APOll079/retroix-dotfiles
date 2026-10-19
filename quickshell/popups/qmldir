@@ -44,3 +44,5 @@ SpotifyPage 1.0 SpotifyPage.qml
 SpotifySearch 1.0 SpotifySearch.qml
 SpotifyRecent 1.0 SpotifyRecent.qml
 SpotifyMoreMenu 1.0 SpotifyMoreMenu.qml
+SpotifyListHeader 1.0 SpotifyListHeader.qml
+SpotifyRowMenu 1.0 SpotifyRowMenu.qml

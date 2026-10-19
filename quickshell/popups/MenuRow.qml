@@ -16,6 +16,9 @@ Button {
     property bool marked: false
     property string markGlyph: "\ue5ca"     // the sign shown when marked (default: a check)
     property bool selected: false
+    property int iconBox: MenuStyle.iconSize   // the icon / thumbnail square (the Spotify lists use a bigger one)
+    property bool accentTitle: false           // the title in the accent colour (the playing song)
+    property bool trailingDim: false           // the trailing text dim (a duration column)
     readonly property bool lit: hover.hovered || hovered || visualFocus || down || selected
 
     implicitHeight: subtext !== "" ? MenuStyle.rowHeight * 3 / 2 : MenuStyle.rowHeight
@@ -43,8 +46,8 @@ Button {
     contentItem: RowLayout {
         spacing: MenuStyle.pad
         Item {
-            Layout.preferredWidth: MenuStyle.iconSize
-            Layout.preferredHeight: MenuStyle.iconSize
+            Layout.preferredWidth: root.iconBox
+            Layout.preferredHeight: root.iconBox
             visible: root.glyph !== "" || root.iconSource != ""
             Image {
                 id: appIcon
@@ -52,7 +55,7 @@ Button {
                 asynchronous: true
                 smooth: false
                 source: root.iconSource
-                sourceSize: Qt.size(MenuStyle.iconSize * 2, MenuStyle.iconSize * 2)
+                sourceSize: Qt.size(root.iconBox * 2, root.iconBox * 2)
                 visible: status === Image.Ready
             }
             Text {
@@ -77,7 +80,7 @@ Button {
                 font.family: MenuStyle.bodyFont
                 font.pixelSize: MenuStyle.fontSize
                 disabledLook: !root.enabled
-                color: root.lit ? MenuStyle.selectText : Config.colors.text
+                color: root.lit ? MenuStyle.selectText : (root.accentTitle ? MenuStyle.barOnGlyph : Config.colors.text)
                 text: root.text
             }
             Text {
@@ -100,7 +103,7 @@ Button {
             visible: root.trailing !== ""
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
-            color: !root.enabled ? Config.colors.shadow : (root.lit ? MenuStyle.selectText : Config.colors.text)
+            color: !root.enabled ? Config.colors.shadow : (root.lit ? MenuStyle.selectText : (root.trailingDim ? Config.colors.shadow : Config.colors.text))
             text: root.trailing
         }
         Text {

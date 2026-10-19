@@ -4,7 +4,7 @@ import QtQuick.Controls.Basic
 import ".."
 
 // The bar under the tabs: the library chips (All / Playlists / Albums / Artists) with the grid / list toggle,
-// or, inside something, a Back row (an opened item with Play, the Spotify search results, the playlist
+// or, inside something, a Back row (an opened item, the Spotify search results, the playlist
 // picker). Search results add their own chips (+ Songs). Chips size to their text.
 ColumnLayout {
     id: nav
@@ -46,16 +46,9 @@ ColumnLayout {
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
             color: Config.colors.text
+            // (an opened album / playlist / artist names itself in the list header)
             text: panel.addMode ? "Add " + (panel.addTarget ? panel.addTarget.name : "") + " to:"
-                : (panel.searchMode ? "Search: " + panel.searchQuery : (panel.view ? panel.view.title : ""))
-        }
-        BevelButton {
-            visible: !panel.addMode && panel.view !== null && panel.view.kind !== "folder" && panel.view.kind !== "artist" && panel.view.kind !== "search"
-            implicitHeight: MenuStyle.spotifyCompactRow
-            text: "Play"
-            glyph: "\ue037"
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.play(panel.view.uri)
+                : (panel.searchMode ? "Search: " + panel.searchQuery : (panel.view && panel.listHead === null ? panel.view.title : ""))
         }
         BevelButton {
             visible: panel.showViewToggle && panel.view !== null
@@ -113,33 +106,6 @@ ColumnLayout {
                 panel.focusKeys();
             }
             SpotifyHint { panel: nav.panel; text: SpotifyState.grid ? "Show as rows" : "Show as covers" }
-        }
-    }
-
-    // An artist: one big Play (their songs in Spotify), then the discography summary
-    ColumnLayout {
-        Layout.fillWidth: true
-        visible: !panel.addMode && panel.view !== null && panel.view.kind === "artist"
-        spacing: MenuStyle.gap
-        BevelButton {
-            Layout.fillWidth: true
-            implicitHeight: MenuStyle.spotifyCompactRow
-            text: panel.view ? "Play " + panel.view.title : ""
-            glyph: "\ue037"
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.play(panel.view.uri)
-        }
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            visible: text !== ""
-            elide: Text.ElideRight
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: MenuStyle.bevelDark
-            text: panel.view && panel.view.summary ? panel.view.summary : ""
         }
     }
 }
