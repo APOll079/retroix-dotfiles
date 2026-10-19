@@ -624,6 +624,16 @@ PanelWindow {
         SpotifyState.play(item.kind === "liked" ? "liked" : item.uri);
     }
 
+    // THE click on a row or tile (list, grid and Recent all come here): a song plays, a container opens, and
+    // the hover play button plays it (playItem). `moved`: the list was just scrolled, so the click only stopped it.
+    function clickItem(index, item, moved) {
+        if (!item || moved)
+            return;
+        if (index >= 0)
+            root.setCursor(index);
+        root.activate(item, false);
+    }
+
     // Click / Enter on a row or tile. fromKeys: Enter (the double-click guard only applies to clicks)
     function activate(item, fromKeys) {
         if (!item || item.kind === "heading")
@@ -675,17 +685,26 @@ PanelWindow {
             root.push({ title: item.name, uri: item.uri, kind: item.kind, items: [], loading: false, blocked: true });
             return;
         }
+        // Anything else is not something we can open: say so instead of doing nothing
+        if (!["artist", "album", "playlist"].includes(item.kind)) {
+            root.note = "Can't open " + (item.name || "this") + " (" + (item.kind || "unknown type") + ")";
+            return;
+        }
         root.wantPlaying = true;
         root.push({ title: item.name, uri: item.uri, kind: item.kind, items: [], loading: true });
         const depth = root.stack.length;
         const uri = item.uri;
-        SpotifyState.open(uri, v => {
+        const name = item.name;
+        SpotifyState.open(uri, (v, err) => {
             // Only fill the view it was opened for (you may have gone back and opened something else)
             if (root.stack.length !== depth || root.stack[depth - 1].uri !== uri)
                 return;
             const s = root.stack.slice();
             s[depth - 1] = Object.assign({}, s[depth - 1], { items: v ? v.items : [], summary: v && v.summary ? v.summary : "", loading: false });
             root.stack = s;
+            // The view stays open with what exists (the name, Play); the reason is on the status bar
+            if (!v)
+                root.note = "Couldn't load " + name + (err ? ": " + err : "");
         });
     }
 

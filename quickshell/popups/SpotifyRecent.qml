@@ -99,7 +99,7 @@ ColumnLayout {
                     }
                 }
                 TapHandler {
-                    onTapped: recent.panel.activate(tile.modelData)
+                    onTapped: recent.panel.clickItem(-1, tile.modelData, false)
                 }
                 BevelButton {
                     visible: tile.lit

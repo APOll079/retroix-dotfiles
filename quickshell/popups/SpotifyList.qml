@@ -109,7 +109,11 @@ SunkenField {
         boundsBehavior: Flickable.StopAtBounds
         // A click right after a scroll or flick only stops it (songs and tiles ignore it)
         property real lastMoved: 0
-        readonly property bool justMoved: moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard
+        // (a function, not a binding: a binding on Date.now() is only re-read when `moving` changes, so it
+        // stayed "just moved" for good after the first scroll and every click was swallowed)
+        function justMoved() {
+            return moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard;
+        }
         onMovingChanged: {
             if (!moving)
                 lastMoved = Date.now();
@@ -208,12 +212,7 @@ SunkenField {
                 subtext: row.modelData.sub
                 iconSource: row.isTrack && row.playing ? "" : (row.modelData.image || "")
                 glyph: row.isTrack && row.playing ? "\ue050" : panel.kindGlyph(row.modelData.kind)
-                onClicked: {
-                    if (row.isTrack && listView.justMoved)
-                        return;
-                    panel.setCursor(row.index);
-                    panel.activate(row.modelData);
-                }
+                onClicked: panel.clickItem(row.index, row.modelData, row.isTrack && listView.justMoved())
             }
             BevelButton {
                 id: playButton
@@ -244,7 +243,9 @@ SunkenField {
         cellHeight: gridProbe.implicitHeight
         currentIndex: listView.currentIndex
         property real lastMoved: 0
-        readonly property bool justMoved: moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard
+        function justMoved() {
+            return moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard;
+        }
         onMovingChanged: {
             if (!moving)
                 lastMoved = Date.now();
@@ -264,12 +265,7 @@ SunkenField {
             hideSub: modelData.kind === "artist" && panel.libraryKind === "artist" && panel.view === null
             selected: index === listView.currentIndex
             canPlay: !panel.addMode && modelData.kind !== "folder" && modelData.kind !== "searchrow"
-            onActivated: {
-                if (grid.justMoved)
-                    return;
-                panel.setCursor(index);
-                panel.activate(modelData);
-            }
+            onActivated: panel.clickItem(index, modelData, grid.justMoved())
             onPlayRequested: panel.playItem(modelData)
         }
         ScrollIndicator.vertical: ScrollIndicator {
