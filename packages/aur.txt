@@ -4,7 +4,7 @@
 # --- rice ---
 hypremoji                   # emoji picker (Super+.)
 posy-cursors                # cursor theme "posy-black" (xsettingsd.conf)
-spotify                     # Spotify app (Super+C scratchpad)
+spotify                     # Spotify app (Spicetify folders sync; lands hidden in special:spotifyspace if started by hand)
 spicetify-cli               # Spotify theme + the qs-folders extension
 vesktop                     # Discord (Super+C scratchpad)
 
