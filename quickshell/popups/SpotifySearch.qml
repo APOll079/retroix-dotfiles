@@ -24,13 +24,18 @@ SearchBox {
             event.accepted = true;
             return;
         }
-        const cols = panel.useGrid ? MenuStyle.spotifyGridColumnsLibrary : 1;
         const empty = search.text === "";
         const cur = panel.listView.currentIndex;
         if (event.key === Qt.Key_Down) {
-            panel.setCursor(Math.min(panel.items.length - 1, cur + cols));
+            if (panel.useGrid)
+                panel.gridMove(1);
+            else
+                panel.setCursor(Math.min(panel.items.length - 1, cur + 1));
         } else if (event.key === Qt.Key_Up) {
-            panel.setCursor(Math.max(0, cur - cols), -1);
+            if (panel.useGrid)
+                panel.gridMove(-1);
+            else
+                panel.setCursor(Math.max(0, cur - 1), -1);
         } else if (panel.useGrid && empty && event.key === Qt.Key_Right) {
             panel.setCursor(Math.min(panel.items.length - 1, cur + 1));
         } else if (panel.useGrid && empty && event.key === Qt.Key_Left) {

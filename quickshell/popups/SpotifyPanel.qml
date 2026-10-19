@@ -135,6 +135,26 @@ PanelWindow {
         const rows = root.items.filter(i => i.kind !== "searchrow" && i.kind !== "heading" && i.kind !== "more");
         return rows.some(i => i.pinned === true) && rows.some(i => i.pinned !== true);
     }
+    // The grid is a list of rows of tiles (a divider row can sit between them): { tiles: [{ item, index }] } or
+    // { heading, index }; `index` is the position in `items`, which the cursor uses
+    readonly property var gridRows: {
+        const cols = MenuStyle.spotifyGridColumnsLibrary;
+        const rows = [];
+        let cur = null;
+        root.items.forEach((it, i) => {
+            if (it.kind === "heading") {
+                cur = null;
+                rows.push({ heading: it, index: i });
+            } else {
+                if (cur === null || cur.tiles.length >= cols) {
+                    cur = { tiles: [] };
+                    rows.push(cur);
+                }
+                cur.tiles.push({ item: it, index: i });
+            }
+        });
+        return rows;
+    }
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
     readonly property bool useGrid: SpotifyState.grid && !root.addMode && !root.songList && !root.searchMode
@@ -368,6 +388,26 @@ PanelWindow {
 
     // After the list changed: cursor onto the playing song once (an album / playlist / Liked just
     // opened), and off a heading when a new search replaced the rows (the view resets its cursor)
+    function gridRowOf(index) {
+        return root.gridRows.findIndex(r => r.tiles !== undefined && r.tiles.some(t => t.index === index));
+    }
+
+    // Up / Down in the grid: the same column one tile row away (divider rows are skipped)
+    function gridMove(dy) {
+        const rows = root.gridRows, cur = listView.currentIndex;
+        const r = root.gridRowOf(cur);
+        if (r < 0)
+            return;
+        const c = rows[r].tiles.findIndex(t => t.index === cur);
+        let n = r + dy;
+        while (n >= 0 && n < rows.length && rows[n].tiles === undefined)
+            n += dy;
+        if (n < 0 || n >= rows.length)
+            return;
+        const t = rows[n].tiles;
+        root.setCursor(t[Math.min(c, t.length - 1)].index);
+    }
+
     function afterItems() {
         // (the list resets its cursor whenever its model is replaced, so the saved place is put back on every
         // change for a moment, until restoreTimer says the list has settled)
@@ -387,8 +427,8 @@ PanelWindow {
                 return;
             }
         }
-        if (root.searchMode)
-            root.setCursor(listView.currentIndex);
+        // (the list resets its cursor when its model is replaced: off a heading, and back in range)
+        root.setCursor(listView.currentIndex);
     }
 
     function emptyText() {
@@ -616,8 +656,13 @@ PanelWindow {
         }
         if (root.libraryKind !== "all")
             rows = rows.filter(r => r.kind === root.libraryKind || (root.libraryKind === "playlist" && (r.kind === "folder" || r.kind === "liked")));
-        // pins first, otherwise keep Spotify's order
-        return rows.filter(r => r.pinned).concat(rows.filter(r => !r.pinned));
+        // pins first, otherwise keep Spotify's order; a thin "Pinned" divider row, and a plain line before the
+        // rest (only when both exist and nothing is typed in the filter)
+        const pins = rows.filter(r => r.pinned), rest = rows.filter(r => !r.pinned);
+        if (pins.length > 0 && rest.length > 0 && filterInput.text.trim() === "")
+            return [{ kind: "heading", uri: "heading:pinned", name: "Pinned", sub: "", image: "" }].concat(pins,
+                [{ kind: "heading", uri: "heading:rest", name: "", sub: "", image: "" }], rest);
+        return pins.concat(rest);
     }
 
     function findFolder(nodes, uri) {

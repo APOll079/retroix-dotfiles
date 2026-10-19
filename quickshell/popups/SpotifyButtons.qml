@@ -3,8 +3,8 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// [shuffle] [previous] [PLAY / PAUSE] [next] [repeat], centred. Play is the main button: twice the width of
-// previous / next (which are squares) and taller, with a big glyph. Shuffle and repeat are small squares at
+// [shuffle] [previous] [PLAY / PAUSE] [next] [repeat] across the full width: previous / play / next share
+// what the two small squares leave, 1 : 2 : 1, so play is twice as wide and taller, with a big glyph. Shuffle and repeat are small squares at
 // the ends and show their state: sunken face and an accent glyph while on; repeat-one swaps in the glyph with
 // the 1. full: false is the slim strip under the lyrics (previous / play / next fill the width, + Play here on
 // another device).
@@ -17,7 +17,6 @@ RowLayout {
     readonly property string repeatMode: SpotifyState.player ? SpotifyState.player.repeat : "off"
     readonly property bool playing: SpotifyState.player !== null && SpotifyState.player.playing
 
-    Item { Layout.fillWidth: true; visible: buttons.full }
     SpotifyReasonHost {
         visible: buttons.full
         Layout.alignment: Qt.AlignVCenter
@@ -38,8 +37,9 @@ RowLayout {
         }
     }
     BevelButton {
-        Layout.fillWidth: !buttons.full
-        Layout.preferredWidth: buttons.full ? MenuStyle.spotifyTransportSide : -1
+        Layout.fillWidth: true
+        Layout.horizontalStretchFactor: 1
+        Layout.preferredWidth: 0
         Layout.alignment: Qt.AlignVCenter
         implicitHeight: buttons.full ? MenuStyle.spotifyTransportSide : MenuStyle.spotifyCompactRow
         glyph: "\ue045"
@@ -48,9 +48,9 @@ RowLayout {
         SpotifyHint { panel: buttons.panel; text: "Previous (Ctrl+Left)" }
     }
     BevelButton {
-        Layout.fillWidth: !buttons.full
+        Layout.fillWidth: true
         Layout.horizontalStretchFactor: 2
-        Layout.preferredWidth: buttons.full ? 2 * MenuStyle.spotifyTransportSide : -1
+        Layout.preferredWidth: 0
         Layout.alignment: Qt.AlignVCenter
         implicitHeight: buttons.full ? MenuStyle.spotifyPlayHeight : MenuStyle.spotifyCompactRow
         glyph: buttons.playing ? "\ue034" : "\ue037"
@@ -60,8 +60,9 @@ RowLayout {
         SpotifyHint { panel: buttons.panel; text: buttons.playing ? "Pause (Space)" : "Play (Space)" }
     }
     BevelButton {
-        Layout.fillWidth: !buttons.full
-        Layout.preferredWidth: buttons.full ? MenuStyle.spotifyTransportSide : -1
+        Layout.fillWidth: true
+        Layout.horizontalStretchFactor: 1
+        Layout.preferredWidth: 0
         Layout.alignment: Qt.AlignVCenter
         implicitHeight: buttons.full ? MenuStyle.spotifyTransportSide : MenuStyle.spotifyCompactRow
         glyph: "\ue044"
@@ -88,7 +89,6 @@ RowLayout {
             }
         }
     }
-    Item { Layout.fillWidth: true; visible: buttons.full }
     BevelButton {
         visible: !buttons.full && SpotifyState.player !== null && !SpotifyState.local
         implicitHeight: MenuStyle.spotifyCompactRow

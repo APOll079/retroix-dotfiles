@@ -292,7 +292,7 @@ Singleton {
 
     // Grid or rows in the library tabs, remembered
     property alias grid: viewAdapter.grid
-    property alias recentOpen: viewAdapter.recentOpen
+    property alias recentOpen: viewAdapter.recentShown
     // Where the drawer was left (restored the first time it opens after a start)
     // (one object, written in one go: separate writes raced with the file's own reload)
     property alias savedPlace: viewAdapter.place
@@ -302,7 +302,7 @@ Singleton {
         JsonAdapter {
             id: viewAdapter
             property bool grid: false
-            property bool recentOpen: true        // the Recent strip is expanded
+            property bool recentShown: true       // the Recent strip is expanded (a new key, so an old collapsed state starts open again)
             // { tab: library | liked, kind: the Library chip, filter: the box text, index: the selected row,
             //   scrollY: how far the list was scrolled }
             property var place: ({ tab: "library", kind: "all", filter: "", index: 0, scrollY: 0 })

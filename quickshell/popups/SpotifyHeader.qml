@@ -11,6 +11,8 @@ RowLayout {
     required property var panel
     readonly property bool compact: panel.lyricsMode
     readonly property var track: SpotifyState.track
+    // what the names open: the song now, else the last played one
+    readonly property var shown: header.track !== null ? header.track : panel.lastTrack
     readonly property string titleText: header.track ? header.track.name : (panel.lastTrack ? "Last played: " + panel.lastTrack.name : "Nothing playing")
     readonly property int coverSize: compact ? MenuStyle.spotifyLyricsCover : MenuStyle.spotifyCoverSize
     Layout.fillWidth: true
@@ -115,6 +117,7 @@ RowLayout {
             text: header.titleText
         }
         Text {
+            id: titleLabel
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             textFormat: Text.PlainText
@@ -126,19 +129,20 @@ RowLayout {
             font.bold: !big
             color: Config.colors.text
             text: header.titleText
+            SpotifyHint { panel: header.panel; text: titleLabel.truncated ? header.titleText : "" }
         }
         LinkText {
             Layout.maximumWidth: column.width
-            linked: header.track !== null && header.track.artist_uri !== ""
+            linked: header.shown !== null && !!header.shown.artist_uri
             text: header.track ? header.track.artists : (panel.lastTrack ? panel.lastTrack.sub : "Pick something below")
-            onActivated: panel.openUri("artist", header.track.artist_uri, header.track.artists.split(", ")[0], "")
+            onActivated: panel.openUri("artist", header.shown.artist_uri, header.shown.artist_name || header.shown.sub.split(", ")[0], "")
             SpotifyHint { panel: header.panel; text: "Open the artist" }
         }
         LinkText {
             Layout.maximumWidth: column.width
-            linked: header.track !== null && header.track.album_uri !== ""
-            text: header.track ? header.track.album : ""
-            onActivated: panel.openUri("album", header.track.album_uri, header.track.album, header.track.image)
+            linked: header.shown !== null && !!header.shown.album_uri
+            text: header.track ? header.track.album : (panel.lastTrack ? panel.lastTrack.album_name || "" : "")
+            onActivated: panel.openUri("album", header.shown.album_uri, header.track ? header.track.album : header.shown.album_name, header.shown.image)
             SpotifyHint { panel: header.panel; text: "Open the album" }
         }
         // Only while another device plays: where, and a button to bring it here

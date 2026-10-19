@@ -13,7 +13,6 @@ Item {
     property var entry: ({})
     property bool selected: false
     property bool showSub: true
-    property bool showPin: true     // the pin badge (the panel hides it when everything shown is pinned)
     property bool hideSub: false    // keep the caption's second line empty (artists on the Artists chip)
     readonly property bool hasMosaic: root.entry.mosaic !== undefined && root.entry.mosaic.length > 0
     property bool canPlay: entry.kind !== "folder"
@@ -116,26 +115,6 @@ Item {
             font.pixelSize: MenuStyle.iconSize
             color: MenuStyle.selectText
             text: "\ue050"
-        }
-    }
-
-    // Pinned in Spotify: a small badge in the cover's top-right corner
-    Rectangle {
-        anchors.right: cover.right
-        anchors.top: cover.top
-        anchors.margins: MenuStyle.gap
-        visible: root.entry.pinned === true && root.showPin
-        width: MenuStyle.iconSize + MenuStyle.gap
-        height: width
-        color: MenuStyle.selectBar
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            anchors.centerIn: parent
-            font.family: MenuStyle.iconFont
-            font.pixelSize: MenuStyle.iconSize
-            color: MenuStyle.selectText
-            text: "\uf10d"
         }
     }
 

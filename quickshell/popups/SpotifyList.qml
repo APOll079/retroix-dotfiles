@@ -25,6 +25,31 @@ SunkenField {
     padding: MenuStyle.spotifyInset
     clip: true
 
+    // A divider row: a dim bold label (may be empty) and an etched line to the right
+    component HeadingRow: Item {
+        property string label: ""
+        Text {
+            id: headingText
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            anchors.left: parent.left
+            anchors.leftMargin: MenuStyle.pad
+            anchors.verticalCenter: parent.verticalCenter
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            font.bold: true
+            color: MenuStyle.bevelDark
+            text: parent.label
+        }
+        Local.MenuSeparator {
+            anchors.left: headingText.right
+            anchors.leftMargin: parent.label === "" ? 0 : MenuStyle.pad
+            anchors.right: parent.right
+            anchors.rightMargin: MenuStyle.pad
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+
     NumberAnimation { id: listFade; target: listArea; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animFade }
 
     SpotifyLyricsView {
@@ -151,30 +176,11 @@ SunkenField {
                 text: row.elided ? row.modelData.name + (row.modelData.sub ? "  -  " + row.modelData.sub : "") : ""
             }
 
-            // Search results: a plain dim heading over each group, with an etched line
-            Item {
+            // A divider row (search groups, "Pinned"): a plain dim heading with an etched line
+            HeadingRow {
                 anchors.fill: parent
                 visible: row.isHeading
-                Text {
-                    id: headingText
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    anchors.left: parent.left
-                    anchors.leftMargin: MenuStyle.pad
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    font.bold: true
-                    color: MenuStyle.bevelDark
-                    text: row.isHeading ? row.modelData.name : ""
-                }
-                Local.MenuSeparator {
-                    anchors.left: headingText.right
-                    anchors.leftMargin: MenuStyle.pad
-                    anchors.right: parent.right
-                    anchors.rightMargin: MenuStyle.pad
-                    anchors.verticalCenter: parent.verticalCenter
-                }
+                label: row.isHeading ? row.modelData.name : ""
             }
 
             HoverHandler {
@@ -243,18 +249,16 @@ SunkenField {
         }
     }
 
-    // The same items as cover tiles
-    GridView {
+    // The same items as cover tiles: a list of rows of tiles, so a divider row can sit between groups
+    ListView {
         id: grid
         anchors.fill: parent
         visible: !panel.lyricsMode && panel.useGrid
-        model: panel.items
+        model: panel.gridRows
         header: panel.listHead !== null ? headComp : null
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
-        cellHeight: gridProbe.implicitHeight
-        currentIndex: listView.currentIndex
+        readonly property real cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
         property real lastMoved: 0
         function justMoved() {
             return moving || Date.now() - lastMoved < MenuStyle.spotifyFlickGuard;
@@ -263,24 +267,47 @@ SunkenField {
             if (!moving)
                 lastMoved = Date.now();
         }
-        onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
+        // keep the cursor's tile row in view
+        Connections {
+            target: listView
+            function onCurrentIndexChanged() {
+                const r = panel.gridRowOf(listView.currentIndex);
+                if (r >= 0)
+                    grid.positionViewAtIndex(r, ListView.Contain);
+            }
+        }
         CoverTile {
             id: gridProbe
             visible: false
             width: grid.cellWidth
         }
-        delegate: CoverTile {
-            required property int index
+        delegate: Item {
+            id: gridRow
             required property var modelData
-            width: grid.cellWidth
-            height: grid.cellHeight
-            entry: modelData
-            showPin: panel.pinsMixed
-            hideSub: modelData.kind === "artist" && panel.libraryKind === "artist" && panel.view === null
-            selected: index === listView.currentIndex
-            canPlay: !panel.addMode && modelData.kind !== "folder" && modelData.kind !== "searchrow"
-            onActivated: panel.clickItem(index, modelData, grid.justMoved())
-            onPlayRequested: panel.playItem(modelData)
+            width: grid.width
+            height: modelData.tiles === undefined ? MenuStyle.rowHeight : gridProbe.implicitHeight
+            HeadingRow {
+                anchors.fill: parent
+                visible: gridRow.modelData.tiles === undefined
+                label: gridRow.modelData.heading ? gridRow.modelData.heading.name : ""
+            }
+            Row {
+                visible: gridRow.modelData.tiles !== undefined
+                Repeater {
+                    model: gridRow.modelData.tiles || []
+                    CoverTile {
+                        required property var modelData
+                        width: grid.cellWidth
+                        height: gridProbe.implicitHeight
+                        entry: modelData.item
+                        hideSub: modelData.item.kind === "artist"
+                        selected: modelData.index === listView.currentIndex
+                        canPlay: !panel.addMode && modelData.item.kind !== "folder" && modelData.item.kind !== "searchrow"
+                        onActivated: panel.clickItem(modelData.index, modelData.item, grid.justMoved())
+                        onPlayRequested: panel.playItem(modelData.item)
+                    }
+                }
+            }
         }
         ScrollIndicator.vertical: ScrollIndicator {
             active: grid.moving
