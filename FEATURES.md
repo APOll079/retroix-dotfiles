@@ -7,6 +7,7 @@ Item numbers are the ids from the approval list. This file has two halves: **Pla
 
 ### Next up
 - Bluetooth PIN agent: only devices that ask for a PIN need it (blueman's agent works until then)
+- Search all of Spotify (/search, 10 per type, playlists I don't own are play-only)
 
 ### Needs a live test (built, not yet confirmed on the desktop)
 - Spotify folders: install the Spicetify extension, open the panel and the Spotify app; folders appear in Lists within a minute
@@ -19,8 +20,6 @@ Item numbers are the ids from the approval list. This file has two halves: **Pla
 - Bluetooth pairing / trust / forget
 - Audio: turn on "Use default output" in EasyEffects' PipeWire settings first. Then: click the DM15 and a Bluetooth sink and listen (does EasyEffects follow? does `-b 1` / `-b 2` really switch the EQ, and what does it do to the mic chain?), connect / disconnect the Bluetooth speaker (sound and EQ should return to the DAC by themselves), restart EasyEffects (EQ back on). If the hint line shows, it is still pinned
 - Wallpaper at the first start after login: DP-2 should now get its wallpaper (retried on its own); if the status still says Invalid monitor, run `hyprctl monitors | grep -E '^Monitor'` and `pgrep -a hyprpaper`
-- NFS drives: a reboot or login should show both drives mounted by themselves (confirmed: `mount /mnt/disk1` as a user works and the service started cleanly). Unverified: the timing against NetworkManager at boot, and `bg` with the NAS off
-- Folder icons: `gsettings set org.gnome.desktop.interface icon-theme QsRetroIcons`, then Nemo's folders should follow a theme switch (the icon-theme flip); quickshell's own bar / tray icons stay on RetroismIcons
 - GTK theme: restart Quickshell once (it writes QsRetro), then `gsettings set org.gnome.desktop.interface gtk-theme QsRetro`: Nemo, a GTK 4 app, a theme switch re-colouring open windows (the Adwaita flip), the buttons / checkboxes / selections in every theme
 - App themes: each app's one-time setup (CLAUDE.md "App themes"), then a theme switch: does Zen's @import really take effect? (VSCodium works; it needs Reload Window after a theme switch)
 - Wallpaper colours: "Set + colours" on a real wallpaper, the Themes menu card "wallpaper", plain Set while that theme is active, the palette surviving a restart
@@ -43,13 +42,12 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 ### Small open items (from the old AUDIT.md)
 - Spotify notification filter: `NotificationDaemon.qml` drops `appName` "spotify" (a guess). If Spotify track toasts still show, use the real app name.
 - Portal float rule (`windowrules.lua`, `windowrule-4`) matches `^(xdg-desktop-portal.*)$`: check that a Zen file picker floats.
-- `hypr/autostart.lua` starts pipewire and wireplumber with `dinitctl`, which probably duplicates the user dinit services. Harmless, not verified.
 - Old files left in the live `~/.config/quickshell` (not in the repo, unused): `popups/MenuFrame.qml`, `popups/NetworkMenu.qml`, `taskbar/TaskbarButton.qml`, `preview.qml`, `fonts/MaterialSymbolsSharp_Filled_36pt-Regular.ttf`. Your sync doesn't delete, so remove them by hand if wanted.
 
 ## Done
 - **Bar**: gripper, workspaces box, divider, Start / Theme; Spotify lyric line (3); privacy icons (6), caffeine (5), sysmon with popup, ETH, Bluetooth, tray, bell + clock
 - **Side panel** (Super+N): power buttons with confirm, now playing, per-app volume, DND (18), notification history, calendar with weather (7)
-- **Launcher** (Super+D): tabs Apps / Games (cover grid) / Clipboard (Ctrl+Tab), fuzzy apps, calculator (10), session actions (11), "," window search, Super+V clipboard (4), usage ranking (13), categories, options menu with pin / move (15 partial). Alt+Tab switcher removed
+- **Launcher** (Super+D): tabs Apps / Games (cover grid) / Clipboard (Ctrl+Tab), fuzzy apps, calculator (10), session actions (11), "," window search, Super+V clipboard (4) with delete (Delete / Shift+Delete) and Clear all (confirm), usage ranking (13), categories, options menu with pin / move (15 partial). Super+Tab window switcher (the launcher's windows search)
 - **Notifications**: toasts with actions (19), position / stack / monitor settings (20), history that keeps the live notification; grouped by app (toasts and history), progress bars, inline reply, history saved across restarts
 - **Bluetooth** (2): native BlueZ, connect / trust / forget / pair
 - **Screenshots** (21): snipping overlay (Super+Shift+S / Print: Region, Window, Screen, All), toast with thumbnail, History viewer with multi-select; no annotation by choice
@@ -58,9 +56,9 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 - **Desktop**: idle dim / lock / screens off (22), OSDs (23), session panel (24), HyprEmoji, Super+Q closes an open menu before it closes a window
 - **Audio (Home tab)**: Output list (click = default sink, EasyEffects follows; the EQ follows the real output, "EQ off" tag), microphone mute + volume, scrollable per-app volumes; `AudioState.qml` + `AudioTab.qml`
 - **Win+C**: Vesktop-only scratchpad (Spotify is the Quickshell panel)
-- **NFS drives at login**: user service `dinit.d/nfs-mounts` mounts `/mnt/disk1` and `/mnt/disk2` after `nm-online`; needs `noauto,user,exec` on the two fstab lines (outside the repo: the commands were given, not run). `nfs-utils` is in pacman.txt
+- **NFS drives at login**: user service `dinit.d/nfs-mounts` mounts `/mnt/disk1` and `/mnt/disk2` after `nm-online`; needs `noauto,user,exec` on the two fstab lines (outside the repo: the commands were given, not run). `nfs-utils` is in pacman.txt. Confirmed live
 - **hyprlock at boot** (29): greetd autologin plus the lock marker (`~/.config/hypr/lock-at-login`, read in `autostart.lua`), both set up by `install.sh` (asks, default no). The lock screen works (confirmed); that it comes up at boot is assumed, not watched
-- **Folder icons**: `theme/icongen.py` hue-shifts the blue of RetroismIcons to the accent into `~/.local/share/icons/QsRetroIcons` (Inherits the original; greys, reds, greens untouched); GTK settings, xsettingsd and `install.sh` use it
+- **Folder icons**: `theme/icongen.py` hue-shifts the blue of RetroismIcons to the accent into `~/.local/share/icons/QsRetroIcons` (Inherits the original; greys, reds, greens untouched); GTK settings, xsettingsd and `install.sh` use it. Confirmed live
 - **GTK theme** (33): `theme/gtkgen.py` recolours the installed ClassicPlatinumStreamlined into `~/.local/share/themes/QsRetro` from the active palette (CSS + PNG assets), gtk settings files and `install.sh` (gsettings theme, icons, full font hinting) point at it
 - **App themes** (32): VSCodium, Zen generated from the active palette (`apply.py` + templates; CSS / colour files only). Neovim (not installed), Steam (needs Millennium), Spotify and Vesktop (both tried, looked bad, dropped) skipped
 - **Wallpaper colours** (31): `theme/wallcolors.py` (Pillow) makes a `wallpaper` palette from a picture (hue + colourfulness only, fixed lightness per role); browser button "Set + colours" / Shift+Enter; `apply.py wallpaper --palette FILE`

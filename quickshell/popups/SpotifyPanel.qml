@@ -15,12 +15,14 @@ import ".."
 // - Library: Spotify's Your Library (pins first) with chips All / Playlists / Artists / Albums;
 //   Playlists shows your folders in Spotify's order.
 // - Liked: Liked Songs.
+// - Search: all of Spotify, separate from the library. Type, then Enter: songs, albums, artists and
+//   playlists (10 each) under headings, chips All / Songs / Albums / Artists / Playlists narrow it.
+//   The query and results stay for the session (tab switches, Back). Songs play on their own;
+//   playlists you don't own are play-only.
 // - Lyrics: the whole drawer for synced lyrics, with a slim transport strip at the bottom.
 // Lists show as rows or cover tiles (the view button, remembered). A click opens (a folder, an
 // album's / your playlist's songs, an artist's albums, Liked Songs); Back returns to where you were.
-// The play button (hover / selected, or Shift+Enter) plays without opening. With text in the Library
-// filter, the last row searches all of Spotify ("Search Spotify for 'x'"): the results open like an
-// item, songs play on their own, playlists you don't own are play-only.
+// The play button (hover / selected, or Shift+Enter) plays without opening.
 // Keys: type to filter, arrows move (Left / Right too in the grid), Enter opens, Shift+Enter plays,
 // Space plays / pauses (empty filter), Escape steps back, then closes.
 // Data and control: SpotifyState.qml + scripts/spotify.py. First run asks for the client ID of your
@@ -33,6 +35,11 @@ PanelWindow {
 
     property string tab: "library"         // library | liked | lyrics
     property string libraryKind: "all"     // Library chip: all | playlist | artist | album
+    property string searchQuery: ""        // Search tab: the last query sent
+    property var searchResults: []         // its rows (spotify.py search)
+    property string searchKind: "all"      // Search chip: all | track | album | artist | playlist
+    property bool searchLoading: false
+    property string searchError: ""
     property var stack: []                 // opened items: { title, uri, kind, items, loading, blocked, fromIndex }
     property bool addMode: false           // picking a playlist for "add to playlist"
     property var addTarget: null           // the song being added: { uri, name }
@@ -46,6 +53,7 @@ PanelWindow {
     readonly property bool remote: SpotifyState.player !== null && !SpotifyState.local
     readonly property var lastTrack: SpotifyState.lastPlayed ? SpotifyState.lastPlayed.track : null
     readonly property bool lyricsMode: root.tab === "lyrics" && !root.addMode && root.stack.length === 0
+    readonly property bool searchMode: root.tab === "search" && !root.addMode && root.stack.length === 0
     readonly property var view: root.stack.length > 0 ? root.stack[root.stack.length - 1] : null
     readonly property var likedRow: ({ kind: "liked", uri: "liked", name: "Liked Songs", sub: "Playlist", image: "", openable: true })
 
@@ -67,23 +75,20 @@ PanelWindow {
             return root.libraryRows();
         if (root.tab === "liked")
             return SpotifyState.lists.liked || [];
+        if (root.tab === "search")
+            return root.searchRows();
         return [];
     }
     readonly property var items: {
-        const text = filterInput.text.trim();
-        const q = text.toLowerCase();
-        const rows = root.baseItems
-            .filter(i => q === "" || (i.name + " " + i.sub).toLowerCase().includes(q))
+        const q = filterInput.text.trim().toLowerCase();
+        return root.baseItems
+            .filter(i => root.searchMode || q === "" || (i.name + " " + i.sub).toLowerCase().includes(q))
             .map(i => root.pinned[i.uri] && !i.pinned ? Object.assign({}, i, { pinned: true }) : i);
-        // The library filter stays; the last row takes the same text to Spotify's search
-        if (text !== "" && root.tab === "library" && !root.view && !root.addMode)
-            rows.push({ kind: "search", uri: "search:" + text, query: text, name: "Search Spotify for '" + text + "'", sub: "", image: "" });
-        return rows;
     }
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
-    readonly property bool useGrid: SpotifyState.grid && !root.addMode && !root.songList
-    readonly property bool showViewToggle: !root.addMode && !root.lyricsMode && !root.songList
+    readonly property bool useGrid: SpotifyState.grid && !root.addMode && !root.songList && !root.searchMode
+    readonly property bool showViewToggle: !root.addMode && !root.lyricsMode && !root.songList && !root.searchMode
 
     anchors {
         left: true
@@ -497,6 +502,7 @@ PanelWindow {
                     model: [
                         { key: "library", text: "Library" },
                         { key: "liked", text: "Liked" },
+                        { key: "search", text: "Search" },
                         { key: "lyrics", text: "Lyrics" }
                     ]
                     BevelButton {
@@ -515,7 +521,7 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: MenuStyle.gap
-                visible: root.addMode || root.stack.length > 0 || root.tab === "library"
+                visible: root.addMode || root.stack.length > 0 || root.tab === "library" || root.searchMode
                 Repeater {
                     model: !root.addMode && root.stack.length === 0 && root.tab === "library" ? [
                         { key: "all", text: "All" },
@@ -531,6 +537,28 @@ PanelWindow {
                         focusPolicy: Qt.NoFocus
                         onClicked: {
                             root.libraryKind = modelData.key;
+                            root.setCursor(0);
+                            root.focusKeys();
+                        }
+                    }
+                }
+                // Search chips: narrow the results to one type
+                Repeater {
+                    model: root.searchMode ? [
+                        { key: "all", text: "All" },
+                        { key: "track", text: "Songs" },
+                        { key: "album", text: "Albums" },
+                        { key: "artist", text: "Artists" },
+                        { key: "playlist", text: "Playlists" }
+                    ] : []
+                    BevelButton {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 1
+                        text: modelData.text
+                        checked: root.searchKind === modelData.key
+                        focusPolicy: Qt.NoFocus
+                        onClicked: {
+                            root.searchKind = modelData.key;
                             root.setCursor(0);
                             root.focusKeys();
                         }
@@ -605,7 +633,7 @@ PanelWindow {
                 Layout.fillWidth: true
                 implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
                 visible: !root.lyricsMode
-                placeholder: "Filter"
+                placeholder: root.searchMode ? "Search Spotify (Enter)" : "Filter"
                 onEdited: root.setCursor(0)
                 onEscaped: {
                     if (!root.goBack())
@@ -620,13 +648,19 @@ PanelWindow {
                     if (event.key === Qt.Key_Down) {
                         root.setCursor(Math.min(root.items.length - 1, cur + cols));
                     } else if (event.key === Qt.Key_Up) {
-                        root.setCursor(Math.max(0, cur - cols));
+                        root.setCursor(Math.max(0, cur - cols), -1);
                     } else if (root.useGrid && empty && event.key === Qt.Key_Right) {
                         root.setCursor(Math.min(root.items.length - 1, cur + 1));
                     } else if (root.useGrid && empty && event.key === Qt.Key_Left) {
-                        root.setCursor(Math.max(0, cur - 1));
+                        root.setCursor(Math.max(0, cur - 1), -1);
                     } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        if (event.modifiers & Qt.ShiftModifier)
+                        const typed = filterInput.text.trim();
+                        // Search tab: a new query (or one with no results yet) goes to Spotify;
+                        // Enter on the same query opens the selected result
+                        if (root.searchMode && !(event.modifiers & Qt.ShiftModifier) && typed !== ""
+                                && (typed !== root.searchQuery || root.searchResults.length === 0))
+                            root.runSearch();
+                        else if (event.modifiers & Qt.ShiftModifier)
                             root.playItem(root.items[cur]);
                         else
                             root.activate(root.items[cur], true);
@@ -758,10 +792,37 @@ PanelWindow {
                         required property int index
                         required property var modelData
                         readonly property bool isTrack: modelData.kind === "track"
+                        readonly property bool isHeading: modelData.kind === "heading"
                         readonly property bool sel: index === list.currentIndex
-                        readonly property bool showPlay: !root.addMode && !isTrack && modelData.kind !== "folder" && modelData.kind !== "search" && (rowHover.hovered || sel)
+                        readonly property bool showPlay: !root.addMode && !isTrack && !isHeading && modelData.kind !== "folder" && (rowHover.hovered || sel)
                         width: list.width
-                        height: MenuStyle.spotifyRowHeight
+                        height: isHeading ? MenuStyle.rowHeight : MenuStyle.spotifyRowHeight
+
+                        // Search results: a plain dim heading over each group, with an etched line
+                        Item {
+                            anchors.fill: parent
+                            visible: row.isHeading
+                            Text {
+                                id: headingText
+                                renderType: Text.NativeRendering
+                                font.hintingPreference: Font.PreferFullHinting
+                                anchors.left: parent.left
+                                anchors.leftMargin: MenuStyle.pad
+                                anchors.verticalCenter: parent.verticalCenter
+                                font.family: MenuStyle.bodyFont
+                                font.pixelSize: MenuStyle.fontSize
+                                font.bold: true
+                                color: MenuStyle.bevelDark
+                                text: row.isHeading ? row.modelData.name : ""
+                            }
+                            MenuSeparator {
+                                anchors.left: headingText.right
+                                anchors.leftMargin: MenuStyle.pad
+                                anchors.right: parent.right
+                                anchors.rightMargin: MenuStyle.pad
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
 
                         HoverHandler {
                             id: rowHover
@@ -777,6 +838,7 @@ PanelWindow {
                         }
                         MenuRow {
                             anchors.fill: parent
+                            visible: !row.isHeading
                             focusPolicy: Qt.NoFocus
                             rightPadding: row.showPlay ? MenuStyle.pad + playButton.width + MenuStyle.gap : MenuStyle.pad
                             selected: row.sel
@@ -831,7 +893,7 @@ PanelWindow {
                         height: grid.cellHeight
                         entry: modelData
                         selected: index === list.currentIndex
-                        canPlay: !root.addMode && modelData.kind !== "folder" && modelData.kind !== "search"
+                        canPlay: !root.addMode && modelData.kind !== "folder"
                         onActivated: {
                             root.setCursor(index);
                             root.activate(modelData);
@@ -997,7 +1059,6 @@ PanelWindow {
         case "album": return "";
         case "folder": return "";
         case "liked": return "";
-        case "search": return "\ue8b6";
         default: return "";
         }
     }
@@ -1021,13 +1082,14 @@ PanelWindow {
             return "No matches";
         if (root.addMode)
             return SpotifyState.loading.playlists ? "Loading..." : "No playlists of your own";
+        if (root.searchMode)
+            return root.searchLoading ? "Searching..." : root.searchError !== "" ? root.searchError
+                : root.searchQuery === "" ? "Type, then press Enter" : "No results";
         if (root.view) {
             if (root.view.kind === "liked")
                 return SpotifyState.loading.liked ? "Loading..." : "No liked songs";
             if (root.view.loading)
                 return "Loading...";
-            if (root.view.kind === "search")
-                return "No results";
             if (root.view.kind === "artist")
                 return "Spotify didn't list this artist's albums. Play above still works.";
             // Not in the playlist list yet: it may still be one of yours, so no "you don't own it" yet
@@ -1044,8 +1106,15 @@ PanelWindow {
         return need.some(k => SpotifyState.loading[k]) ? "Loading..." : "Empty";
     }
 
-    function setCursor(i) {
-        list.currentIndex = Math.max(0, i);
+    // dir -1 when moving up: a heading row is skipped in the direction of travel (forwards from the top)
+    function setCursor(i, dir) {
+        const isHeading = j => root.items[j] && root.items[j].kind === "heading";
+        let j = Math.max(0, i);
+        while (isHeading(j))
+            j += dir < 0 ? -1 : 1;
+        if (j < 0)
+            for (j = 0; isHeading(j); j++) {}
+        list.currentIndex = Math.max(0, Math.min(j, root.items.length - 1));
     }
 
     // Keyboard goes to the filter box where there is one, else to the key catcher (Lyrics, login)
@@ -1070,7 +1139,7 @@ PanelWindow {
     function showTab(key) {
         root.tab = key;
         root.stack = [];
-        filterInput.text = "";
+        filterInput.text = key === "search" ? root.searchQuery : "";
         root.setCursor(0);
         root.loadForTab(false);
         root.focusKeys();
@@ -1164,14 +1233,14 @@ PanelWindow {
 
     // Play without opening (the play buttons, Shift+Enter)
     function playItem(item) {
-        if (!item || item.kind === "folder" || item.kind === "search")
+        if (!item || item.kind === "folder" || item.kind === "heading")
             return;
         SpotifyState.play(item.kind === "liked" ? "liked" : item.uri);
     }
 
     // Click / Enter on a row or tile. fromKeys: Enter (the double-click guard only applies to clicks)
     function activate(item, fromKeys) {
-        if (!item)
+        if (!item || item.kind === "heading")
             return;
         if (!fromKeys && Date.now() - root.openedAt < MenuStyle.spotifyClickGuard)
             return;
@@ -1186,25 +1255,12 @@ PanelWindow {
             return;
         }
         if (item.kind === "track") {
-            // A song from search results plays on its own (the results aren't a context)
-            const ctx = root.view ? (root.view.kind === "search" ? "" : root.view.uri) : (root.tab === "liked" ? "liked" : "");
+            const ctx = root.view ? root.view.uri : (root.tab === "liked" ? "liked" : "");
             SpotifyState.play(ctx || item.uri, ctx ? item.uri : "");
             return;
         }
         if (item.kind === "folder") {
             root.push({ title: item.name, uri: item.uri, kind: "folder", items: item.children ? root.folderRows(item.children, false) : [], loading: false, blocked: !item.children });
-            return;
-        }
-        if (item.kind === "search") {
-            root.push({ title: "Search: " + item.query, uri: item.uri, kind: "search", items: [], loading: true });
-            const depth = root.stack.length;
-            SpotifyState.search(item.query, v => {
-                if (root.stack.length !== depth || root.stack[depth - 1].uri !== item.uri)
-                    return;
-                const s = root.stack.slice();
-                s[depth - 1] = Object.assign({}, s[depth - 1], { items: Array.isArray(v) ? v : [], loading: false });
-                root.stack = s;
-            });
             return;
         }
         if (item.kind === "liked") {
@@ -1226,6 +1282,40 @@ PanelWindow {
             const s = root.stack.slice();
             s[depth - 1] = Object.assign({}, s[depth - 1], { items: v ? v.items : [], summary: v && v.summary ? v.summary : "", loading: false });
             root.stack = s;
+        });
+    }
+
+    // Search tab rows: with chip All, a heading before each type that has results
+    function searchRows() {
+        const groups = [["track", "Songs"], ["album", "Albums"], ["artist", "Artists"], ["playlist", "Playlists"]];
+        const rows = [];
+        for (const [kind, title] of groups) {
+            if (root.searchKind !== "all" && root.searchKind !== kind)
+                continue;
+            const got = root.searchResults.filter(r => r.kind === kind);
+            if (got.length === 0)
+                continue;
+            if (root.searchKind === "all")
+                rows.push({ kind: "heading", uri: "heading:" + kind, name: title, sub: "", image: "" });
+            rows.push(...got);
+        }
+        return rows;
+    }
+
+    // Enter on the Search tab: send what is typed; an answer for an older query is dropped
+    function runSearch() {
+        const q = filterInput.text.trim();
+        root.searchQuery = q;
+        root.searchResults = [];
+        root.searchError = "";
+        root.searchLoading = true;
+        SpotifyState.search(q, (v, err) => {
+            if (q !== root.searchQuery)
+                return;
+            root.searchLoading = false;
+            root.searchResults = Array.isArray(v) ? v : [];
+            root.searchError = err || "";
+            root.setCursor(0);
         });
     }
 

@@ -639,22 +639,19 @@ def cmd_albums():
 
 
 def cmd_search(text):
-    """One /search for songs, albums, artists and playlists, in that order, as the panel's rows.
-    Playlists you don't own (or collaborate on) are play-only: Spotify won't list their songs."""
+    """One /search for songs, albums, artists and playlists, in that order, as the panel's rows (its
+    Search tab puts a heading over each type). Playlists you don't own (or collaborate on) are
+    play-only: Spotify won't list their songs."""
     text = text.strip()
     if not text:
         return []
     res = api("GET", "/search", {"q": text, "type": "track,album,artist,playlist", "limit": SEARCH_LIMIT}) or {}
     items = lambda kind: [x for x in ((res.get(kind) or {}).get("items") or []) if x]    # playlists can hold nulls
     rows = []
-    for t in items("tracks"):
-        row = track_item(t)
-        if row:
-            row["sub"] = "Song \u00b7 " + row["sub"]
-            rows.append(row)
+    rows += [r for r in (track_item(t) for t in items("tracks")) if r]
     for a in items("albums"):
         rows.append({"kind": "album", "uri": a.get("uri", ""), "name": a.get("name", ""),
-                     "sub": "Album \u00b7 " + ", ".join(x.get("name", "") for x in a.get("artists", [])),
+                     "sub": ", ".join(x.get("name", "") for x in a.get("artists", [])),
                      "image": image(a.get("images")), "openable": True})
     for a in items("artists"):
         rows.append({"kind": "artist", "uri": a.get("uri", ""), "name": a.get("name", ""), "sub": "Artist",
@@ -665,7 +662,7 @@ def cmd_search(text):
         owner = p.get("owner") or {}
         own = owner.get("id") == uid or bool(p.get("collaborative"))
         rows.append({"kind": "playlist", "uri": p.get("uri", ""), "name": p.get("name", ""),
-                     "sub": "Playlist \u00b7 " + ("yours" if own else "by " + (owner.get("display_name") or "someone else")),
+                     "sub": "yours" if own else "by " + (owner.get("display_name") or "someone else"),
                      "image": image(p.get("images")), "openable": own})
     return [r for r in rows if r["uri"]]
 

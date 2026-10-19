@@ -91,6 +91,12 @@ read_list() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# pacman's package databases; without them every -Si says "not found"
+PACMAN_SYNC="${PACMAN_SYNC:-/var/lib/pacman/sync}"
+have_sync_dbs() {
+    compgen -G "$PACMAN_SYNC/*.db" >/dev/null || { warn "no package databases in $PACMAN_SYNC: run doas pacman -Syu first"; return 1; }
+}
+
 # --- init detection + services ---
 
 detect_init() {
@@ -167,6 +173,7 @@ install_pacman() {
         note "all ${#pkgs[@]} installed"
         return
     fi
+    have_sync_dbs || return
     # Unknown names would make pacman refuse the whole list: warn and install the rest
     local known=() p
     for p in "${missing[@]}"; do
@@ -200,6 +207,7 @@ install_aur() {
         note "all ${#pkgs[@]} installed"
         return
     fi
+    have_sync_dbs || return
     # Repo first: whatever an official repo has (e.g. zen-browser-bin on CachyOS) comes from pacman
     local inrepo=() fromaur=() p
     for p in "${missing[@]}"; do

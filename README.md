@@ -79,7 +79,7 @@ These are best guesses at what each app reads, so expect to fix a variable name 
 - **Spotify panel**: needs Spotify Premium and your own Spotify developer app (free). Super+S
   walks you through it once. For folders and pins, also enable the Spicetify extension:
   `spicetify config extensions qs-folders.js && spicetify apply`.
-- Wallpaper and profile picture: `~/Pictures/wallpaper.png` and `~/Pictures/profile.PNG`.
+- Wallpapers: the browser (Themes > Wallpapers...) lists `~/Pictures/wallpapers`. Profile picture: `~/Pictures/profile.PNG`.
 
 ## Docs
 
