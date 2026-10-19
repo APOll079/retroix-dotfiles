@@ -31,3 +31,11 @@ TaskManager 1.0 TaskManager.qml
 CoverTile 1.0 CoverTile.qml
 WallpaperView 1.0 WallpaperView.qml
 WallpaperBrowser 1.0 WallpaperBrowser.qml
+SpotifySetup 1.0 SpotifySetup.qml
+SpotifyHeader 1.0 SpotifyHeader.qml
+SpotifyButtons 1.0 SpotifyButtons.qml
+SpotifyTransport 1.0 SpotifyTransport.qml
+SpotifyNav 1.0 SpotifyNav.qml
+SpotifyLyricsView 1.0 SpotifyLyricsView.qml
+SpotifyList 1.0 SpotifyList.qml
+SpotifyStatusBar 1.0 SpotifyStatusBar.qml

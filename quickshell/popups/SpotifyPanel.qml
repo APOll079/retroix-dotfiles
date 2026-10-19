@@ -61,6 +61,11 @@ PanelWindow {
     readonly property var lastTrack: SpotifyState.lastPlayed ? SpotifyState.lastPlayed.track : null
     readonly property bool lyricsMode: root.tab === "lyrics" && !root.addMode && root.stack.length === 0
     readonly property bool searchMode: root.tab === "search" && !root.addMode && root.stack.length === 0
+    // Items that moved into the component files; the logic below still uses them by these names
+    readonly property var filterInput: nav.box
+    readonly property var clientInput: setup.input
+    readonly property var listView: spotifyList.view
+    readonly property var lyricsView: spotifyList.lyricsView
     readonly property var view: root.stack.length > 0 ? root.stack[root.stack.length - 1] : null
     readonly property var likedRow: ({ kind: "liked", uri: "liked", name: "Liked Songs", sub: "Playlist", image: "", openable: true })
 
@@ -153,11 +158,7 @@ PanelWindow {
         root.focusKeys();
     }
     onItemsChanged: Qt.callLater(root.afterItems)
-    onTabChanged: listFade.restart()
-    onStackChanged: {
-        listFade.restart();
-        root.songMenu = null;
-    }
+    onStackChanged: root.songMenu = null
 
     // Keys where there's no filter box to type in (Lyrics, the login page): Escape and Space
     Item {
@@ -187,83 +188,7 @@ PanelWindow {
         Rectangle { x: parent.width - 1; y: 0; width: 1; height: parent.height; color: Config.colors.outline }
         Rectangle { x: 0; y: parent.height - 1; width: parent.width; height: 1; color: Config.colors.outline }
 
-        // --- setup: client ID, then login ---
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: MenuStyle.pad
-            visible: !SpotifyState.loggedIn
-            spacing: MenuStyle.pad
-
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                Layout.fillWidth: true
-                wrapMode: Text.Wrap
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: Config.colors.text
-                text: !SpotifyState.configured || root.editClient
-                    ? "One-time setup:\n1. developer.spotify.com > Dashboard > Create app.\n2. Redirect URI: http://127.0.0.1:8898/callback\n3. Tick Web API, save, copy the Client ID here."
-                    : "Log in once in the browser. The login is kept in Quickshell's state folder."
-            }
-            SearchBox {
-                id: clientInput
-                Layout.fillWidth: true
-                implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
-                visible: !SpotifyState.configured || root.editClient
-                showIcon: false
-                placeholder: "Client ID"
-                onEscaped: root.closeCallback()
-                onKeyPressed: event => {
-                    if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && clientInput.text.trim() !== "") {
-                        root.saveClient();
-                        event.accepted = true;
-                    }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.gap
-                BevelButton {
-                    visible: !SpotifyState.configured || root.editClient
-                    text: "Save"
-                    enabled: clientInput.text.trim() !== ""
-                    focusPolicy: Qt.NoFocus
-                    onClicked: root.saveClient()
-                }
-                BevelButton {
-                    visible: SpotifyState.configured && !root.editClient
-                    text: SpotifyState.loggingIn ? "Waiting for the browser..." : "Log in"
-                    glyph: ""
-                    enabled: !SpotifyState.loggingIn
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.login()
-                }
-                Item { Layout.fillWidth: true }
-                BevelButton {
-                    visible: SpotifyState.configured && !root.editClient
-                    text: "Change client ID"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        root.editClient = true;
-                        clientInput.text = "";
-                        clientInput.focusInput();
-                    }
-                }
-            }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                Layout.fillWidth: true
-                wrapMode: Text.Wrap
-                visible: SpotifyState.error !== ""
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: Config.colors.urgent
-                text: SpotifyState.error
-            }
-            Item { Layout.fillHeight: true }
-        }
+        SpotifySetup { id: setup; panel: root }
 
         // --- main ---
         ColumnLayout {
@@ -272,195 +197,9 @@ PanelWindow {
             visible: SpotifyState.loggedIn
             spacing: MenuStyle.pad
 
-            // Now playing: cover, then title / artist / album and right under it where it plays
-            RowLayout {
-                Layout.fillWidth: true
-                visible: !root.lyricsMode
-                Layout.preferredHeight: MenuStyle.spotifyCoverSize
-                Layout.maximumHeight: MenuStyle.spotifyCoverSize
-                spacing: MenuStyle.pad
-                SunkenField {
-                    Layout.preferredWidth: MenuStyle.spotifyCoverSize
-                    Layout.preferredHeight: MenuStyle.spotifyCoverSize
-                    padding: MenuStyle.spotifyInset
-                    Image {
-                        id: cover
-                        anchors.fill: parent
-                        source: SpotifyState.track ? SpotifyState.track.image : (root.lastTrack ? root.lastTrack.image : "")
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                    }
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        anchors.centerIn: parent
-                        visible: cover.status !== Image.Ready
-                        font.family: MenuStyle.iconFont
-                        font.pixelSize: MenuStyle.spotifyTileIcon
-                        color: MenuStyle.bevelDark
-                        text: ""
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    spacing: 0
-                    Repeater {
-                        model: SpotifyState.track
-                            ? [SpotifyState.track.name, SpotifyState.track.artists, SpotifyState.track.album]
-                            : (root.lastTrack
-                                ? ["Last played: " + root.lastTrack.name, root.lastTrack.sub, "Play carries on here"]
-                                : ["Nothing playing", "Pick something below", ""])
-                        Text {
-                            renderType: Text.NativeRendering
-                            font.hintingPreference: Font.PreferFullHinting
-                            textFormat: Text.PlainText
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            font.family: index === 0 ? MenuStyle.titleFont : MenuStyle.bodyFont
-                            font.pixelSize: MenuStyle.fontSize
-                            font.bold: index === 0
-                            color: index === 0 ? Config.colors.text : MenuStyle.bevelDark
-                            text: modelData
-                        }
-                    }
-                    // Where it plays; on another device (the phone) a button moves it here
-                    RowLayout {
-                        Layout.fillWidth: true
-                        visible: SpotifyState.player !== null && SpotifyState.player.device !== ""
-                        spacing: MenuStyle.gap
-                        Text {
-                            renderType: Text.NativeRendering
-                            font.hintingPreference: Font.PreferFullHinting
-                            textFormat: Text.PlainText
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            font.family: MenuStyle.bodyFont
-                            font.pixelSize: MenuStyle.fontSize
-                            color: MenuStyle.bevelDark
-                            text: "on " + root.deviceName()
-                        }
-                        BevelButton {
-                            visible: root.remote
-                            text: "Play here"
-                            glyph: ""
-                            focusPolicy: Qt.NoFocus
-                            onClicked: SpotifyState.playHere()
-                        }
-                    }
-                    Item { Layout.fillHeight: true }
-                }
-            }
+            SpotifyHeader { Layout.fillWidth: true; panel: root }
 
-            // Seek bar (same height as the volume slider below): click to jump
-            RowLayout {
-                Layout.fillWidth: true
-                visible: !root.lyricsMode
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.clock(SpotifyState.progress)
-                }
-                SegmentBar {
-                    id: seekBar
-                    Layout.fillWidth: true
-                    implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
-                    value: SpotifyState.track && SpotifyState.track.duration > 0 ? SpotifyState.progress / SpotifyState.track.duration : 0
-                    // Glides between the once-a-second ticks instead of jumping
-                    Behavior on value {
-                        NumberAnimation { duration: MenuStyle.spotifyTickMs }
-                    }
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: SpotifyState.track !== null
-                        cursorShape: Qt.PointingHandCursor
-                        onReleased: mouse => SpotifyState.seek(Math.max(0, Math.min(1, mouse.x / width)) * SpotifyState.track.duration)
-                    }
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.clock(SpotifyState.track ? SpotifyState.track.duration : 0)
-                }
-            }
-
-            Transport {
-                Layout.fillWidth: true
-                visible: !root.lyricsMode
-                full: true
-            }
-
-            // Like, add to playlist, volume
-            RowLayout {
-                Layout.fillWidth: true
-                visible: !root.lyricsMode
-                spacing: MenuStyle.gap
-                BevelButton {
-                    glyph: SpotifyState.liked ? "" : ""
-                    glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
-                    enabled: SpotifyState.track !== null
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.toggleLike()
-                }
-                BevelButton {
-                    glyph: ""
-                    checked: root.addMode
-                    enabled: SpotifyState.track !== null
-                    focusPolicy: Qt.NoFocus
-                    onClicked: root.toggleAddMode()
-                }
-                BevelButton {
-                    glyph: SpotifyState.volume === 0 ? "\ue04f" : "\ue050"
-                    enabled: SpotifyState.volume >= 0
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.toggleMute()
-                }
-                RetroSlider {
-                    id: volumeSlider
-                    Layout.fillWidth: true
-                    from: 0
-                    to: 100
-                    stepSize: 1
-                    enabled: SpotifyState.volume >= 0
-                    // Every change (drag, click, release) goes straight to SpotifyState, which decides
-                    // where it goes (PipeWire here, Spotify for another device) and what to show
-                    onMoved: SpotifyState.setVolume(value)
-                    onPressedChanged: {
-                        if (!pressed)
-                            SpotifyState.setVolume(value);
-                    }
-                    // Shows SpotifyState.volume, except while your hand is on the knob.
-                    // RestoreNone: switching this off must never move the knob.
-                    Binding on value {
-                        when: !volumeSlider.pressed
-                        value: Math.max(0, SpotifyState.volume)
-                        restoreMode: Binding.RestoreNone
-                    }
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.preferredWidth: pctWidth.width
-                    horizontalAlignment: Text.AlignRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: SpotifyState.volume >= 0 ? SpotifyState.volume + "%" : ""
-                    TextMetrics {
-                        id: pctWidth
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        text: "100%"
-                    }
-                }
-            }
+            SpotifyTransport { Layout.fillWidth: true; panel: root }
 
             Local.MenuSeparator {
                 Layout.fillWidth: true
@@ -495,563 +234,22 @@ PanelWindow {
                 visible: !root.addMode && !root.lyricsMode
             }
 
-            // Tabs
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.gap
-                visible: !root.addMode
-                Repeater {
-                    model: [
-                        { key: "library", text: "Library" },
-                        { key: "liked", text: "Liked" },
-                        { key: "search", text: "Search" },
-                        { key: "lyrics", text: "Lyrics" }
-                    ]
-                    BevelButton {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        text: modelData.text
-                        checked: root.tab === modelData.key
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.showTab(modelData.key)
-                    }
-                }
-            }
+            // Tabs, chips / opened item's header, artist summary and the filter box
+            SpotifyNav { id: nav; Layout.fillWidth: true; panel: root }
 
-            // Library chips, or an opened item's header (Back, title, Play) / the playlist picker's;
-            // the view toggle sits at the end of whichever row is showing
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.gap
-                visible: root.addMode || root.stack.length > 0 || root.tab === "library" || root.searchMode
-                Repeater {
-                    model: !root.addMode && root.stack.length === 0 && root.tab === "library" ? [
-                        { key: "all", text: "All" },
-                        { key: "playlist", text: "Playlists" },
-                        { key: "artist", text: "Artists" },
-                        { key: "album", text: "Albums" }
-                    ] : []
-                    BevelButton {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        text: modelData.text
-                        checked: root.libraryKind === modelData.key
-                        focusPolicy: Qt.NoFocus
-                        onClicked: {
-                            root.libraryKind = modelData.key;
-                            root.setCursor(0);
-                            root.focusKeys();
-                        }
-                    }
-                }
-                // Search chips: narrow the results to one type
-                Repeater {
-                    model: root.searchMode ? [
-                        { key: "all", text: "All" },
-                        { key: "track", text: "Songs" },
-                        { key: "album", text: "Albums" },
-                        { key: "artist", text: "Artists" },
-                        { key: "playlist", text: "Playlists" }
-                    ] : []
-                    BevelButton {
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: 1
-                        text: modelData.text
-                        checked: root.searchKind === modelData.key
-                        focusPolicy: Qt.NoFocus
-                        onClicked: {
-                            root.searchKind = modelData.key;
-                            root.setCursor(0);
-                            root.focusKeys();
-                        }
-                    }
-                }
-                BevelButton {
-                    visible: root.addMode || root.stack.length > 0
-                    text: root.addMode ? "Cancel" : "Back"
-                    glyph: ""
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        root.goBack();
-                        root.focusKeys();
-                    }
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    textFormat: Text.PlainText
-                    Layout.fillWidth: true
-                    visible: root.addMode || root.stack.length > 0
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.addMode ? "Add " + (root.addTarget ? root.addTarget.name : "") + " to:" : (root.view ? root.view.title : "")
-                }
-                BevelButton {
-                    visible: !root.addMode && root.view !== null && root.view.kind !== "folder" && root.view.kind !== "artist"
-                    text: "Play"
-                    glyph: ""
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.play(root.view.uri)
-                }
-                BevelButton {
-                    visible: root.showViewToggle
-                    glyph: SpotifyState.grid ? "" : ""
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        SpotifyState.grid = !SpotifyState.grid;
-                        root.focusKeys();
-                    }
-                }
-            }
-
-            // An artist: one big Play (their songs in Spotify), then the discography summary
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: !root.addMode && root.view !== null && root.view.kind === "artist"
-                spacing: MenuStyle.gap
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: root.view ? "Play " + root.view.title : ""
-                    glyph: "\ue037"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.play(root.view.uri)
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    textFormat: Text.PlainText
-                    Layout.fillWidth: true
-                    visible: text !== ""
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
-                    text: root.view && root.view.summary ? root.view.summary : ""
-                }
-            }
-
-            SearchBox {
-                id: filterInput
-                Layout.fillWidth: true
-                implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
-                visible: !root.lyricsMode
-                placeholder: root.searchMode ? "Search Spotify (Enter)" : "Filter"
-                onEdited: root.setCursor(0)
-                onEscaped: {
-                    if (!root.goBack())
-                        root.closeCallback();
-                }
-                // Up / Down (and Left / Right in the grid) move, Enter opens, Shift+Enter plays,
-                // Space plays / pauses while the filter is empty
-                onKeyPressed: event => {
-                    const cols = root.useGrid ? MenuStyle.spotifyGridColumnsLibrary : 1;
-                    const empty = filterInput.text === "";
-                    const cur = list.currentIndex;
-                    if (event.key === Qt.Key_Down) {
-                        root.setCursor(Math.min(root.items.length - 1, cur + cols));
-                    } else if (event.key === Qt.Key_Up) {
-                        root.setCursor(Math.max(0, cur - cols), -1);
-                    } else if (root.useGrid && empty && event.key === Qt.Key_Right) {
-                        root.setCursor(Math.min(root.items.length - 1, cur + 1));
-                    } else if (root.useGrid && empty && event.key === Qt.Key_Left) {
-                        root.setCursor(Math.max(0, cur - 1), -1);
-                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        const typed = filterInput.text.trim();
-                        // Search tab: a new query (or one with no results yet) goes to Spotify;
-                        // Enter on the same query opens the selected result
-                        // (Shift+Enter with an unsent query searches too: it must not play an old row)
-                        if (root.searchMode && typed !== ""
-                                && (typed !== root.searchQuery || (!(event.modifiers & Qt.ShiftModifier) && root.searchResults.length === 0)))
-                            root.runSearch();
-                        else if (event.modifiers & Qt.ShiftModifier)
-                            root.playItem(root.items[cur]);
-                        else
-                            root.activate(root.items[cur], true);
-                    } else if (event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) {
-                        const it = root.items[cur];
-                        if (it && it.kind === "track")
-                            root.songMenu = it;
-                    } else if (event.key === Qt.Key_Space && empty) {
-                        SpotifyState.togglePlay();
-                    } else {
-                        return;
-                    }
-                    event.accepted = true;
-                }
-            }
-
-            // The list (or the lyrics)
-            SunkenField {
-                id: listArea
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                padding: MenuStyle.spotifyInset
-                clip: true
-
-                NumberAnimation { id: listFade; target: listArea; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animFade }
-
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    textFormat: Text.PlainText
-                    anchors.centerIn: parent
-                    width: parent.width - 2 * MenuStyle.pad
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.Wrap
-                    visible: root.lyricsMode && (Lyrics.lines.length === 0 || root.remote)
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
-                    text: root.remote ? "Playing on " + root.deviceName() + ". Lyrics show while this PC plays: press Play here below."
-                        : (Media.spotify === null ? "Lyrics follow this PC's player (the Spotify app or spotifyd); neither is running." : "No synced lyrics for this song")
-                }
-
-                // Lyrics: the current line sits on the accent bar, kept at the reading spot; click a line to jump there
-                ListView {
-                    id: lyricsView
-                    anchors.fill: parent
-                    visible: root.lyricsMode && !root.remote
-                    model: Lyrics.lines
-                    // Set from Lyrics.onIndexChanged below: a plain binding gets overwritten when the
-                    // model changes, and then the view stops following the song
-                    Connections {
-                        target: Lyrics
-                        function onIndexChanged() {
-                            lyricsView.currentIndex = Lyrics.index;
-                        }
-                        function onLinesChanged() {
-                            lyricsView.currentIndex = Lyrics.index;
-                        }
-                    }
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    highlightRangeMode: ListView.ApplyRange
-                    preferredHighlightBegin: height * MenuStyle.lyricsAnchor - MenuStyle.rowHeight
-                    preferredHighlightEnd: height * MenuStyle.lyricsAnchor + MenuStyle.rowHeight
-                    highlightMoveDuration: MenuStyle.animScroll
-                    highlightFollowsCurrentItem: true
-                    // Room above and below so the first and last lines can reach the reading spot too
-                    header: Item { width: 1; height: lyricsView.height * MenuStyle.lyricsAnchor - MenuStyle.rowHeight }
-                    footer: Item { width: 1; height: lyricsView.height * (1 - MenuStyle.lyricsAnchor) - MenuStyle.rowHeight }
-                    delegate: Rectangle {
-                        id: lyricRow
-                        required property int index
-                        required property var modelData
-                        readonly property bool current: index === Lyrics.index
-                        width: lyricsView.width
-                        height: lyricText.implicitHeight + MenuStyle.gap
-                        color: current ? MenuStyle.selectBar : Qt.rgba(MenuStyle.selectBar.r, MenuStyle.selectBar.g, MenuStyle.selectBar.b, 0)
-                        Behavior on color {
-                            ColorAnimation { duration: MenuStyle.animHover }
-                        }
-                        Text {
-                            id: lyricText
-                            renderType: Text.NativeRendering
-                            font.hintingPreference: Font.PreferFullHinting
-                            textFormat: Text.PlainText
-                            anchors.verticalCenter: parent.verticalCenter
-                            x: MenuStyle.pad
-                            width: parent.width - 2 * MenuStyle.pad
-                            wrapMode: Text.Wrap
-                            horizontalAlignment: Text.AlignHCenter
-                            font.family: MenuStyle.bodyFont
-                            font.pixelSize: MenuStyle.lyricsFontSize
-                            color: lyricRow.current ? MenuStyle.selectText : (lyricRow.index < Lyrics.index ? MenuStyle.bevelDark : Config.colors.text)
-                            text: lyricRow.modelData.text === "" ? "♪" : lyricRow.modelData.text
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.seekLyric(lyricRow.modelData.t)
-                        }
-                    }
-                }
-
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    anchors.centerIn: parent
-                    width: parent.width - 2 * MenuStyle.pad
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.Wrap
-                    visible: !root.lyricsMode && root.items.length === 0
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
-                    text: root.emptyText()
-                }
-
-                // Rows: the accent bar spans the whole row; the play button sits inside it, on hover
-                // or when selected (songs play on click, so they have none)
-                ListView {
-                    id: list
-                    anchors.fill: parent
-                    visible: !root.lyricsMode && !root.useGrid
-                    model: root.items
-                    currentIndex: 0
-                    // Results of an older query (a new one is typed or on its way) look old
-                    opacity: root.searchMode && root.searchResults.length > 0 && (root.searchLoading || filterInput.text.trim() !== root.searchQuery) ? 0.5 : 1
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
-                    delegate: Item {
-                        id: row
-                        required property int index
-                        required property var modelData
-                        readonly property bool isTrack: modelData.kind === "track"
-                        readonly property bool isHeading: modelData.kind === "heading"
-                        readonly property bool sel: index === list.currentIndex
-                        readonly property bool playing: root.isPlaying(modelData)
-                        readonly property bool showPlay: !root.addMode && !isTrack && !isHeading && modelData.kind !== "more" && modelData.kind !== "folder" && (rowHover.hovered || sel)
-                        width: list.width
-                        height: isHeading ? MenuStyle.rowHeight : MenuStyle.spotifyRowHeight
-
-                        // Search results: a plain dim heading over each group, with an etched line
-                        Item {
-                            anchors.fill: parent
-                            visible: row.isHeading
-                            Text {
-                                id: headingText
-                                renderType: Text.NativeRendering
-                                font.hintingPreference: Font.PreferFullHinting
-                                anchors.left: parent.left
-                                anchors.leftMargin: MenuStyle.pad
-                                anchors.verticalCenter: parent.verticalCenter
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                font.bold: true
-                                color: MenuStyle.bevelDark
-                                text: row.isHeading ? row.modelData.name : ""
-                            }
-                            Local.MenuSeparator {
-                                anchors.left: headingText.right
-                                anchors.leftMargin: MenuStyle.pad
-                                anchors.right: parent.right
-                                anchors.rightMargin: MenuStyle.pad
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-
-                        HoverHandler {
-                            id: rowHover
-                        }
-                        // Right-click a song: its actions (queue, add to playlist, like) in the status line
-                        TapHandler {
-                            acceptedButtons: Qt.RightButton
-                            enabled: row.isTrack && !root.addMode
-                            onTapped: {
-                                root.setCursor(row.index);
-                                root.songMenu = row.modelData;
-                            }
-                        }
-                        MenuRow {
-                            anchors.fill: parent
-                            visible: !row.isHeading
-                            focusPolicy: Qt.NoFocus
-                            rightPadding: row.showPlay ? MenuStyle.pad + playButton.width + MenuStyle.gap : MenuStyle.pad
-                            selected: row.sel
-                            text: row.modelData.name
-                            marked: row.playing || row.modelData.pinned === true
-                            markGlyph: row.playing ? "\ue050" : ""
-                            subtext: row.isTrack ? row.modelData.sub + "  " + root.clock(row.modelData.duration) : row.modelData.sub
-                            iconSource: row.modelData.image || ""
-                            glyph: root.kindGlyph(row.modelData.kind)
-                            onClicked: {
-                                root.setCursor(row.index);
-                                root.activate(row.modelData);
-                            }
-                        }
-                        BevelButton {
-                            id: playButton
-                            anchors.right: parent.right
-                            anchors.rightMargin: MenuStyle.pad
-                            anchors.verticalCenter: parent.verticalCenter
-                            visible: row.showPlay
-                            glyph: ""
-                            focusPolicy: Qt.NoFocus
-                            onClicked: root.playItem(row.modelData)
-                        }
-                    }
-                    ScrollIndicator.vertical: ScrollIndicator {
-                        active: list.moving
-                    }
-                }
-
-                // The same items as cover tiles
-                GridView {
-                    id: grid
-                    anchors.fill: parent
-                    visible: !root.lyricsMode && root.useGrid
-                    model: root.items
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-                    cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
-                    cellHeight: gridProbe.implicitHeight
-                    currentIndex: list.currentIndex
-                    onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
-                    CoverTile {
-                        id: gridProbe
-                        visible: false
-                        width: grid.cellWidth
-                    }
-                    delegate: CoverTile {
-                        required property int index
-                        required property var modelData
-                        width: grid.cellWidth
-                        height: grid.cellHeight
-                        entry: modelData
-                        selected: index === list.currentIndex
-                        canPlay: !root.addMode && modelData.kind !== "folder"
-                        onActivated: {
-                            root.setCursor(index);
-                            root.activate(modelData);
-                        }
-                        onPlayRequested: root.playItem(modelData)
-                    }
-                    ScrollIndicator.vertical: ScrollIndicator {
-                        active: grid.moving
-                    }
-                }
-            }
+            SpotifyList { id: spotifyList; Layout.fillWidth: true; Layout.fillHeight: true; panel: root }
 
             // Lyrics: a slim transport strip stays, so the drawer is never a dead end
-            Transport {
+            SpotifyButtons {
                 Layout.fillWidth: true
                 visible: root.lyricsMode
                 full: false
             }
 
-            // Status: errors / notes, and Log out (with a confirm)
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    textFormat: Text.PlainText
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: root.statusError !== "" && !root.songMenu ? Config.colors.urgent : (root.songMenu ? Config.colors.text : MenuStyle.bevelDark)
-                    text: root.songMenu ? root.songMenu.name
-                        : root.confirmLogout ? "Log out of Spotify here?"
-                        : root.statusError !== "" ? root.statusError
-                        : root.note !== "" ? root.note
-                        : (!root.lyricsMode && SpotifyState.volume < 0 ? "Volume shows once this PC plays" : "")
-                }
-                BevelButton {
-                    visible: root.songMenu !== null
-                    text: "Queue"
-                    glyph: "\ue03c"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        const s = root.songMenu;
-                        root.songMenu = null;
-                        SpotifyState.queue(s.uri, ok => root.note = ok ? s.name + " plays next" : "Couldn't queue " + s.name);
-                    }
-                }
-                BevelButton {
-                    visible: root.songMenu !== null
-                    glyph: "\ue03b"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        const s = root.songMenu;
-                        root.toggleAddMode({ uri: s.uri, name: s.name });
-                    }
-                }
-                BevelButton {
-                    visible: root.songMenu !== null
-                    glyph: "\ue87d"
-                    glyphColor: MenuStyle.likedColor
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        const s = root.songMenu;
-                        root.songMenu = null;
-                        SpotifyState.likeSong(s.uri, ok => root.note = ok ? "Liked " + s.name : "Couldn't like " + s.name);
-                    }
-                }
-                BevelButton {
-                    visible: root.songMenu !== null
-                    glyph: "\ue5cd"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: root.songMenu = null
-                }
-                BevelButton {
-                    visible: root.confirmLogout && !root.songMenu
-                    text: "Log out"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        root.confirmLogout = false;
-                        SpotifyState.logout();
-                    }
-                }
-                BevelButton {
-                    visible: root.confirmLogout && !root.songMenu
-                    text: "Cancel"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: root.confirmLogout = false
-                }
-                BevelButton {
-                    visible: !root.confirmLogout && !root.songMenu
-                    text: "Log out"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: root.confirmLogout = true
-                }
-            }
+            SpotifyStatusBar { Layout.fillWidth: true; panel: root }
         }
     }
 
-    // Previous / play / next (+ shuffle / repeat when full, + Play here on another device)
-    component Transport: RowLayout {
-        property bool full: true
-        spacing: MenuStyle.gap
-        BevelButton {
-            Layout.fillWidth: true
-            visible: parent.full
-            glyph: ""
-            checked: SpotifyState.player !== null && SpotifyState.player.shuffle
-            enabled: SpotifyState.player !== null
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.toggleShuffle()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: ""
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.previous()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: SpotifyState.player && SpotifyState.player.playing ? "" : ""
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.togglePlay()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: ""
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.next()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            visible: parent.full
-            glyph: SpotifyState.player && SpotifyState.player.repeat === "track" ? "" : ""
-            checked: SpotifyState.player !== null && SpotifyState.player.repeat !== "off"
-            enabled: SpotifyState.player !== null
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.cycleRepeat()
-        }
-        BevelButton {
-            visible: !parent.full && SpotifyState.player !== null && !SpotifyState.local
-            text: "Play here"
-            glyph: ""
-            focusPolicy: Qt.NoFocus
-            onClicked: SpotifyState.playHere()
-        }
-    }
 
     // --- behaviour ---
 
@@ -1068,12 +266,12 @@ PanelWindow {
 
     function kindGlyph(kind) {
         switch (kind) {
-        case "track": return "";
-        case "artist": return "";
-        case "album": return "";
-        case "folder": return "";
-        case "liked": return "";
-        default: return "";
+        case "track": return "\ue405";
+        case "artist": return "\ue7fd";
+        case "album": return "\ue019";
+        case "folder": return "\ue2c7";
+        case "liked": return "\ue87d";
+        default: return "\ue03d";
         }
     }
 
@@ -1116,7 +314,7 @@ PanelWindow {
             }
         }
         if (root.searchMode)
-            root.setCursor(list.currentIndex);
+            root.setCursor(listView.currentIndex);
     }
 
     function emptyText() {
@@ -1158,7 +356,7 @@ PanelWindow {
             j += dir < 0 ? -1 : 1;
         if (j < 0)
             for (j = 0; isHeading(j); j++) {}
-        list.currentIndex = Math.max(0, Math.min(j, root.items.length - 1));
+        listView.currentIndex = Math.max(0, Math.min(j, root.items.length - 1));
     }
 
     // Keyboard goes to the filter box where there is one, else to the key catcher (Lyrics, login)
@@ -1392,7 +590,7 @@ PanelWindow {
     }
 
     function push(entry) {
-        entry.fromIndex = list.currentIndex;
+        entry.fromIndex = listView.currentIndex;
         entry.fromFilter = filterInput.text;
         root.openedAt = Date.now();
         root.stack = root.stack.concat([entry]);
