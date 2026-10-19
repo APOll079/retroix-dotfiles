@@ -123,6 +123,43 @@ ColumnLayout {
             }
         }
         Item { Layout.fillWidth: true }
+        // Recent's toggle (collapse / expand, remembered): lives here so the strip needs no label row
+        Item {
+            id: recentToggle
+            visible: panel.tab === "library" && panel.view === null && !panel.searchMode && panel.filterInput.text.trim() === "" && SpotifyState.recent.length > 0
+            implicitHeight: MenuStyle.spotifyChipHeight
+            implicitWidth: toggleLabel.implicitWidth + toggleChevron.implicitWidth + 2 * MenuStyle.pad
+            Text {
+                id: toggleLabel
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                anchors.verticalCenter: parent.verticalCenter
+                x: MenuStyle.gap
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                color: toggleHover.hovered ? Config.colors.text : MenuStyle.bevelDark
+                text: "Recent"
+            }
+            Text {
+                id: toggleChevron
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: toggleLabel.right
+                font.family: MenuStyle.iconFont
+                font.pixelSize: MenuStyle.iconSize
+                color: toggleLabel.color
+                text: SpotifyState.recentOpen ? "\ue5ce" : "\ue5cf"
+            }
+            HoverHandler {
+                id: toggleHover
+                cursorShape: Qt.PointingHandCursor
+            }
+            TapHandler {
+                onTapped: SpotifyState.recentOpen = !SpotifyState.recentOpen
+            }
+            SpotifyHint { panel: nav.panel; text: SpotifyState.recentOpen ? "Hide Recent" : "Show Recent" }
+        }
         BevelButton {
             visible: panel.showViewToggle && panel.view === null
             implicitHeight: MenuStyle.spotifyChipHeight
