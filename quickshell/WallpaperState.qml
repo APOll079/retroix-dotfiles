@@ -23,11 +23,13 @@ Singleton {
     readonly property var monitors: adapter.monitors   // { "DP-2": { path, fit } }
     readonly property string file: Quickshell.statePath("wallpaper.json")
     readonly property string hyprctl: Quickshell.env("QS_WALLPAPER_HYPRCTL") || "hyprctl"
-    readonly property int maxTries: 10     // at start hyprpaper may not listen yet: retry once a second
+    readonly property int maxTries: 30     // at start hyprpaper may not listen yet (or know a monitor yet): retry once a second
+    readonly property int setTries: 4      // a Set from the browser: a few tries, then say which monitor failed
 
     property bool rerun: false
     property bool switchAfter: false
     property int tries: 0
+    property int triesTotal: 1
     property var pending: []               // [[monitor, path, fit], ...] being set
 
     function refresh() {
@@ -57,7 +59,7 @@ Singleton {
             next[m] = { path: path, fit: fit };
         adapter.monitors = next;
         root.writeLock();
-        root.send(outputs.map(m => [m, path, fit]), 1);
+        root.send(outputs.map(m => [m, path, fit]), root.setTries);
         if (colours || Config.settings.currentTheme === "wallpaper")
             root.makeColours(path, colours === true);
     }
@@ -96,8 +98,10 @@ Singleton {
     }
 
     function send(jobs, tries) {
+        retry.stop();
         root.pending = jobs;
         root.tries = tries;
+        root.triesTotal = tries;
         root.status = "";
         setter.running = false;
         setter.running = true;
@@ -124,20 +128,36 @@ Singleton {
         }
     }
 
-    // One hyprctl call per monitor; the first failure stops the run and (if tries are left) retries
+    // One hyprctl call per monitor, all of them every time (a monitor that fails never blocks the
+    // others), ~0.3 s apart: hyprpaper can answer "Invalid monitor" while it is still busy with the
+    // first image or doesn't know the second monitor yet. Each failure comes back as "MON|message";
+    // only those monitors are tried again. hyprctl splits the argument on every comma (no escape), so
+    // a path with a comma goes through a comma-free symlink in Quickshell's cache dir.
     Process {
         id: setter
-        command: ["sh", "-c", "hc=$1; shift; while [ $# -ge 3 ]; do out=$(\"$hc\" hyprpaper wallpaper \"$1,$2,$3\" 2>&1) || { echo \"$out\"; exit 1; }; case $out in *rror*|*ouldn*|*ailed*) echo \"$out\"; exit 1;; esac; shift 3; done",
-            "sh", root.hyprctl].concat([].concat(...root.pending))
+        command: ["sh", "-c", "hc=$1; lk=$2; shift 2; rc=0; first=1; while [ $# -ge 3 ]; do [ $first = 1 ] || sleep 0.3; first=0; p=$2; case $p in *,*) mkdir -p \"$lk\"; l=\"$lk/$(printf %s \"$p\" | md5sum | cut -c1-16).${p##*.}\"; ln -sfn \"$p\" \"$l\"; p=$l;; esac; out=$(\"$hc\" hyprpaper wallpaper \"$1,$p,$3\" 2>&1); st=$?; case $out in *rror*|*ouldn*|*ailed*) st=1;; esac; if [ $st -ne 0 ]; then printf '%s|%s\\n' \"$1\" \"$(printf %s \"$out\" | tr '\\n' ' ')\"; rc=1; fi; shift 3; done; exit $rc",
+            "sh", root.hyprctl, Quickshell.cachePath("wallpaper-links")].concat([].concat(...root.pending))
         stdout: StdioCollector { id: setterOut }
         onExited: code => {
             if (code === 0)
                 return;
+            // "DP-2|error: failed to set wallpaper: Invalid monitor" lines -> { "DP-2": "message" }
+            const failed = {};
+            for (const line of setterOut.text.split("\n")) {
+                const i = line.indexOf("|");
+                if (i > 0)
+                    failed[line.slice(0, i)] = line.slice(i + 1).trim();
+            }
+            const names = Object.keys(failed);
+            if (names.length > 0)
+                root.pending = root.pending.filter(j => names.indexOf(j[0]) !== -1);
             if (root.tries > 1) {
                 root.tries--;
                 retry.restart();
             } else {
-                root.status = "hyprpaper: " + (setterOut.text.trim() || "not running");
+                root.status = names.length > 0
+                    ? names.map(n => n + ": " + failed[n].replace(/^error:\s*/i, "")).join("   ") + " (gave up after " + root.triesTotal + " tries)"
+                    : "hyprpaper: not running";
             }
         }
     }
