@@ -18,7 +18,9 @@ import ".."
 // - Lyrics: the whole drawer for synced lyrics, with a slim transport strip at the bottom.
 // Lists show as rows or cover tiles (the view button, remembered). A click opens (a folder, an
 // album's / your playlist's songs, an artist's albums, Liked Songs); Back returns to where you were.
-// The play button (hover / selected, or Shift+Enter) plays without opening.
+// The play button (hover / selected, or Shift+Enter) plays without opening. With text in the Library
+// filter, the last row searches all of Spotify ("Search Spotify for 'x'"): the results open like an
+// item, songs play on their own, playlists you don't own are play-only.
 // Keys: type to filter, arrows move (Left / Right too in the grid), Enter opens, Shift+Enter plays,
 // Space plays / pauses (empty filter), Escape steps back, then closes.
 // Data and control: SpotifyState.qml + scripts/spotify.py. First run asks for the client ID of your
@@ -68,10 +70,15 @@ PanelWindow {
         return [];
     }
     readonly property var items: {
-        const q = filterInput.text.trim().toLowerCase();
-        return root.baseItems
+        const text = filterInput.text.trim();
+        const q = text.toLowerCase();
+        const rows = root.baseItems
             .filter(i => q === "" || (i.name + " " + i.sub).toLowerCase().includes(q))
             .map(i => root.pinned[i.uri] && !i.pinned ? Object.assign({}, i, { pinned: true }) : i);
+        // The library filter stays; the last row takes the same text to Spotify's search
+        if (text !== "" && root.tab === "library" && !root.view && !root.addMode)
+            rows.push({ kind: "search", uri: "search:" + text, query: text, name: "Search Spotify for '" + text + "'", sub: "", image: "" });
+        return rows;
     }
     readonly property bool songList: root.items.some(i => i.kind === "track") || (root.view !== null && root.view.kind === "liked") || (!root.view && root.tab === "liked")
     // Covers in a grid (remembered toggle) for anything but song lists and the playlist picker
@@ -752,7 +759,7 @@ PanelWindow {
                         required property var modelData
                         readonly property bool isTrack: modelData.kind === "track"
                         readonly property bool sel: index === list.currentIndex
-                        readonly property bool showPlay: !root.addMode && !isTrack && modelData.kind !== "folder" && (rowHover.hovered || sel)
+                        readonly property bool showPlay: !root.addMode && !isTrack && modelData.kind !== "folder" && modelData.kind !== "search" && (rowHover.hovered || sel)
                         width: list.width
                         height: MenuStyle.spotifyRowHeight
 
@@ -824,7 +831,7 @@ PanelWindow {
                         height: grid.cellHeight
                         entry: modelData
                         selected: index === list.currentIndex
-                        canPlay: !root.addMode && modelData.kind !== "folder"
+                        canPlay: !root.addMode && modelData.kind !== "folder" && modelData.kind !== "search"
                         onActivated: {
                             root.setCursor(index);
                             root.activate(modelData);
@@ -990,6 +997,7 @@ PanelWindow {
         case "album": return "";
         case "folder": return "";
         case "liked": return "";
+        case "search": return "\ue8b6";
         default: return "";
         }
     }
@@ -1018,6 +1026,8 @@ PanelWindow {
                 return SpotifyState.loading.liked ? "Loading..." : "No liked songs";
             if (root.view.loading)
                 return "Loading...";
+            if (root.view.kind === "search")
+                return "No results";
             if (root.view.kind === "artist")
                 return "Spotify didn't list this artist's albums. Play above still works.";
             // Not in the playlist list yet: it may still be one of yours, so no "you don't own it" yet
@@ -1154,7 +1164,7 @@ PanelWindow {
 
     // Play without opening (the play buttons, Shift+Enter)
     function playItem(item) {
-        if (!item || item.kind === "folder")
+        if (!item || item.kind === "folder" || item.kind === "search")
             return;
         SpotifyState.play(item.kind === "liked" ? "liked" : item.uri);
     }
@@ -1176,12 +1186,25 @@ PanelWindow {
             return;
         }
         if (item.kind === "track") {
-            const ctx = root.view ? root.view.uri : (root.tab === "liked" ? "liked" : "");
+            // A song from search results plays on its own (the results aren't a context)
+            const ctx = root.view ? (root.view.kind === "search" ? "" : root.view.uri) : (root.tab === "liked" ? "liked" : "");
             SpotifyState.play(ctx || item.uri, ctx ? item.uri : "");
             return;
         }
         if (item.kind === "folder") {
             root.push({ title: item.name, uri: item.uri, kind: "folder", items: item.children ? root.folderRows(item.children, false) : [], loading: false, blocked: !item.children });
+            return;
+        }
+        if (item.kind === "search") {
+            root.push({ title: "Search: " + item.query, uri: item.uri, kind: "search", items: [], loading: true });
+            const depth = root.stack.length;
+            SpotifyState.search(item.query, v => {
+                if (root.stack.length !== depth || root.stack[depth - 1].uri !== item.uri)
+                    return;
+                const s = root.stack.slice();
+                s[depth - 1] = Object.assign({}, s[depth - 1], { items: Array.isArray(v) ? v : [], loading: false });
+                root.stack = s;
+            });
             return;
         }
         if (item.kind === "liked") {

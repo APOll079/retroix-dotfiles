@@ -183,6 +183,11 @@ Singleton {
         root.run(["open", uri], v => callback(v));
     }
 
+    // All of Spotify (not just your library): songs, albums, artists, playlists, 10 of each
+    function search(text, callback) {
+        root.run(["search", text], v => callback(v));
+    }
+
     // --- control ---
 
     function after(args) {

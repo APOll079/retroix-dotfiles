@@ -18,6 +18,7 @@ Commands
   recent                      last 8 distinct albums / playlists / artists you played from
   playlists | artists | albums | liked-tracks
   open <uri>                  tracks of an album or of your own playlist; albums of an artist
+  search <text>               songs, albums, artists, playlists matching it (SEARCH_LIMIT each)
   play [<context-uri>|liked] [<track-uri>]   start a context (optionally at a track), or a single track
   resume                      play; with nothing active, carry on here (transfer) or start the last song
   transfer                    move playback to this PC (the app if open, else spotifyd), keep playing
@@ -31,7 +32,7 @@ Commands
 Endpoints used (Spotify's development-mode API after the February 2026 changes): /me, /me/player*,
 /me/player/recently-played, /me/playlists, /me/following, /me/albums, /me/tracks, /me/library
 (PUT, DELETE, /contains), /playlists/{id} (+ /items, own playlists only), /albums/{id}/tracks,
-/artists/{id}, /artists/{id}/albums. If Spotify changes one, this file is the only place to fix.
+/artists/{id}, /artists/{id}/albums, /search. If Spotify changes one, this file is the only place to fix.
 
 Testing: SPOTIFY_FIXTURE=<file.json> answers requests from a {"METHOD /path": response} map instead
 of the network (the query string is ignored), and login is skipped. A value {"__error": msg,
@@ -68,6 +69,7 @@ SCOPES = " ".join([
 LIKED_LIMIT = 1000        # Liked Songs: first N tracks (50 per request)
 PLAYLIST_LIMIT = 500      # a playlist's first N tracks (big ones would take dozens of requests)
 RETRY_MAX_WAIT = 5        # 429: wait and retry once when Retry-After is at most this many seconds
+SEARCH_LIMIT = 10         # /search: the most a development-mode app may ask for per type (2026)
 RECENT_TTL = 24 * 3600    # Recent: cached name / cover per context for this long (recent-cache.json)
 LOGIN_TIMEOUT = 180       # seconds to finish the browser login
 
@@ -636,6 +638,38 @@ def cmd_albums():
     return res
 
 
+def cmd_search(text):
+    """One /search for songs, albums, artists and playlists, in that order, as the panel's rows.
+    Playlists you don't own (or collaborate on) are play-only: Spotify won't list their songs."""
+    text = text.strip()
+    if not text:
+        return []
+    res = api("GET", "/search", {"q": text, "type": "track,album,artist,playlist", "limit": SEARCH_LIMIT}) or {}
+    items = lambda kind: [x for x in ((res.get(kind) or {}).get("items") or []) if x]    # playlists can hold nulls
+    rows = []
+    for t in items("tracks"):
+        row = track_item(t)
+        if row:
+            row["sub"] = "Song \u00b7 " + row["sub"]
+            rows.append(row)
+    for a in items("albums"):
+        rows.append({"kind": "album", "uri": a.get("uri", ""), "name": a.get("name", ""),
+                     "sub": "Album \u00b7 " + ", ".join(x.get("name", "") for x in a.get("artists", [])),
+                     "image": image(a.get("images")), "openable": True})
+    for a in items("artists"):
+        rows.append({"kind": "artist", "uri": a.get("uri", ""), "name": a.get("name", ""), "sub": "Artist",
+                     "image": image(a.get("images")), "openable": True})
+    pls = items("playlists")
+    uid = me_id() if pls else ""
+    for p in pls:
+        owner = p.get("owner") or {}
+        own = owner.get("id") == uid or bool(p.get("collaborative"))
+        rows.append({"kind": "playlist", "uri": p.get("uri", ""), "name": p.get("name", ""),
+                     "sub": "Playlist \u00b7 " + ("yours" if own else "by " + (owner.get("display_name") or "someone else")),
+                     "image": image(p.get("images")), "openable": own})
+    return [r for r in rows if r["uri"]]
+
+
 def cmd_liked_tracks():
     return [x for x in (track_item(s.get("track")) for s in paged("/me/tracks", {"limit": 50}, LIKED_LIMIT)) if x]
 
@@ -825,6 +859,8 @@ def dispatch(cmd, args):
         return cmd_liked_tracks()
     if cmd == "open":
         return cmd_open(args[0])
+    if cmd == "search":
+        return cmd_search(args[0])
     if cmd == "play":
         return cmd_play(args)
     if cmd == "resume":
