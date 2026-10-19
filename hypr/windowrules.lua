@@ -126,6 +126,18 @@ hl.window_rule({
     suppress_event = "activate activatefocus"
 })
 
+-- Floating terminal for doas password prompts (Services System actions, Uninstall): kitty --class qs-dialog.
+-- center is a boolean effect and size takes the table form {w, h} (Hyprland wiki, Window Rules > Effects); not seen running here
+hl.window_rule({
+    name  = "qs-dialog-terminal",
+    match = {
+        class = "^qs-dialog$"
+    },
+    float  = true,
+    center = true,
+    size   = { 720, 420 }
+})
+
 -- HyprEmoji (SUPER + period): float near the cursor. Rule taken from the package's own
 -- /usr/share/hypremoji/hypremoji.lua; without it the picker tiles and fills half the screen.
 hl.window_rule({

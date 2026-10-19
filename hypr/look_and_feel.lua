@@ -53,6 +53,10 @@ hl.config({
 
         blur = {
             enabled = false
+        },
+
+        shadow = {
+            enabled = false
         }
     }
 })

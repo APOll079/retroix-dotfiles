@@ -23,7 +23,7 @@ hl.bind(mainMod .. " + SHIFT" .. " + " .. "S", hl.dsp.exec_cmd(screenshotOverlay
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd("hyprpicker -a"))  -- help: Screen | Pick a colour
--- Task Manager (quickshell TaskManager.qml) on the focused monitor; btm stays installed, unbound
+-- Task Manager (quickshell TaskManager.qml) on the focused monitor
 local taskManager = [[bash -c 'qs ipc call taskmanager_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind("CTRL + SHIFT" .. " + " .. "ESCAPE", hl.dsp.exec_cmd(taskManager))  -- help: Apps | Task Manager
 -- Spotify panel (quickshell SpotifyPanel.qml) on the focused monitor

@@ -46,7 +46,6 @@ OUTPUTS = {
     "btop.theme": ("btop/themes/current.theme", None),
     "fish-colors.fish": ("fish/conf.d/theme-colors.fish", "fish"),
     "hypremoji.css": ("hypremoji/style.css", None),
-    "bottom.toml": ("bottom/bottom.toml", None),
     # App themes (CSS / colour files only, never a profile folder). Each is a guess at what the app
     # reads until it was tried live; see CLAUDE.md "App themes".
     "vscodium-package.json": ("~/.vscode-oss/extensions/qs.qs-retro-theme-1.0.0/package.json", None, "~/.vscode-oss/extensions"),
@@ -221,6 +220,8 @@ def main():
     if len(args) != 1:
         sys.exit(USAGE)
     name = args[0]
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", name):
+        sys.exit(f"bad theme name {name!r}: only letters, digits, - and _ are allowed")
     if palette_file:
         try:
             with open(palette_file, encoding="utf-8") as f:

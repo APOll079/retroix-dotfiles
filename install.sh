@@ -191,11 +191,26 @@ ensure_yay() {
     tmp="$(mktemp -d)"
     run doas pacman -S --needed git base-devel
     run git clone https://aur.archlinux.org/yay-bin.git "$tmp/yay-bin"
+    # No sudo here: makepkg would fall back to su. PACMAN_AUTH (read from the environment) makes it use doas
+    local auth=""
+    use_doas_for_yay && auth="PACMAN_AUTH=doas "
     if (( DRY )); then
-        note "[dry-run] (cd $tmp/yay-bin && makepkg -si)"
+        note "[dry-run] (cd $tmp/yay-bin && ${auth}makepkg -si)"
+    elif [[ -n "$auth" ]]; then
+        (cd "$tmp/yay-bin" && PACMAN_AUTH=doas makepkg -si)
     else
         (cd "$tmp/yay-bin" && makepkg -si)
     fi
+}
+
+# yay's default sudo binary is "sudo"; on a doas-only system every AUR install would fail
+use_doas_for_yay() { ! have sudo && have doas; }
+YAY_SUDO=()
+yay_configure() {
+    use_doas_for_yay || return 0
+    YAY_SUDO=(--sudo doas)
+    # --save writes ~/.config/yay/config.json; repeating it is harmless
+    if (( DRY )) || have yay; then run yay --sudo doas --save; fi
 }
 
 install_aur() {
@@ -219,6 +234,7 @@ install_aur() {
     fi
     if (( ${#fromaur[@]} )); then
         ensure_yay
+        yay_configure
         local known=()
         for p in "${fromaur[@]}"; do
             # dry run without yay: can't check, keep the name
@@ -226,7 +242,7 @@ install_aur() {
         done
         (( ${#known[@]} )) || return
         note "from the AUR: ${known[*]}"
-        run yay -S --needed "${known[@]}"
+        run yay "${YAY_SUDO[@]}" -S --needed "${known[@]}"
     fi
 }
 
@@ -312,6 +328,7 @@ enable_services() {
             continue
         fi
         enable_service "$scope" "$name"
+        [[ "$name" == spotifyd ]] && note "spotifyd: run 'spotifyd authenticate' once (a Spotify login), or the service keeps restarting"
     done < <(sed -e 's/#.*//' "$REPO/packages/services-dinit.txt" | awk 'NF >= 2')
 }
 
