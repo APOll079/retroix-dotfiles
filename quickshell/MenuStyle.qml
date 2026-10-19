@@ -94,7 +94,7 @@ Singleton {
     readonly property int spotifyChipHeight: 20     // chips: smaller than tabs and buttons
     readonly property int spotifyStatusHeight: 18   // the status bar at the bottom of the drawer
     readonly property int spotifyPagePad: 3         // inside the tab page's bevel
-    readonly property int spotifyRecentCount: 4    // the 4 newest, one row, square tiles of about 90 px
+    readonly property int spotifyRecentCount: 3    // the newest, one row, square tiles of about 120 px (collapsible)
     readonly property int spotifyLyricsCover: 32    // the cover in the compact lyrics header
     readonly property int spotifyNoteMs: 3000       // how long a short message stays on the status bar
     readonly property int spotifyWheelStep: 5       // the mouse wheel on the volume row: percent per notch

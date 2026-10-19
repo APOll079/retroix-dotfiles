@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import ".."
 
-// Recent: the 4 newest covers in ONE row of squares (about 90 px, so text printed on album art stays readable),
+// Recent: the 3 newest covers in ONE row of squares (about 120 px, so text printed on album art stays readable),
 // no captions: hovering names one (status bar + tooltip). Only on the Library tab with nothing typed and
 // nothing opened; collapsed by the "Recent" toggle in the chip row (remembered). A click opens, the play
 // button on a hovered cover plays.
