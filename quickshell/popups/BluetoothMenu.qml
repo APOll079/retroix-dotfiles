@@ -158,7 +158,7 @@ PopupWindow {
                     text: root.forgetting ? "Forget " + root.label(root.forgetting) + "?" : ""
                 }
                 BevelButton {
-                    text: "Yes"
+                    text: "Forget"
                     onClicked: {
                         root.forgetting.forget();
                         root.forgetting = null;

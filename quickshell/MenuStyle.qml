@@ -92,7 +92,7 @@ Singleton {
     readonly property int spotifyTickMs: 1000
     readonly property int spotifyVolumeStep: 300    // ms between Spotify volume calls while dragging (another device)
     readonly property int spotifyVolumeHold: 3000   // ms the slider keeps your value before trusting the source again
-    readonly property color likedColor: "#1db954"    // liked heart: Spotify green (the one colour not from the palette, on request)
+    readonly property color likedColor: "#1db954"    // liked heart: Spotify green (the one colour not from the palette, on request; bevelLight below is the second, a derived tint)
     readonly property int lyricsFastTick: 100
     readonly property int lyricsFontSize: 16      // Monaco hints cleanly at 12 and 16
     readonly property real lyricsAnchor: 0.38     // where the current lyric sits (0 top, 0.5 middle)
@@ -126,6 +126,8 @@ Singleton {
     readonly property int animScroll: 200
     // Idle dim layer strength (outline colour over the screen)
     readonly property real idleDimOpacity: 0.5
+    // Idle dim fades in over this long (eased, no bounce); 0 = appears at once. It leaves instantly on input.
+    readonly property int idleDimFade: 1000
     // Weather refresh (wttr.in), ms
     readonly property int weatherRefresh: 1800000
     readonly property int weatherRetry: 60000           // after a failed fetch
@@ -155,6 +157,8 @@ Singleton {
     // Stronger bevel tones, derived from the active theme so every theme keeps working.
     // Cherry's own highlight/shadow are too close to its base (1.07:1 / 1.5:1) to read as an edge.
     readonly property color bevelLight: Qt.tint(Config.colors.base, "#b3ffffff")
+    // Glyph of a bar button that is switched on (caffeine): the accent darkened, so it reads on the base face (accent itself is 2-4:1 there)
+    readonly property color barOnGlyph: Qt.darker(selectBar, 1.8)
     readonly property color bevelDark: Qt.darker(Config.colors.shadow, 1.7)
     // Hover / selected bar: a hard dark accent, with base-coloured text on top
     // Selection / hover bar, title bars and meter fills. Use the theme's own accent (cherry:

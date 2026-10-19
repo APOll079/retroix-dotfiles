@@ -56,6 +56,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         iconFontValue: "\uefef"
         isToggled: Idle.caffeine
+        glyphOn: Idle.caffeine
+        tooltip: Idle.caffeine ? "Caffeine on: idle dim, lock and screen-off paused" : "Caffeine off"
         onClicked: Idle.caffeine = !Idle.caffeine
     }
 

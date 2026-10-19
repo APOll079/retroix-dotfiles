@@ -116,20 +116,16 @@ Wallpapers,
 None
 }
 property alias settings: settingsJsonAdapter.settings
-FileView {
+// GuardedFileView saves adapter changes itself, creates a missing file, and on invalid JSON keeps
+// a .bad-<timestamp> copy and runs on these defaults without overwriting the file
+GuardedFileView {
 path: Qt.resolvedUrl("./settings.json")
 // when changes are made on disk, reload the file's content
 watchChanges: true
 onFileChanged: reload()
-// when changes are made to properties in the adapter, save them
-onAdapterUpdated: writeAdapter()
+// a good load, a missing file and a broken one all end here, so apply.py etc. still run
 onLoaded: root.settingsReady()
-onLoadFailed: error => {
-if (error == FileViewError.FileNotFound) {
-writeAdapter();
-}
-root.settingsReady();
-}
+onLoadFailed: error => root.settingsReady()
 JsonAdapter {
 id: settingsJsonAdapter
 property JsonObject settings: JsonObject {

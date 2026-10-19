@@ -22,10 +22,14 @@ Button {
     property string toggledIconFontValue: ""
     property string label: ""
     property int minWidth: MenuStyle.barButtonHeight
+    // glyphOn: draw the glyph in the darkened accent (a switch that is on, e.g. caffeine)
+    property bool glyphOn: false
+    // Flat hover note under the button after a short pause ("" = none)
+    property string tooltip: ""
 
     readonly property bool lit: interactive && hovered
     readonly property bool sunken: interactive && (isToggled || down)
-    readonly property color contentColor: lit ? MenuStyle.selectText : urgent ? Config.colors.urgent : (dim ? MenuStyle.bevelDark : Config.colors.text)
+    readonly property color contentColor: lit ? MenuStyle.selectText : urgent ? Config.colors.urgent : (glyphOn ? MenuStyle.barOnGlyph : dim ? MenuStyle.bevelDark : Config.colors.text)
     readonly property string currentGlyph: (isToggled && toggledIconFontValue !== "") ? toggledIconFontValue : iconFontValue
 
     implicitHeight: MenuStyle.barButtonHeight
@@ -73,7 +77,45 @@ Button {
                 color: root.contentColor
                 elide: Text.ElideRight
                 width: root.maxLabelWidth > 0 ? Math.min(implicitWidth, root.maxLabelWidth) : implicitWidth
+                textFormat: Text.PlainText
                 text: root.label
+            }
+        }
+    }
+
+    Timer {
+        id: tipTimer
+        interval: 500
+        running: root.tooltip !== "" && root.hovered && !root.down
+        onTriggered: tip.shown = true
+    }
+    PopupWindow {
+        id: tip
+        property bool shown: false
+        visible: shown && root.hovered && !root.down && root.tooltip !== ""
+        onVisibleChanged: if (!visible) shown = false
+        anchor.item: root
+        anchor.rect.x: Math.round(root.width / 2 - width / 2)
+        anchor.rect.y: root.height + 4
+        anchor.adjustment: PopupAdjustment.Slide
+        implicitWidth: tipText.implicitWidth + 2 * MenuStyle.pad
+        implicitHeight: tipText.implicitHeight + 2 * MenuStyle.gap + 2
+        color: "transparent"
+        Rectangle {
+            anchors.fill: parent
+            color: Config.colors.base
+            border.width: 1
+            border.color: Config.colors.outline
+            Text {
+                id: tipText
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                anchors.centerIn: parent
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                color: Config.colors.text
+                textFormat: Text.PlainText
+                text: root.tooltip
             }
         }
     }

@@ -92,6 +92,7 @@ Rectangle {
                     font.pixelSize: MenuStyle.fontSize
                     font.bold: true
                     color: root.titleTextColor
+                    textFormat: Text.PlainText
                     text: root.windowTitle
                 }
             }

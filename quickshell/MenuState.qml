@@ -8,7 +8,8 @@ Singleton {
     id: root
 
     property var openOn: ({})            // screen name -> true while that bar has a menu open
-    readonly property bool anyOpen: Object.keys(root.openOn).some(k => root.openOn[k])
+    // only monitors that still exist count (a flag left by an unplugged one is ignored)
+    readonly property bool anyOpen: Object.keys(root.openOn).some(k => root.openOn[k] && Quickshell.screens.some(s => s.name === k))
 
     signal closeAll()
 

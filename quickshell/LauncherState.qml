@@ -45,15 +45,10 @@ Singleton {
         adapter.pinned = p;
     }
 
-    FileView {
+    // First run has no file yet; GuardedFileView creates it (and keeps a broken one, see its header)
+    GuardedFileView {
         path: Quickshell.statePath("launcher.json")
-        // First run has no file yet; onLoadFailed creates it
         printErrors: false
-        onAdapterUpdated: writeAdapter()
-        onLoadFailed: error => {
-            if (error == FileViewError.FileNotFound)
-                writeAdapter();
-        }
         JsonAdapter {
             id: adapter
             property var counts: ({})

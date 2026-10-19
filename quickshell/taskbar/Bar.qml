@@ -13,6 +13,8 @@ id: root
 required property var modelData
 property int currentPopup: Config.SystemPopup.None
 onCurrentPopupChanged: MenuState.setOpen(root.modelData.name, root.currentPopup != Config.SystemPopup.None)
+// An unplugged monitor must not leave its flag set (the other bar's click catcher would stay up)
+Component.onDestruction: MenuState.setOpen(root.modelData.name, false)
 // A click on any monitor's click catcher closes the menus of every bar
 Connections {
 target: MenuState
@@ -247,6 +249,20 @@ strong: true
 dim: Media.paused
 label: Lyrics.line !== "" && !Media.paused ? Lyrics.line : Media.text
 maxLabelWidth: MenuStyle.barMediaMaxWidth
+// Left click: the Spotify drawer; middle click: play / pause
+MouseArea {
+anchors.fill: parent
+acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+cursorShape: Qt.PointingHandCursor
+onClicked: mouse => {
+if (mouse.button === Qt.MiddleButton) {
+if (Media.spotify && Media.spotify.canTogglePlaying)
+Media.spotify.togglePlaying();
+} else {
+taskbar.toggleMenu(spotifyPanel, Config.SystemPopup.Spotify, null, "keep");
+}
+}
+}
 }
 
 IpcHandler {

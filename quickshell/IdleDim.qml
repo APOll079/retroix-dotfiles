@@ -25,6 +25,11 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: Config.colors.outline
-        opacity: MenuStyle.idleDimOpacity
+        // Fades in over idleDimFade; when Idle.dimmed ends the window hides at once (input is never delayed)
+        opacity: Idle.dimmed ? MenuStyle.idleDimOpacity : 0
+        Behavior on opacity {
+            enabled: MenuStyle.idleDimFade > 0
+            NumberAnimation { duration: MenuStyle.idleDimFade; easing.type: Easing.InOutQuad }
+        }
     }
 }

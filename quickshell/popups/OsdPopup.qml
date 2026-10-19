@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Bluetooth
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,6 +17,8 @@ Scope {
     property int osdValue: 0
     // Text instead of a meter (Bluetooth); "" = show the meter
     property string osdText: ""
+    // Volume OSD while muted: "MUTE" instead of the percentage, empty meter
+    property bool osdMuted: false
     property bool ready: false
     readonly property var cfg: Config.settings.osd
 
@@ -40,6 +43,7 @@ Scope {
         root.osdLabel = label;
         root.osdIcon = icon;
         root.osdText = "";
+        root.osdMuted = false;
         root.osdValue = Math.max(0, Math.min(100, Math.round(value)));
         osdWindow.visible = true;
         hideTimer.restart();
@@ -49,6 +53,7 @@ Scope {
         root.osdLabel = label;
         root.osdIcon = icon;
         root.osdText = text;
+        root.osdMuted = false;
         osdWindow.visible = true;
         hideTimer.restart();
     }
@@ -60,6 +65,7 @@ Scope {
         if (!sink || !sink.audio)
             return;
         root.show("Volume", sink.audio.muted ? "\ue04f" : "\ue050", sink.audio.volume * 100);
+        root.osdMuted = sink.audio.muted;
     }
 
     Connections {
@@ -105,6 +111,8 @@ Scope {
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         // Empty input region: clicks go through to whatever is under the OSD
         mask: Region {}
+        // The focused monitor, like the toasts (null = the compositor's choice)
+        screen: Quickshell.screens.find(s => Hyprland.focusedMonitor && s.name === Hyprland.focusedMonitor.name) || null
 
         anchors {
             bottom: true
@@ -129,7 +137,7 @@ Scope {
                     Layout.fillWidth: true
                     implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
                     value: root.osdValue / 100
-                    dim: false
+                    dim: root.osdMuted
                 }
 
                 Text {
@@ -144,7 +152,7 @@ Scope {
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text
-                    text: root.osdText === "" ? root.osdValue + "%" : root.osdText
+                    text: root.osdText !== "" ? root.osdText : (root.osdMuted ? "MUTE" : root.osdValue + "%")
                 }
             }
         }

@@ -103,7 +103,7 @@ PopupWindow {
                                         visible: card.current
                                         font.family: MenuStyle.iconFont
                                         font.pixelSize: MenuStyle.iconSize - 2
-                                        color: Config.colors.accent
+                                        color: MenuStyle.selectBar
                                         text: ""
                                     }
                                     Text {

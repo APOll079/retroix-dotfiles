@@ -125,6 +125,7 @@ RowLayout {
                             font.pixelSize: MenuStyle.fontSize
                             font.bold: true
                             color: Config.colors.text
+                            textFormat: Text.PlainText
                             text: tip.title
                             visible: text !== ""
                         }
@@ -134,6 +135,7 @@ RowLayout {
                             font.family: MenuStyle.bodyFont
                             font.pixelSize: MenuStyle.fontSize
                             color: Config.colors.text
+                            textFormat: Text.PlainText
                             text: tip.description
                             visible: text !== ""
                         }
