@@ -30,6 +30,7 @@ PanelWindow {
     property int viewIndex: 0
     property string quick: "all"           // all | today | week
     property bool confirmDelete: false
+    property bool wantNewest: true         // select the newest shot as soon as the list has it (open, filter change)
 
     readonly property string dir: Quickshell.env("HOME") + "/screenshots"
     readonly property var targets: page === 1 ? (folderModel.count > 0 ? [pathAt(viewIndex)] : []) : selection
@@ -56,7 +57,13 @@ PanelWindow {
         nameFilters: root.filters()
         showDirs: false
         sortField: FolderListModel.Time
+        onStatusChanged: {
+            if (status === FolderListModel.Ready && root.wantNewest)
+                root.selectNewest();
+        }
         onCountChanged: {
+            if (root.wantNewest)
+                root.selectNewest();
             if (root.viewIndex >= count)
                 root.viewIndex = Math.max(0, count - 1);
             if (count === 0)
@@ -261,6 +268,7 @@ PanelWindow {
                     Text {
                         renderType: Text.NativeRendering
                         font.hintingPreference: Font.PreferFullHinting
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         elide: Text.ElideMiddle
                         font.family: MenuStyle.bodyFont
@@ -300,6 +308,7 @@ PanelWindow {
                     Text {
                         renderType: Text.NativeRendering
                         font.hintingPreference: Font.PreferFullHinting
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         elide: Text.ElideMiddle
                         font.family: MenuStyle.bodyFont
@@ -308,7 +317,7 @@ PanelWindow {
                         text: root.targets.length === 1 ? "Move " + root.baseName(root.targets[0]) + " to the trash?" : "Move " + root.targets.length + " shots to the trash?"
                     }
                     BevelButton {
-                        text: "Yes"
+                        text: "Move to Trash"
                         focusPolicy: Qt.NoFocus
                         onClicked: root.trash(root.targets)
                     }
@@ -376,10 +385,25 @@ PanelWindow {
 
     // --- selection ---
 
+    // The newest shot is selected from the start, so Copy / Open / Delete and Ctrl+C work at once.
+    // The list can still be loading (or the old filter's rows still there), so it is picked again
+    // whenever the model reports new content, until the user selects something themselves.
     function resetSelection() {
+        root.wantNewest = true;
         root.selection = [];
         root.anchorIndex = -1;
         root.confirmDelete = false;
+        grid.currentIndex = 0;
+        root.selectNewest();
+    }
+
+    function selectNewest() {
+        const p = root.pathAt(0);
+        if (p === "")
+            return;
+        root.selection = [p];
+        root.anchorIndex = 0;
+        root.keyNav = true;
         grid.currentIndex = 0;
     }
 
@@ -395,6 +419,7 @@ PanelWindow {
 
     function clickCell(i, mods) {
         const p = root.pathAt(i);
+        root.wantNewest = false;
         root.keyNav = false;
         root.confirmDelete = false;
         if ((mods & Qt.ShiftModifier) && root.anchorIndex >= 0) {
@@ -419,6 +444,7 @@ PanelWindow {
         if (folderModel.count === 0)
             return;
         const from = grid.currentIndex, to = Math.max(0, Math.min(folderModel.count - 1, from + d));
+        root.wantNewest = false;
         root.keyNav = true;
         root.confirmDelete = false;
         if (extend) {
@@ -497,7 +523,7 @@ PanelWindow {
             else if (k === Qt.Key_A && ctrl)
                 root.selectRange(0, folderModel.count - 1, false);
             else if (k === Qt.Key_Escape) {
-                if (root.selection.length > 0)
+                if (root.selection.length > 1)
                     root.resetSelection();
                 else
                     root.closeCallback();
@@ -541,6 +567,7 @@ PanelWindow {
     }
 
     function closeMenu() {
+        root.wantNewest = false;
         root.visible = false;
     }
 }

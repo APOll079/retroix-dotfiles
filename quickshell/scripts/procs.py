@@ -6,17 +6,20 @@ Prints one JSON object per line every interval (default 2 s) until stdin closes 
 Quickshell runs it only while the Task Manager is open. --once prints a single sample.
 
 { "cpu": %, "mem": {used, total}, "swap": {used, total},
-  "gpu": {busy, vramUsed, vramTotal} or null, "count": processes,
+  "gpu": {busy, vramUsed, vramTotal} or null, "count": processes, "self": this helper's pid,
   "groups": [{ name, count, cpu, mem, mine, pids }] }      (bytes for memory, % of the whole CPU)
 
 Processes are grouped by program: the executable's name when readable (so browser helper
-processes fold into their browser), else the kernel's short name. Kernel threads are skipped.
+processes fold into their browser), else the kernel's short name. Interpreters (python, node,
+bash, java, ...) are grouped by the script they run, wine by the Windows program, so "python3.13"
+or "wine64-preloader" do not swallow unrelated programs. Kernel threads are skipped.
 Memory is RSS summed per group, an estimate (shared pages are counted in every process).
 The GPU is the card with the most VRAM (amdgpu sysfs). Standard library only.
 """
 import glob
 import json
 import os
+import re
 import sys
 import time
 
@@ -68,6 +71,66 @@ def gpu_info(dev):
         return None
 
 
+INTERPRETER = re.compile(r"^(python[0-9.]*|pypy[0-9]*|node(js)?|electron[0-9]*|java|bash|sh|dash|zsh|fish|ruby|perl|lua[0-9.]*|luajit)$")
+WINE = re.compile(r"^wine(64)?(-preloader)?$|^wine64?-preloader$")
+SKIP_VALUE = {"-cp", "-classpath", "--classpath", "-r", "--require", "-p", "--print", "-W", "-X", "--eval"}
+
+
+def basename(path):
+    """Last part of a Unix or Windows path"""
+    return re.split(r"[\\/]", path.rstrip("\\/"))[-1]
+
+
+def script_name(args):
+    """The script (or module / jar) an interpreter runs: its first non-option argument, else None"""
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--":
+            return basename(args[i + 1]) if i + 1 < len(args) else None
+        if a == "-m":
+            return args[i + 1] if i + 1 < len(args) else None
+        if a == "-jar":
+            return basename(args[i + 1]) if i + 1 < len(args) else None
+        if a in ("-c", "-e"):
+            return None
+        if a in SKIP_VALUE:
+            i += 2
+            continue
+        if a.startswith("-"):
+            i += 1
+            continue
+        return basename(a)
+    return None
+
+
+def group_name(exe, cmdline):
+    """Group name for a process: `exe` is the executable's file name, `cmdline` its argv (list of str)."""
+    if WINE.match(exe):
+        for a in cmdline[1:]:
+            if a.lower().endswith(".exe"):
+                return basename(a)
+        return "wine"
+    if INTERPRETER.match(exe):
+        name = script_name(cmdline[1:])
+        if name:
+            # an Electron app's app.asar is named after its folder (/usr/lib/vesktop/app.asar)
+            if name.endswith(".asar") and len(cmdline) > 1:
+                parent = basename(os.path.dirname([a for a in cmdline[1:] if a.endswith(".asar")][0]))
+                return parent or name
+            return name
+    return exe
+
+
+def read_cmdline(d):
+    try:
+        with open(f"/proc/{d}/cmdline", "rb") as f:
+            raw = f.read(4096)
+    except OSError:
+        return []
+    return [x.decode("utf-8", "replace") for x in raw.split(b"\0") if x]
+
+
 def processes():
     """pid -> (name, ticks, rss bytes, mine)"""
     out = {}
@@ -92,6 +155,8 @@ def processes():
         name = comm
         try:
             name = os.path.basename(os.readlink(f"/proc/{d}/exe")).replace(" (deleted)", "") or comm
+            if INTERPRETER.match(name) or WINE.match(name):
+                name = group_name(name, read_cmdline(d))
         except OSError:
             pass
         out[pid] = (name, ticks, rss, mine)
@@ -117,7 +182,7 @@ def sample(prev, card):
     result = {
         "cpu": round(max(0.0, min(100.0, cpu)), 1),
         "mem": mem, "swap": swap, "gpu": gpu_info(card),
-        "count": len(procs),
+        "count": len(procs), "self": os.getpid(),
         "groups": sorted(({**g, "cpu": round(g["cpu"], 1)} for g in groups.values()), key=lambda g: (-g["cpu"], -g["mem"])),
     }
     state = {"total": total, "idle": idle, "ticks": {pid: p[1] for pid, p in procs.items()}}

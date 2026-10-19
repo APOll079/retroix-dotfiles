@@ -264,6 +264,7 @@ Scope {
                                         Text {
                                             renderType: Text.NativeRendering
                                             font.hintingPreference: Font.PreferFullHinting
+                                            textFormat: Text.PlainText
                                             width: parent.width
                                             elide: Text.ElideRight
                                             horizontalAlignment: Text.AlignHCenter
@@ -275,6 +276,7 @@ Scope {
                                         Text {
                                             renderType: Text.NativeRendering
                                             font.hintingPreference: Font.PreferFullHinting
+                                            textFormat: Text.PlainText
                                             width: parent.width
                                             elide: Text.ElideRight
                                             horizontalAlignment: Text.AlignHCenter

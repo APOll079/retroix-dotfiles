@@ -49,7 +49,8 @@ PanelWindow {
     property bool mineOnly: true
     property string selectedName: ""     // process group, kept across refreshes
     property int appIndex: 0
-    property var confirm: null           // { text, pids, signal }
+    property var confirm: null           // { text, verb, signal, name, pid } (pid only for the Apps tab)
+    property string notice: ""           // a short refusal shown in the status line for a few seconds
 
     readonly property var groups: {
         if (!root.sample)
@@ -88,7 +89,7 @@ PanelWindow {
             Keys.onEscapePressed: root.cancelOrClose()
             Keys.onUpPressed: root.appIndex = Math.max(0, root.appIndex - 1)
             Keys.onDownPressed: root.appIndex = Math.min(root.apps.length - 1, root.appIndex + 1)
-            Keys.onReturnPressed: root.switchToApp()
+            Keys.onReturnPressed: root.confirm ? root.doConfirm() : root.switchToApp()
             Keys.onTabPressed: event => {
                 if (event.modifiers & Qt.ControlModifier)
                     root.cycleTab(1);
@@ -187,6 +188,9 @@ PanelWindow {
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Delete) {
                                 root.askEnd(false);
+                                event.accepted = true;
+                            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
+                                root.doConfirm();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
                                 root.cycleTab(1);
@@ -349,17 +353,17 @@ PanelWindow {
                         font.family: MenuStyle.bodyFont
                         font.pixelSize: MenuStyle.fontSize
                         color: root.confirm ? Config.colors.text : MenuStyle.bevelDark
-                        text: root.confirm ? root.confirm.text : root.statusText()
+                        text: root.confirm ? root.confirm.text : root.notice !== "" ? root.notice : root.statusText()
                     }
                     BevelButton {
                         visible: root.confirm !== null
-                        text: "Yes"
+                        text: root.confirm ? root.confirm.verb : ""
                         focusPolicy: Qt.NoFocus
                         onClicked: root.doConfirm()
                     }
                     BevelButton {
                         visible: root.confirm !== null
-                        text: "No"
+                        text: "Cancel"
                         focusPolicy: Qt.NoFocus
                         onClicked: root.confirm = null
                     }
@@ -512,26 +516,105 @@ PanelWindow {
         root.closeCallback();
     }
 
+    // What happens if a core process is ended; "" = an ordinary program
+    function coreEffect(name) {
+        const n = name.toLowerCase();
+        if (n === "quickshell" || n === "qs")
+            return "the bar and every menu go away until it is restarted";
+        if (n === "hyprland" || n === "start-hyprland")
+            return "your session ends and every window closes";
+        if (n.startsWith("pipewire") || n === "wireplumber")
+            return "all sound stops";
+        if (n.startsWith("dinit"))
+            return "your user services go down";
+        if (n === "dbus-daemon" || n === "dbus-broker")
+            return "desktop apps lose their connection";
+        return "";
+    }
+
+    function groupOfPid(pid) {
+        return root.sample ? root.sample.groups.find(g => g.pids.indexOf(pid) !== -1) || null : null;
+    }
+
+    function ownHelper(g) {
+        return root.sample !== null && g.pids.indexOf(root.sample.self) !== -1;
+    }
+
+    function say(text) {
+        root.notice = text;
+        noticeTimer.restart();
+    }
+    Timer {
+        id: noticeTimer
+        interval: 4000
+        onTriggered: root.notice = ""
+    }
+
+    // A real pid: -1 would signal everything you own, 0 your process group
+    function validPid(p) {
+        return typeof p === "number" && Number.isInteger(p) && p > 1;
+    }
+
     function askEnd(force) {
+        let name = "", pid = 0;
         if (root.tab === "apps") {
             const t = root.selectedApp;
             if (!t)
                 return;
-            root.confirm = { text: (force ? "Kill " : "End ") + t.title + "?", pids: [t.lastIpcObject.pid], signal: force ? "KILL" : "TERM" };
+            pid = t.lastIpcObject.pid;
+            if (!root.validPid(pid)) {
+                root.say("No pid for this window");
+                return;
+            }
+            const g = root.groupOfPid(pid);
+            name = g ? g.name : t.title;
+            if (g && root.ownHelper(g)) {
+                root.say("This is the Task Manager's own helper: ending it would freeze this window");
+                return;
+            }
         } else if (root.tab === "processes") {
             const g = root.selectedGroup;
             if (!g || !g.mine)
                 return;
-            root.confirm = { text: (force ? "Kill " : "End ") + g.name + (g.count > 1 ? " (" + g.count + " processes)" : "") + "?", pids: g.pids, signal: force ? "KILL" : "TERM" };
+            if (root.ownHelper(g)) {
+                root.say(g.name + " is the Task Manager's own helper: ending it would freeze this window");
+                return;
+            }
+            name = g.name;
+        } else
+            return;
+        const effect = root.coreEffect(name);
+        const verb = force ? "Kill" : "End task";
+        if (effect !== "")
+            root.confirm = { text: name + " is a core process: " + effect + ". " + (force ? "Kill" : "End") + " anyway?", verb: verb + " anyway", signal: force ? "KILL" : "TERM", name: name, pid: pid };
+        else {
+            const g = root.tab === "processes" ? root.selectedGroup : null;
+            root.confirm = { text: (force ? "Kill " : "End ") + (root.tab === "apps" ? root.selectedApp.title : name + (g && g.count > 1 ? " (" + g.count + " processes)" : "")) + "?", verb: verb, signal: force ? "KILL" : "TERM", name: name, pid: pid };
         }
     }
 
+    // The pids are read again from the live sample now, not from when the question was asked
     function doConfirm() {
         const c = root.confirm;
         root.confirm = null;
-        if (!c || c.pids.length === 0)
+        if (!c)
             return;
-        Quickshell.execDetached(["kill", "-" + c.signal].concat(c.pids.map(p => String(p))));
+        let pids = [];
+        if (c.pid > 0) {
+            const g = root.groupOfPid(c.pid);
+            if (g && !root.ownHelper(g))
+                pids = [c.pid];
+        } else {
+            const g = root.sample ? root.sample.groups.find(x => x.name === c.name && x.mine) : null;
+            if (g && !root.ownHelper(g))
+                pids = g.pids;
+        }
+        pids = pids.filter(p => root.validPid(p));
+        if (pids.length === 0) {
+            root.say(c.name + " is already gone");
+            return;
+        }
+        Quickshell.execDetached(["kill", "-" + c.signal].concat(pids.map(p => String(p))));
     }
 
     function cancelOrClose() {

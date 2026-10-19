@@ -19,7 +19,8 @@ Item {
 
     property int cursor: 0
     property string target: "all"          // "all" or an output name
-    property string fit: "cover"
+    property string fit: "cover"           // "" = the chosen monitors have different fits and none was picked yet
+    property string seek: ""               // file name to put the cursor on once the list has it
 
     readonly property var fits: ["cover", "contain", "fill", "tile"]
     readonly property var prepared: WallpaperState.files.map(n => ({ name: Utils.Fuzzy.prepare(n), file: n }))
@@ -27,7 +28,34 @@ Item {
     readonly property string current: root.results[root.cursor] || ""
 
     onQueryChanged: root.cursor = 0
+    onTargetChanged: root.loadFit()
+
+    // The cursor goes to the picture the main monitor (DP-2, else the first saved one) shows. The list
+    // may still be loading when the browser opens, so it is looked up again whenever it changes.
+    function seekNow() {
+        if (root.seek === "")
+            return;
+        const i = root.results.indexOf(root.seek);
+        if (i < 0)
+            return;
+        root.seek = "";
+        root.cursor = i;
+        grid.positionViewAtIndex(i, GridView.Contain);
+    }
+
+    // The saved fit of the chosen monitor(s); different fits under "All" leave no fit chip checked
+    function loadFit() {
+        const saved = WallpaperState.monitors;
+        const fits = [];
+        for (const m of root.outputs()) {
+            const f = saved[m] && saved[m].fit;
+            if (f && fits.indexOf(f) === -1)
+                fits.push(f);
+        }
+        root.fit = fits.length === 1 ? fits[0] : fits.length === 0 ? "cover" : "";
+    }
     onResultsChanged: {
+        root.seekNow();
         if (root.cursor >= root.results.length)
             root.cursor = Math.max(0, root.results.length - 1);
     }
@@ -51,7 +79,7 @@ Item {
     function apply(name, colours) {
         if (name === "")
             return;
-        WallpaperState.setWallpaper(WallpaperState.pathOf(name), root.outputs(), root.fit, colours === true);
+        WallpaperState.setWallpaper(WallpaperState.pathOf(name), root.outputs(), root.fit || "cover", colours === true);
     }
 
     function move(d) {
@@ -68,6 +96,11 @@ Item {
 
     function reset() {
         root.cursor = 0;
+        const saved = WallpaperState.monitors;
+        const main = saved["DP-2"] ? "DP-2" : Object.keys(saved)[0];
+        root.seek = main ? saved[main].path.split("/").pop() : "";
+        root.seekNow();
+        root.loadFit();
         WallpaperState.refresh();
     }
 
@@ -94,6 +127,7 @@ Item {
                 font.pixelSize: MenuStyle.fontSize
                 color: MenuStyle.bevelDark
                 text: !WallpaperState.loaded ? "Looking for wallpapers..."
+                    : WallpaperState.folderSlow ? "Wallpaper folder is not answering\n" + WallpaperState.folder
                     : WallpaperState.folderMissing ? "No folder " + WallpaperState.folder + "\nMake it and put images in it (png, jpg, webp)"
                     : root.query !== "" ? "No match"
                     : "No images in " + WallpaperState.folder
@@ -233,7 +267,7 @@ Item {
             }
             Item { Layout.fillWidth: true }
             BevelButton {
-                text: "Set + colours"
+                text: Config.settings.currentTheme === "wallpaper" ? "Set + theme" : "Set + colours"
                 glyph: "\ue40a"
                 enabled: root.current !== ""
                 focusPolicy: Qt.NoFocus
@@ -272,6 +306,7 @@ Item {
                 font.pixelSize: MenuStyle.fontSize
                 color: WallpaperState.status !== "" ? Config.colors.text : MenuStyle.bevelDark
                 text: WallpaperState.status !== "" ? WallpaperState.status
+                    : WallpaperState.info !== "" ? WallpaperState.info
                     : root.current !== "" ? (root.cursor + 1) + " / " + root.results.length + "   " + root.current + "   in " + root.tilde(WallpaperState.folder)
                     : root.tilde(WallpaperState.folder)
             }

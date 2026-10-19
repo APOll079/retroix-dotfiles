@@ -9,7 +9,8 @@ import ".."
 // Keybind cheat sheet (Super+F1, `qs ipc call cheatsheet_<mon> toggle`), centred like the Games
 // menu. The list comes from scripts/binds.py, which reads hypr/binds.lua and hypr/inputs.lua next
 // to the shell folder; the label of each bind is its `-- help: Group | Label` comment there.
-// Type to filter (keys, label or group); Escape clears the search, then closes.
+// A heading row starts each group. The list scrolls (wheel; Up / Down / PageUp / PageDown in the
+// search box). Type to filter (keys, label or group); Escape clears the search, then closes.
 PanelWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)
@@ -22,6 +23,20 @@ PanelWindow {
     readonly property var shown: {
         const q = searchInput.text.trim().toLowerCase();
         return root.binds.filter(b => q === "" || (b.keys + " " + b.label + " " + b.group).toLowerCase().includes(q));
+    }
+
+    // shown + a heading row ({ heading: "Apps" }) wherever the group changes
+    readonly property var rows: {
+        const out = [];
+        let group = null;
+        for (const b of root.shown) {
+            if (b.group !== group) {
+                group = b.group;
+                out.push({ heading: group });
+            }
+            out.push(b);
+        }
+        return out;
     }
 
     // An Overlay-layer panel, not a popup of the bar: the bar sits below fullscreen windows, so a
@@ -71,6 +86,13 @@ PanelWindow {
                     Layout.fillWidth: true
                     placeholder: "Filter keybinds"
                     onEscaped: root.closeCallback()
+                    onKeyPressed: event => {
+                        const steps = { [Qt.Key_Up]: -3 * MenuStyle.rowHeight, [Qt.Key_Down]: 3 * MenuStyle.rowHeight, [Qt.Key_PageUp]: -list.height, [Qt.Key_PageDown]: list.height };
+                        if (event.key in steps) {
+                            list.contentY = Math.max(0, Math.min(Math.max(0, list.contentHeight - list.height), list.contentY + steps[event.key]));
+                            event.accepted = true;
+                        }
+                    }
                 }
 
                 SunkenField {
@@ -90,25 +112,50 @@ PanelWindow {
                         text: root.binds.length === 0 ? "No keybinds found" : "No matches"
                     }
 
-                    // Two columns, filled top to bottom
-                    GridView {
-                        id: grid
+                    ListView {
+                        id: list
                         anchors.fill: parent
-                        flow: GridView.FlowTopToBottom
-                        cellWidth: Math.floor(width / 2)
-                        cellHeight: MenuStyle.rowHeight
-                        interactive: false
-                        model: root.shown
+                        boundsBehavior: Flickable.StopAtBounds
+                        clip: true
+                        model: root.rows
                         delegate: Item {
+                            id: row
                             required property var modelData
-                            width: grid.cellWidth
-                            height: grid.cellHeight
+                            readonly property bool isHeading: modelData.heading !== undefined
+                            width: list.width
+                            height: MenuStyle.rowHeight
+
+                            Text {
+                                renderType: Text.NativeRendering
+                                font.hintingPreference: Font.PreferFullHinting
+                                visible: row.isHeading
+                                anchors.left: parent.left
+                                anchors.leftMargin: MenuStyle.gap
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 2
+                                font.family: MenuStyle.titleFont
+                                font.pixelSize: MenuStyle.fontSize
+                                font.bold: true
+                                color: MenuStyle.bevelDark
+                                text: row.isHeading ? row.modelData.heading : ""
+                            }
+                            Rectangle {
+                                visible: row.isHeading
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.leftMargin: MenuStyle.gap
+                                anchors.rightMargin: MenuStyle.gap
+                                height: 1
+                                color: Config.colors.shadow
+                            }
 
                             Rectangle {
                                 id: chip
+                                visible: !row.isHeading
                                 anchors.verticalCenter: parent.verticalCenter
                                 x: MenuStyle.gap
-                                width: MenuStyle.cheatKeyWidth
+                                width: Math.max(MenuStyle.cheatKeyWidth, keyText.implicitWidth + 2 * MenuStyle.pad)
                                 height: parent.height - 4
                                 color: Config.colors.base
                                 border.width: 1
@@ -121,12 +168,13 @@ PanelWindow {
                                     font.family: MenuStyle.bodyFont
                                     font.pixelSize: MenuStyle.fontSize
                                     color: Config.colors.text
-                                    text: modelData.keys
+                                    text: row.isHeading ? "" : row.modelData.keys
                                 }
                             }
                             Text {
                                 renderType: Text.NativeRendering
                                 font.hintingPreference: Font.PreferFullHinting
+                                visible: !row.isHeading
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.left: chip.right
                                 anchors.leftMargin: MenuStyle.gap
@@ -136,8 +184,11 @@ PanelWindow {
                                 font.family: MenuStyle.bodyFont
                                 font.pixelSize: MenuStyle.fontSize
                                 color: Config.colors.text
-                                text: modelData.label
+                                text: row.isHeading ? "" : row.modelData.label
                             }
+                        }
+                        ScrollIndicator.vertical: ScrollIndicator {
+                            active: list.moving
                         }
                     }
                 }

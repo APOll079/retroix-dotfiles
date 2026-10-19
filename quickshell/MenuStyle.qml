@@ -111,7 +111,6 @@ Singleton {
     // Bar centre keeps the last Spotify track this long after it goes empty (track changes)
     readonly property int barHideDelay: 2000
     // How often the lyric line follows Spotify's position
-    readonly property int servicesRefreshDelay: 4000 // Services panel: refresh after a doas terminal opened
     readonly property int taskInterval: 2000        // Task Manager refresh (ms)
     readonly property int taskHistory: 60           // samples per Performance graph (2 min at 2 s)
     readonly property int taskColumnWidth: 80       // CPU / Memory / Procs columns

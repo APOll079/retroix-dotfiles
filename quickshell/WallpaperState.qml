@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "utils/WallpaperJobs.js" as Jobs
 
 // Wallpapers for the wallpaper browser. The images are the files in settings.json "wallpaper.folder"
 // (default ~/Pictures/wallpapers, top level only). Picking one sets it live through hyprpaper's IPC
@@ -14,7 +15,12 @@ Singleton {
     property var files: []                 // file names in the folder, sorted
     property bool loaded: false
     property bool folderMissing: false
+    property bool folderSlow: false        // the folder listing timed out (dead mount?)
     property string status: ""             // last error from hyprpaper or the colour step, "" when fine
+    // Transient, not urgent: what a Set is doing / just did (cleared a few seconds after it finishes)
+    property string setInfo: ""
+    property string colourInfo: ""
+    readonly property string info: root.colourInfo !== "" ? root.colourInfo : root.setInfo
 
     readonly property string folder: {
         const f = (Config.settings.wallpaper && Config.settings.wallpaper.folder) || "~/Pictures/wallpapers";
@@ -31,6 +37,11 @@ Singleton {
     property int tries: 0
     property int triesTotal: 1
     property var pending: []               // [[monitor, path, fit], ...] being set
+    property var applied: ({})             // monitors hyprpaper accepted since start
+    property bool restoring: false         // the current send is the start-up restore (quiet about unplugged outputs)
+    property var setNames: []              // what the current user Set covers, for the feedback line
+    property string setFit: ""
+    property string setFile: ""
 
     function refresh() {
         if (lister.running)
@@ -59,6 +70,12 @@ Singleton {
             next[m] = { path: path, fit: fit };
         adapter.monitors = next;
         root.writeLock();
+        root.restoring = false;
+        root.setNames = outputs.slice();
+        root.setFit = fit;
+        root.setFile = path.split("/").pop();
+        root.setInfo = "Setting " + root.setFile + " on " + outputs.join(", ") + "...";
+        infoTimer.stop();
         root.send(outputs.map(m => [m, path, fit]), root.setTries);
         if (colours || Config.settings.currentTheme === "wallpaper")
             root.makeColours(path, colours === true);
@@ -66,6 +83,8 @@ Singleton {
 
     function makeColours(path, switchTheme) {
         root.switchAfter = switchTheme;
+        root.colourInfo = "Making colours...";
+        colourInfoTimer.stop();
         colourer.command = ["python3", "-I", Quickshell.shellDir + "/theme/wallcolors.py", path, "--out", Config.wallPalette];
         colourer.running = false;
         colourer.running = true;
@@ -90,17 +109,41 @@ Singleton {
     }
     Process { id: lockWriter }
 
-    // Only monitors that are plugged in: a saved one that isn't would burn all maxTries and leave a
-    // "gave up" status behind (all of them while the screen list is still empty at start)
+    // At start every saved monitor is tried, whatever Quickshell.screens says: right after login the
+    // list can be incomplete (DP-1 there, DP-2 a moment later), and filtering by it once dropped DP-2 for
+    // good. An output that is really unplugged just never answers; it burns its tries quietly (see
+    // Jobs.reportable). A screen that shows up later is handled by onScreensChanged below.
     function restore() {
         root.writeLock();
-        const connected = Quickshell.screens.map(s => s.name);
-        const jobs = Object.keys(adapter.monitors)
-            .filter(m => connected.length === 0 || connected.indexOf(m) !== -1)
-            .map(m => [m, adapter.monitors[m].path, adapter.monitors[m].fit || "cover"]);
-        if (jobs.length > 0)
+        root.started = true;
+        root.applied = {};
+        const jobs = Jobs.restoreJobs(adapter.monitors, root.applied, [], [], true);
+        console.log("[wallpaper] restore: " + (jobs.map(j => j[0]).join(", ") || "nothing saved") + " (screens now: " + root.screenList().join(", ") + ")");
+        if (jobs.length > 0) {
+            root.restoring = true;
             root.send(jobs, root.maxTries);
+        }
     }
+
+    function screenList() {
+        return Quickshell.screens.map(s => s.name);
+    }
+
+    // A screen appeared after the restore started: set the saved wallpaper on it too
+    Connections {
+        target: Quickshell
+        function onScreensChanged() {
+            if (!root.started)
+                return;
+            const jobs = Jobs.restoreJobs(adapter.monitors, root.applied, root.pending.map(j => j[0]), root.screenList(), false);
+            console.log("[wallpaper] screens changed: " + root.screenList().join(", ") + (jobs.length > 0 ? " -> setting " + jobs.map(j => j[0]).join(", ") : ""));
+            if (jobs.length > 0) {
+                root.restoring = true;
+                root.send(root.pending.concat(jobs), root.maxTries);
+            }
+        }
+    }
+    property bool started: false
 
     function send(jobs, tries) {
         retry.stop();
@@ -108,6 +151,7 @@ Singleton {
         root.tries = tries;
         root.triesTotal = tries;
         root.status = "";
+        console.log("[wallpaper] try 1/" + tries + ": " + jobs.map(j => j[0]).join(", "));
         setter.running = false;
         setter.running = true;
     }
@@ -115,7 +159,7 @@ Singleton {
     // Lists the folder: images only, top level, sorted by name
     Process {
         id: lister
-        command: ["find", "-L", root.folder, "-maxdepth", "1", "-type", "f",
+        command: ["timeout", "10", "find", "-L", root.folder, "-maxdepth", "1", "-type", "f",
             "(", "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")",
             "-printf", "%f\\n"]
         stdout: StdioCollector {
@@ -125,7 +169,9 @@ Singleton {
             }
         }
         onExited: code => {
-            root.folderMissing = code !== 0 && root.files.length === 0;
+            // 124 = timeout: a folder on a dead mount must not hang the listing
+            root.folderSlow = code === 124;
+            root.folderMissing = code !== 0 && code !== 124 && root.files.length === 0;
             if (root.rerun) {
                 root.rerun = false;
                 lister.running = true;
@@ -144,27 +190,64 @@ Singleton {
             "sh", root.hyprctl, Quickshell.cachePath("wallpaper-links")].concat([].concat(...root.pending))
         stdout: StdioCollector { id: setterOut }
         onExited: code => {
-            if (code === 0)
+            const attempt = root.triesTotal - root.tries + 1;
+            if (code === 0) {
+                for (const j of root.pending)
+                    root.markApplied(j[0], attempt, "ok");
+                root.pending = [];
+                root.finishSet();
                 return;
-            // "DP-2|error: failed to set wallpaper: Invalid monitor" lines -> { "DP-2": "message" }
-            const failed = {};
-            for (const line of setterOut.text.split("\n")) {
-                const i = line.indexOf("|");
-                if (i > 0)
-                    failed[line.slice(0, i)] = line.slice(i + 1).trim();
             }
+            // "DP-2|error: failed to set wallpaper: Invalid monitor" lines -> { "DP-2": "message" }
+            const failed = Jobs.parseFailures(setterOut.text);
             const names = Object.keys(failed);
+            for (const j of root.pending) {
+                if (names.indexOf(j[0]) === -1)
+                    root.markApplied(j[0], attempt, "ok");
+                else
+                    console.log("[wallpaper] " + j[0] + ": " + failed[j[0]] + " (try " + attempt + "/" + root.triesTotal + ")");
+            }
             if (names.length > 0)
                 root.pending = root.pending.filter(j => names.indexOf(j[0]) !== -1);
+            else
+                console.log("[wallpaper] hyprctl failed without a monitor message: hyprpaper not running? (try " + attempt + "/" + root.triesTotal + ")");
             if (root.tries > 1) {
                 root.tries--;
                 retry.restart();
             } else {
-                root.status = names.length > 0
-                    ? names.map(n => n + ": " + failed[n].replace(/^error:\s*/i, "")).join("   ") + " (gave up after " + root.triesTotal + " tries)"
-                    : "hyprpaper: not running";
+                const shown = Jobs.reportable(names, root.screenList(), root.restoring);
+                console.log("[wallpaper] gave up on " + (names.join(", ") || "all") + " after " + root.triesTotal + " tries" + (shown.length < names.length ? " (not plugged in, quiet)" : ""));
+                root.setInfo = "";
+                if (names.length === 0)
+                    root.status = "hyprpaper: not running";
+                else if (shown.length > 0)
+                    root.status = shown.map(n => n + ": " + failed[n].replace(/^error:\s*/i, "")).join("   ") + " (gave up after " + root.triesTotal + " tries)";
             }
         }
+    }
+    function markApplied(m, attempt, result) {
+        const next = Object.assign({}, root.applied);
+        next[m] = true;
+        root.applied = next;
+        console.log("[wallpaper] " + m + ": " + result + " (try " + attempt + "/" + root.triesTotal + ")");
+    }
+    // All pending monitors accepted: say so for a few seconds (not after the quiet start-up restore)
+    function finishSet() {
+        if (root.restoring || root.setNames.length === 0)
+            return;
+        const f = root.setFit;
+        root.setInfo = "Set on " + root.setNames.join(", ") + " (" + f.charAt(0).toUpperCase() + f.slice(1) + ")";
+        infoTimer.restart();
+    }
+    Timer {
+        id: infoTimer
+        interval: 3000
+        onTriggered: root.setInfo = ""
+    }
+    Timer {
+        id: colourInfoTimer
+        interval: 3000
+        onTriggered: root.colourInfo = ""
     }
     // Palette from the picture (theme/wallcolors.py); then Config reads it and, if asked, the theme switches
     Process {
@@ -172,12 +255,15 @@ Singleton {
         stderr: StdioCollector { id: colourerErr }
         onExited: code => {
             if (code !== 0) {
+                root.colourInfo = "";
                 root.status = "colours: " + (colourerErr.text.trim().split("\n").pop() || "failed");
                 return;
             }
             Config.reloadWallTheme();
             if (root.switchAfter)
                 Config.settings.currentTheme = "wallpaper";
+            root.colourInfo = "Theme: wallpaper";
+            colourInfoTimer.restart();
         }
     }
     Timer {
@@ -186,15 +272,11 @@ Singleton {
         onTriggered: setter.running = true
     }
 
-    FileView {
+    // A wallpaper.json that doesn't parse is kept as .bad-<time> and never overwritten (GuardedFileView)
+    GuardedFileView {
         path: root.file
         printErrors: false
-        onAdapterUpdated: writeAdapter()
         onLoaded: root.restore()
-        onLoadFailed: error => {
-            if (error == FileViewError.FileNotFound)
-                writeAdapter();
-        }
         JsonAdapter {
             id: adapter
             property var monitors: ({})

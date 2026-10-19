@@ -201,7 +201,7 @@ PanelWindow {
         }
     }
 
-    // Keys: Escape cancels, Enter shoots (screen / all / a finished region), 1-4 pick a mode
+    // Keys: Escape cancels, Enter shoots (screen / all; a region or window shoots on release / click), 1-4 pick a mode
     Item {
         id: keys
         focus: true
@@ -281,8 +281,9 @@ PanelWindow {
             args = ["-g", Math.round(r.x + root.screen.x) + "," + Math.round(r.y + root.screen.y) + " " + Math.round(r.width) + "x" + Math.round(r.height)];
         // $1 dir, then the grim arguments
         const script = [
-            'dir="$1"; shift; mkdir -p "$dir"; f="$dir/screenshot_$(date +%Y%m%d_%H%M%S).png"',
-            'grim "$@" "$f" || exit 1',
+            'dir="$1"; shift; mkdir -p "$dir"; b="$dir/screenshot_$(date +%Y%m%d_%H%M%S)"; f="$b.png"; n=2',
+            'while [ -e "$f" ]; do f="$b-$n.png"; n=$((n+1)); done',
+            'err=$(grim "$@" "$f" 2>&1) || { notify-send -a Screenshot "Screenshot failed" "$(printf %s "$err" | head -n 1)"; exit 1; }',
             'wl-copy < "$f"',
             'a=$(notify-send -a Screenshot -h "string:image-path:$f" -A default=Open "Screenshot saved" "$(basename "$f")")',
             '[ "$a" = default ] && xdg-open "$f"'

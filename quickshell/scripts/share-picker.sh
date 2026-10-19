@@ -29,7 +29,11 @@ note() { printf '%s %s %s\n' "$(date +%T)" "$$" "$*" >> "$log"; }
 
 # One picker at a time: later requests queue here until the earlier one has answered
 exec 9>"$state/lock"
-command -v flock >/dev/null 2>&1 && flock 9
+# (waits at most 130 s: one hung picker, killed after 120 s below, can't block every later share)
+if command -v flock >/dev/null 2>&1 && ! flock -w 130 9; then
+    note "gave up waiting for the lock"
+    exit 0
+fi
 
 if [ -f "$last" ]; then
     age=$(( $(date +%s) - $(stat -c %Y "$last") ))
@@ -44,7 +48,8 @@ here=$(cd "$(dirname "$0")" && pwd)
 out=$(mktemp "$state/out.XXXXXX") || exit 1
 trap 'rm -f "$out"' EXIT
 note start
-SHAREPICKER_OUT="$out" qs -p "$here/../sharepicker.qml" >/dev/null 2>&1
+# a picker nobody answers for 2 minutes is killed; it printed nothing, so that is a cancel
+SHAREPICKER_OUT="$out" timeout 120 qs -p "$here/../sharepicker.qml" >/dev/null 2>&1
 cp "$out" "$last"
 result=$(tr -d '\n' < "$out")
 note "result: ${result:-cancelled}"

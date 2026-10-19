@@ -22,6 +22,10 @@ KEY_NAMES = {
     "return": "Enter", "enter": "Enter", "space": "Space", "escape": "Esc", "period": ".",
     "comma": ",", "left": "Left", "right": "Right", "up": "Up", "down": "Down",
     "print": "Print", "mouse_down": "Scroll down", "mouse_up": "Scroll up",
+    "xf86audioplay": "Media Play", "xf86audiopause": "Media Pause", "xf86audionext": "Media Next",
+    "xf86audioprev": "Media Previous", "xf86audiostop": "Media Stop", "xf86audiomute": "Mute",
+    "xf86audiomicmute": "Mic mute", "xf86audioraisevolume": "Volume up", "xf86audiolowervolume": "Volume down",
+    "xf86monbrightnessup": "Brightness up", "xf86monbrightnessdown": "Brightness down",
     "mouse:272": "Left drag", "mouse:273": "Right drag", "mouse:275": "Side button 1", "mouse:276": "Side button 2",
 }
 GROUP_ORDER = ["Apps", "Windows", "Workspaces", "Screen", "Desktop", "Mouse", "Media"]
@@ -82,6 +86,53 @@ def pretty(keys):
     return "+".join(names)
 
 
+DIRECTIONS = ["Left", "Right", "Up", "Down"]
+
+
+def fold(binds):
+    """Fold duplicate rows (rule based, order kept):
+    - four direction rows ("Super+Left" ... "Super+Down", "Focus left" ... "Focus down") -> "Super+Arrows | Move focus"
+    - rows with the same group and label but other keys -> one row, keys joined with " / "
+      (a side-button row keeps its own line: "<label> (side button)")."""
+    out = []
+    # directions: same group, same modifier prefix, labels "<word> <direction>"
+    seen = {}
+    for b in binds:
+        prefix, _, last = b["keys"].rpartition("+")
+        m = re.match(r"^(.*\S)\s+(left|right|up|down)$", b["label"], re.I)
+        if last in DIRECTIONS and m and m.group(2).lower() == last.lower():
+            seen.setdefault((b["group"], prefix, m.group(1).lower()), {})[last] = b
+    folded = {k for k, v in seen.items() if len(v) == 4}
+    done = set()
+    for b in binds:
+        prefix, _, last = b["keys"].rpartition("+")
+        m = re.match(r"^(.*\S)\s+(left|right|up|down)$", b["label"], re.I)
+        key = (b["group"], prefix, m.group(1).lower()) if m else None
+        if key in folded and last in DIRECTIONS:
+            if key not in done:
+                done.add(key)
+                out.append({"keys": (prefix + "+" if prefix else "") + "Arrows", "group": b["group"], "label": "Move " + m.group(1).lower()})
+            continue
+        out.append(b)
+    # same label, other keys
+    merged, index = [], {}
+    for b in out:
+        k = (b["group"], b["label"])
+        if k not in index:
+            index[k] = len(merged)
+            merged.append(dict(b))
+            continue
+        first = merged[index[k]]
+        side = lambda x: x["keys"].lower().startswith("side button")
+        if side(b) != side(first):
+            # a side-button twin of a keyboard / mouse row stays separate
+            (b if side(b) else first)["label"] += " (side button)"
+            merged.append(dict(b))
+        elif b["keys"] not in first["keys"].split(" / "):
+            first["keys"] += " / " + b["keys"]
+    return merged
+
+
 def dispatcher_label(rest):
     m = re.search(r"hl\.dsp\.([\w.]+)", rest)
     return m.group(1).replace(".", " ").replace("_", " ") if m else "custom action"
@@ -89,7 +140,8 @@ def dispatcher_label(rest):
 
 def parse(path):
     binds, loop = [], None
-    for line in open(path, encoding="utf-8"):
+    # errors="replace": one odd byte in a comment must not hide the whole file
+    for line in open(path, encoding="utf-8", errors="replace"):
         m = FOR.match(line)
         if m:
             loop = (m.group(1), m.group(2), m.group(3))
@@ -113,8 +165,9 @@ if __name__ == "__main__":
     for p in sys.argv[1:]:
         try:
             result += parse(p)
-        except OSError:
-            pass
+        except Exception as e:  # a missing / unreadable / odd file must not hide the others
+            print("binds.py: %s: %s" % (p, e), file=sys.stderr)
+    result = fold(result)
     rank = lambda b: GROUP_ORDER.index(b["group"]) if b["group"] in GROUP_ORDER else len(GROUP_ORDER)
     result.sort(key=rank)  # stable: file order inside a group
     print(json.dumps(result))

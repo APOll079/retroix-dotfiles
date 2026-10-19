@@ -9,8 +9,10 @@ import ".."
 // dinit services (Start > Services, `qs ipc call services_<mon> toggle`), centred like the Games
 // menu. Lists `dinitctl list` with state; Start / Stop / Restart act on the selected service.
 // Two scopes: "User" (your own dinit instance: pipewire, wireplumber, ...) runs straight away;
-// "System" (the machine's dinit) runs `doas dinitctl ...` in a terminal, so the password prompt is
-// the real one and nothing is stored. The panel refreshes after each action.
+// "System" (the machine's dinit) runs `doas dinitctl ...` in a floating terminal (`kitty --class
+// qs-dialog`), so the password prompt is the real one and nothing is stored. The panel closes while
+// the terminal is open (it would hold the keyboard over it) and the list refreshes when the
+// terminal exits. User actions refresh the list when they finish.
 // Type to filter, Up / Down select, Escape clears the search, then closes.
 // `dinitctl list` is expected as "[{+}     ] name (pid: 123)" per line; if your dinit prints it
 // differently, parse() below is the one place to adjust.
@@ -33,7 +35,9 @@ PanelWindow {
         return root.services.filter(s => (root.filter === "all" || s.state === root.filter) && (q === "" || s.name.toLowerCase().includes(q)));
     }
     readonly property var current: root.shown[root.cursor] || null
-    readonly property bool busy: actProc.running
+    readonly property bool busy: actProc.running || termProc.running
+    property bool listAgain: false         // a refresh was asked while `dinitctl list` was running
+    property string listScope: "user"      // the scope the running `dinitctl list` was started for
 
     onShownChanged: root.cursor = Math.max(0, Math.min(root.cursor, root.shown.length - 1))
 
@@ -156,6 +160,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         width: parent.width - 2 * MenuStyle.pad
                         horizontalAlignment: Text.AlignHCenter
+                        textFormat: Text.PlainText
                         wrapMode: Text.Wrap
                         visible: root.shown.length === 0
                         font.family: MenuStyle.bodyFont
@@ -198,6 +203,7 @@ PanelWindow {
                     Text {
                         renderType: Text.NativeRendering
                         font.hintingPreference: Font.PreferFullHinting
+                        textFormat: Text.PlainText
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         font.family: MenuStyle.bodyFont
@@ -261,47 +267,67 @@ PanelWindow {
         return out.sort((a, b) => a.name.localeCompare(b.name));
     }
 
+    // One `dinitctl list` at a time. Asked again while one runs (the scope was switched, an action
+    // finished): the old one is stopped, its output is ignored (it belongs to the other scope) and a
+    // new one starts as soon as it has exited.
     function refresh() {
-        if (!listProc.running)
+        if (listProc.running) {
+            root.listAgain = true;
+            listProc.running = false;
+        } else {
+            root.listScope = root.scope;
             listProc.running = true;
+        }
     }
 
-    // Start / Stop / Restart. User services run directly; system services open a terminal where
-    // doas asks for the password. That terminal stays open until you close it, so it is detached
-    // (a second action meanwhile still works) and the list refreshes a little later.
+    // Start / Stop / Restart. User services run directly. System services open a floating terminal
+    // where doas asks for the password: the panel closes first (an Overlay panel with the keyboard
+    // would sit over the terminal), the list refreshes when the terminal exits. The name goes in as
+    // an argument, never into the script text, and must start with a letter or digit.
     function act(verb) {
         const s = root.current;
-        if (!s || !/^[A-Za-z0-9@._:+-]+$/.test(s.name))
+        if (!s || !/^[A-Za-z0-9][A-Za-z0-9@._:+-]*$/.test(s.name))
             return;
         if (root.scope === "system") {
-            Quickshell.execDetached([Config.settings.execCommands.terminal, "fish", "-c", "doas dinitctl --system " + verb + " " + s.name + "; echo; read -P 'Press Enter to close'"]);
-            refreshLater.restart();
+            termProc.command = ["kitty", "--class", "qs-dialog", "fish", "-c", "doas dinitctl --system $argv[1] $argv[2]; echo; read -P 'Press Enter to close'", verb, s.name];
+            termProc.running = true;
+            root.closeCallback();
         } else {
             actProc.command = ["dinitctl", "--user", verb, s.name];
             actProc.running = true;
         }
     }
 
-    Timer {
-        id: refreshLater
-        interval: MenuStyle.servicesRefreshDelay
-        onTriggered: root.refresh()
+    Process {
+        id: termProc
+        onExited: root.refresh()
     }
 
     Process {
         id: listProc
-        command: ["dinitctl", root.scope === "system" ? "--system" : "--user", "list"]
+        command: ["dinitctl", root.listScope === "system" ? "--system" : "--user", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (root.listScope !== root.scope)
+                    return;
                 root.services = root.parse(text);
                 if (root.services.length > 0)
                     root.error = "";
             }
         }
         stderr: StdioCollector {
-            onStreamFinished: root.error = text.trim() !== "" ? text.trim() : ""
+            onStreamFinished: {
+                if (root.listScope === root.scope)
+                    root.error = text.trim() !== "" ? text.trim() : "";
+            }
         }
         onExited: code => {
+            if (root.listAgain) {
+                root.listAgain = false;
+                root.listScope = root.scope;
+                listProc.running = true;
+                return;
+            }
             if (code !== 0 && root.error === "")
                 root.error = "dinitctl list failed (exit " + code + ")";
         }
