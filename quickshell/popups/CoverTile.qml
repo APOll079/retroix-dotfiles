@@ -20,6 +20,8 @@ Item {
     // Hover from a HoverHandler: it stays hovered over the play button, where a MouseArea would lose
     // the pointer to the button, hide it, get the pointer back and show it again (flicker)
     readonly property bool lit: hover.hovered || root.selected
+    // This album / playlist / artist is what plays right now
+    readonly property bool playingNow: !!root.entry.uri && SpotifyState.player !== null && root.entry.uri === SpotifyState.player.context
     readonly property int coverSize: width - 2 * MenuStyle.gap
 
     implicitHeight: MenuStyle.gap + coverSize + MenuStyle.spotifyInset + MenuStyle.rowHeight * (showSub ? 2 : 1)
@@ -67,6 +69,26 @@ Item {
                 default: return "";
                 }
             }
+        }
+    }
+
+    // Speaker in the cover's corner while this one plays
+    Rectangle {
+        anchors.left: cover.left
+        anchors.top: cover.top
+        anchors.margins: MenuStyle.gap
+        visible: root.playingNow
+        width: MenuStyle.iconSize + MenuStyle.gap
+        height: width
+        color: MenuStyle.selectBar
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            anchors.centerIn: parent
+            font.family: MenuStyle.iconFont
+            font.pixelSize: MenuStyle.iconSize
+            color: MenuStyle.selectText
+            text: "\ue050"
         }
     }
 

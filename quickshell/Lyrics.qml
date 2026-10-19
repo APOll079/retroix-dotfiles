@@ -17,6 +17,8 @@ Singleton {
     property bool fast: false     // the Spotify panel shows the lyrics: tick faster
     property int index: -1        // position of `line` in `lines` (-1 before the first line)
     property var cache: ({})      // key -> lines ([] = none found)
+    property var cacheKeys: []    // cache keys, oldest first (the cache keeps the newest cacheMax)
+    readonly property int cacheMax: 200
 
     onKeyChanged: load()
     Component.onCompleted: load()
@@ -55,13 +57,22 @@ Singleton {
     }
 
     function done(found) {
-        root.cache[fetch.pendingKey] = found;
+        const k = fetch.pendingKey;
+        if (!(k in root.cache)) {
+            root.cacheKeys.push(k);
+            while (root.cacheKeys.length > root.cacheMax)
+                delete root.cache[root.cacheKeys.shift()];
+        }
+        root.cache[k] = found;
         if (fetch.pendingKey === root.key)
             root.lines = found;
     }
 
     // Network failure: no lyrics for now, but nothing cached, so the track is tried again next time
     function failed() {
+        const i = root.cacheKeys.indexOf(fetch.pendingKey);
+        if (i >= 0)
+            root.cacheKeys.splice(i, 1);
         delete root.cache[fetch.pendingKey];
         if (fetch.pendingKey === root.key)
             root.lines = [];

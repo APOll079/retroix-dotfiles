@@ -54,7 +54,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 
 API = "https://api.spotify.com/v1"
 AUTH_URL = "https://accounts.spotify.com/authorize"
@@ -256,7 +256,10 @@ def api(method, endpoint, query=None, body=None, allow_empty=True):
         except ValueError:
             msg, reason = text[:200], ""
         raise ApiError(reason or msg or ("HTTP %d" % status), status)
-    return json.loads(raw) if raw else None
+    try:
+        return json.loads(raw) if raw else None
+    except ValueError:
+        raise ApiError("Spotify sent an unreadable answer", status)
 
 
 # serve mode keeps one HTTPS connection open (no new handshake per request)
@@ -301,7 +304,12 @@ def send(method, url, data, headers):
                 raise ApiError("No connection: %s" % e, 0)
 
 
-FOLDERS_PORT = 8899                    # the Spicetify extension qs-folders.js posts here
+FOLDERS_PORT = int(os.environ.get("SPOTIFY_FOLDERS_PORT") or 8899)   # the Spicetify extension qs-folders.js posts here (env: test hook)
+# A browser always sends Origin on a cross-origin POST. The extension runs inside the Spotify client
+# (page origin https://xpui.app.spotify.com, unverified live); any other Origin is a web page, refused.
+# No Origin at all (curl, a script on this PC) is let through. Host must name this listener (DNS rebinding).
+FOLDERS_ORIGIN_HOSTS = {"xpui.app.spotify.com"}
+FOLDERS_TIMEOUT = 5                    # seconds a client may take to send its request
 FOLDERS_MAX = 1024 * 1024              # bytes
 URI_RE = re.compile(r"^spotify:[A-Za-z0-9:._-]{1,200}$")
 
@@ -375,7 +383,7 @@ def take_message(text):
         return False
     write_private(name, {"items": data, "time": int(time.time())})
     # Tell the panel (its stdout reader) to re-read the file
-    print(json.dumps({"event": kind}), flush=True)
+    answer({"event": kind})
     return True
 
 
@@ -385,9 +393,22 @@ def folder_listener():
     Plain HTTP (the extension uses a no-cors fetch; verified working from Spotify). Localhost only,
     while the panel is open."""
     class Handler(BaseHTTPRequestHandler):
+        timeout = FOLDERS_TIMEOUT      # a client that stalls can't hold the listener for ever
+
+        def allowed(self):
+            host = (self.headers.get("Host") or "").lower()
+            if host not in ("127.0.0.1:%d" % FOLDERS_PORT, "localhost:%d" % FOLDERS_PORT):
+                return False
+            origin = self.headers.get("Origin")
+            return origin is None or (urllib.parse.urlparse(origin).hostname or "") in FOLDERS_ORIGIN_HOSTS
+
         def do_POST(self):
             ok = False
             try:
+                if not self.allowed():
+                    self.send_response(403)
+                    self.end_headers()
+                    return
                 size = int(self.headers.get("Content-Length") or 0)
                 kind = {"/folders": "folders", "/library": "library"}.get(self.path)
                 if kind and 0 < size <= FOLDERS_MAX:
@@ -397,14 +418,14 @@ def folder_listener():
             except (ValueError, OSError):
                 ok = False
             self.send_response(204 if ok else 400)
-            self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
 
         def log_message(self, *args):
             pass
 
     try:
-        server = HTTPServer(("127.0.0.1", FOLDERS_PORT), Handler)
+        server = ThreadingHTTPServer(("127.0.0.1", FOLDERS_PORT), Handler)
+        server.daemon_threads = True
     except OSError:
         return  # port taken (another panel instance): that one listens
     threading.Thread(target=server.serve_forever, daemon=True).start()
@@ -481,7 +502,8 @@ def paged(endpoint, query, limit=None, key=None):
         if limit and len(items) >= limit:
             return items[:limit]
         nxt = page.get("next")
-        page = api("GET", nxt) if nxt and not FIXTURE else None
+        # (only Spotify's own API: the Bearer token must never go to another host)
+        page = api("GET", nxt) if nxt and not FIXTURE and str(nxt).startswith(API + "/") else None
     return items
 
 
@@ -514,6 +536,7 @@ def track_item(t):
         "kind": "track", "uri": t.get("uri", ""), "name": t.get("name", ""),
         "sub": ", ".join(a.get("name", "") for a in t.get("artists", [])),
         "image": image(album.get("images")), "duration": t.get("duration_ms", 0),
+        "album_uri": album.get("uri", ""),
     }
 
 
@@ -662,7 +685,7 @@ def cmd_search(text):
         owner = p.get("owner") or {}
         own = owner.get("id") == uid or bool(p.get("collaborative"))
         rows.append({"kind": "playlist", "uri": p.get("uri", ""), "name": p.get("name", ""),
-                     "sub": "yours" if own else "by " + (owner.get("display_name") or "someone else"),
+                     "sub": "Your playlist" if own else "by " + (owner.get("display_name") or "someone else"),
                      "image": image(p.get("images")), "openable": own})
     return [r for r in rows if r["uri"]]
 

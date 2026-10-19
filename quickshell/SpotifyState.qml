@@ -146,6 +146,8 @@ Singleton {
             // A failed poll keeps the last known player instead of blanking the panel
             if (err)
                 return;
+            // A good answer ends an old error banner
+            root.error = "";
             root.player = v;
             root.progress = v ? v.progress : 0;
             const uri = v && v.track ? v.track.uri : "";
@@ -280,14 +282,9 @@ Singleton {
 
     // Grid or rows in the library tabs, remembered
     property alias grid: viewAdapter.grid
-    FileView {
+    GuardedFileView {
         path: Quickshell.statePath("spotify-view.json")
         printErrors: false
-        onAdapterUpdated: writeAdapter()
-        onLoadFailed: error => {
-            if (error == FileViewError.FileNotFound)
-                writeAdapter();
-        }
         JsonAdapter {
             id: viewAdapter
             property bool grid: false
@@ -377,6 +374,19 @@ Singleton {
         root.serve("volume", [100]);
         if (root.player)
             root.player = Object.assign({}, root.player, { volume: 100 });
+    }
+
+    // Speaker button: mute (remembering the level), click again to restore it
+    property int volumeBeforeMute: 50
+    function toggleMute() {
+        if (root.volume < 0)
+            return;
+        if (root.volume > 0) {
+            root.volumeBeforeMute = root.volume;
+            root.setVolume(0);
+        } else {
+            root.setVolume(root.volumeBeforeMute);
+        }
     }
 
     function setVolume(pct) {
