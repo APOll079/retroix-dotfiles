@@ -66,13 +66,14 @@ hl.workspace_rule({
 hl.bind(mainMod .. " + " .. "mouse_down", hl.dsp.focus({ workspace = "e+1" }))  -- help: Workspaces | Next workspace
 hl.bind(mainMod .. " + " .. "mouse_up", hl.dsp.focus({ workspace = "e-1" }))  -- help: Workspaces | Previous workspace
 
--- SUPER + C: scratchpad for Spotify + Vesktop. The window rules in windowrules.lua
--- send both to special:spotifyspace; this launches whichever isn't running, then toggles it.
+-- SUPER + C: scratchpad for Vesktop. The window rule in windowrules.lua sends it to
+-- special:spotifyspace (the name is kept from when Spotify lived there too; a Spotify started by
+-- hand still lands there hidden); this launches it if it isn't running, then toggles the workspace.
+-- Spotify itself is a Quickshell menu (Super+S) and is no longer started from here.
 local scratchApps = {
-    { class = "Spotify", cmd = "spotify" },
     { class = "vesktop", cmd = "vesktop" }
 }
-hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Spotify + Vesktop scratchpad
+hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchpad
     local running = {}
     for _, w in ipairs(hl.get_windows()) do
         running[w.class] = true

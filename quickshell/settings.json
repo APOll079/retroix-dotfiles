@@ -1,5 +1,8 @@
 {
     "settings": {
+        "audio": {
+            "eqOutputMatch": "DM15"
+        },
         "bar": {
             "fontSize": 12,
             "monochromeTrayIcons": true,

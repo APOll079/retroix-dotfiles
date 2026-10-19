@@ -177,6 +177,11 @@ property JsonObject weather: JsonObject {
 property string location: ""
 property bool metric: true
 }
+// Audio (Home tab): routing to a sink whose name / description contains eqOutputMatch (e.g. "DM15", the
+// DAC) turns the EasyEffects EQ on, routing to any other sink turns it off. Empty = never touch the EQ.
+property JsonObject audio: JsonObject {
+property string eqOutputMatch: ""
+}
 // Wallpaper browser (Themes > Wallpapers...): the folder it lists (top level only; ~ allowed)
 property JsonObject wallpaper: JsonObject {
 property string folder: "~/Pictures/wallpapers"

@@ -5,7 +5,7 @@ import QtQuick.Controls.Basic
 import Quickshell.Services.Pipewire
 import ".."
 
-// Audio section of the Home tab: now playing with controls, and per-app volume (the overall volume is on the DAC). `active` is true while Home is showing.
+// Audio section of the Home tab: now playing with controls, the output (EasyEffects-aware routing), the microphone, and per-app volume (the overall volume is on the DAC). `active` is true while Home is showing.
 ColumnLayout {
     id: root
     property bool active: false
@@ -56,11 +56,112 @@ ColumnLayout {
         }
     }
 
+    // === OUTPUT ===
+    // The hardware sinks. EasyEffects sits in front of them and follows the default sink (see
+    // AudioState.qml), so a click makes that sink the default and the tick is the current default;
+    // "EQ off" marks a sink the EQ is switched off for (settings.json "audio.eqOutputMatch").
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        visible: AudioState.outputs.length > 0
+        font.family: MenuStyle.titleFont
+        font.pixelSize: MenuStyle.fontSize
+        color: Config.colors.text
+        text: "Output"
+    }
+
+    Repeater {
+        model: AudioState.outputs
+
+        MenuRow {
+            required property var modelData
+            Layout.fillWidth: true
+            glyph: /^bluez/i.test(modelData.name) ? "\ue1a7" : "\ue050"
+            text: modelData.description || modelData.nickname || modelData.name
+            marked: AudioState.currentOutput === modelData
+            trailing: AudioState.eqOffTag(modelData) ? "EQ off" : ""
+            onClicked: AudioState.route(modelData)
+        }
+    }
+
+    // EasyEffects feeds another sink than the default for a few seconds: it is pinned to one device
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        Layout.fillWidth: true
+        visible: AudioState.notFollowing
+        wrapMode: Text.Wrap
+        font.family: MenuStyle.bodyFont
+        font.pixelSize: MenuStyle.fontSize
+        color: MenuStyle.bevelDark
+        text: "EasyEffects isn't following the default output. Turn on \"Use default output\" in its PipeWire settings."
+    }
+
+    // === MICROPHONE ===
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        visible: AudioState.mic !== null
+        font.family: MenuStyle.titleFont
+        font.pixelSize: MenuStyle.fontSize
+        color: Config.colors.text
+        text: "Microphone"
+    }
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        visible: AudioState.mic !== null
+        spacing: 2
+
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            Layout.fillWidth: true
+            elide: Text.ElideRight
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: Config.colors.text
+            text: AudioState.mic ? (AudioState.mic.description || AudioState.mic.nickname || AudioState.mic.name) : ""
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: MenuStyle.pad
+
+            BevelButton {
+                implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
+                glyph: AudioState.micMuted ? "\ue02b" : "\ue029"
+                checked: AudioState.micMuted
+                onClicked: AudioState.setMicMuted(!AudioState.micMuted)
+            }
+
+            RetroSlider {
+                Layout.fillWidth: true
+                from: 0
+                to: 100
+                value: AudioState.micVolume * 100
+                dim: AudioState.micMuted
+                onMoved: AudioState.setMicVolume(value / 100)
+            }
+
+            Text {
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                Layout.preferredWidth: MenuStyle.valueLabelWidth
+                horizontalAlignment: Text.AlignRight
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                color: Config.colors.text
+                text: AudioState.micMuted ? "MUTE" : Math.round(AudioState.micVolume * 100) + "%"
+            }
+        }
+    }
+
     // === PER-APP VOLUME ===
     // Node properties are only filled in once a node is tracked, so track every stream first
     // and pick the playback ones ("Stream/Output/Audio") after that.
     readonly property var allStreams: Pipewire.nodes.values.filter(n => n.isStream)
-    readonly property var streamNodes: allStreams.filter(n => n.properties && n.properties["media.class"] === "Stream/Output/Audio")
+    readonly property var streamNodes: allStreams.filter(n => n.properties && n.properties["media.class"] === "Stream/Output/Audio" && !AudioState.isEE(n))
 
     // One row per app: browsers open a stream per tab, so group streams by application name
     readonly property var appGroups: {
@@ -91,64 +192,82 @@ ColumnLayout {
         text: "Applications"
     }
 
-    Repeater {
-        model: root.appGroups
+    // Capped (scrolls after a few apps) so the side panel can't outgrow the screen
+    Flickable {
+        id: appsView
+        Layout.fillWidth: true
+        visible: root.appGroups.length > 0
+        Layout.preferredHeight: Math.min(appsColumn.implicitHeight, MenuStyle.audioAppsMaxHeight)
+        contentHeight: appsColumn.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: contentHeight > height
 
         ColumnLayout {
-            id: streamRow
-            required property var modelData
-            // The first stream speaks for the app; changes go to all of its streams
-            readonly property var lead: modelData.nodes[0]
-            readonly property real vol: lead.audio ? lead.audio.volume : 0
-            readonly property bool muted: lead.audio ? lead.audio.muted : false
-            function setVolume(v) {
-                for (var n of modelData.nodes) if (n.audio) n.audio.volume = v;
-            }
-            function setMuted(m) {
-                for (var n of modelData.nodes) if (n.audio) n.audio.muted = m;
-            }
-            Layout.fillWidth: true
-            spacing: 2
+            id: appsColumn
+            width: appsView.width
+            spacing: MenuStyle.pad
 
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: Config.colors.text
-                text: streamRow.modelData.name
-            }
+            Repeater {
+                model: root.appGroups
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.pad
-
-                BevelButton {
-                    implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
-                    glyph: streamRow.muted ? "\ue04f" : "\ue050"
-                    onClicked: streamRow.setMuted(!streamRow.muted)
-                }
-
-                RetroSlider {
+                ColumnLayout {
+                    id: streamRow
+                    required property var modelData
+                    // The first stream speaks for the app; changes go to all of its streams
+                    readonly property var lead: modelData.nodes[0]
+                    readonly property real vol: lead.audio ? lead.audio.volume : 0
+                    readonly property bool muted: lead.audio ? lead.audio.muted : false
+                    function setVolume(v) {
+                        for (var n of modelData.nodes) if (n.audio) n.audio.volume = v;
+                    }
+                    function setMuted(m) {
+                        for (var n of modelData.nodes) if (n.audio) n.audio.muted = m;
+                    }
                     Layout.fillWidth: true
-                    from: 0
-                    to: 100
-                    value: streamRow.vol * 100
-                    dim: streamRow.muted
-                    onMoved: streamRow.setVolume(value / 100)
-                }
+                    spacing: 2
 
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.preferredWidth: MenuStyle.valueLabelWidth
-                    horizontalAlignment: Text.AlignRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: streamRow.muted ? "MUTE" : Math.round(streamRow.vol * 100) + "%"
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        font.family: MenuStyle.bodyFont
+                        font.pixelSize: MenuStyle.fontSize
+                        color: Config.colors.text
+                        text: streamRow.modelData.name
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: MenuStyle.pad
+
+                        BevelButton {
+                            implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
+                            glyph: streamRow.muted ? "\ue04f" : "\ue050"
+                            onClicked: streamRow.setMuted(!streamRow.muted)
+                        }
+
+                        RetroSlider {
+                            Layout.fillWidth: true
+                            from: 0
+                            to: 100
+                            value: streamRow.vol * 100
+                            dim: streamRow.muted
+                            onMoved: streamRow.setVolume(value / 100)
+                        }
+
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            Layout.preferredWidth: MenuStyle.valueLabelWidth
+                            horizontalAlignment: Text.AlignRight
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.fontSize
+                            color: Config.colors.text
+                            text: streamRow.muted ? "MUTE" : Math.round(streamRow.vol * 100) + "%"
+                        }
+                    }
                 }
             }
         }
