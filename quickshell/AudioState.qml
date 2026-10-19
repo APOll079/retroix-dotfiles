@@ -23,7 +23,8 @@ import Quickshell.Services.Pipewire
 //                    across restarts. Empty = never touched. Only while EasyEffects runs.
 //  - mic             the one hardware source (EasyEffects' virtual source left out); mute / volume go
 //                    to it, so EasyEffects and every app hear the change.
-// QS_EASYEFFECTS_CMD replaces `flatpak run com.github.wwmm.easyeffects` (tests: a fake).
+// The flatpak (com.github.wwmm.easyeffects) when it is installed, else a native `easyeffects` on
+// PATH; QS_EASYEFFECTS_CMD replaces both (tests: a fake). A failed call is retried up to 3 times.
 Singleton {
     id: root
 
@@ -101,7 +102,10 @@ Singleton {
     // The sink the EQ state has to match: where EasyEffects really sends the sound
     readonly property var eqTarget: root.feeding || root.defaultOutput
     property string lastEq: ""             // the last `-b` value sent ("1" or "2")
-    onEqTargetChanged: eqSettle.restart()
+    onEqTargetChanged: {
+        bypass.tries = 0;
+        eqSettle.restart();
+    }
     onEeSinkChanged: {
         // EasyEffects (re)started: it may come back with an old bypass state
         root.lastEq = "";
@@ -122,12 +126,34 @@ Singleton {
                 return;
             root.lastEq = want;
             const base = Quickshell.env("QS_EASYEFFECTS_CMD");
-            bypass.command = base ? [base, "-b", want] : ["flatpak", "run", "com.github.wwmm.easyeffects", "-b", want];
+            bypass.command = base ? [base, "-b", want] : ["sh", "-c",
+                "if flatpak info com.github.wwmm.easyeffects >/dev/null 2>&1; then exec flatpak run com.github.wwmm.easyeffects -b \"$1\"; "
+                + "elif command -v easyeffects >/dev/null; then exec easyeffects -b \"$1\"; else exit 127; fi", "sh", want];
             bypass.running = false;
             bypass.running = true;
         }
     }
-    Process { id: bypass }
+    Process {
+        id: bypass
+        property int tries: 0
+        // Failed (EasyEffects busy starting, not installed): forget what was sent and try again
+        onExited: code => {
+            if (code === 0) {
+                bypass.tries = 0;
+                return;
+            }
+            root.lastEq = "";
+            if (bypass.tries < 3) {
+                bypass.tries++;
+                eqRetry.restart();
+            }
+        }
+    }
+    Timer {
+        id: eqRetry
+        interval: 3000
+        onTriggered: eqSettle.restart()
+    }
 
     // --- microphone ---
     readonly property var mic: nodes.find(n => !n.isSink && !n.isStream && root.cls(n) === "Audio/Source" && !root.isEE(n)) || null

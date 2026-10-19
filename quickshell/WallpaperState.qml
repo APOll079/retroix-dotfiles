@@ -90,9 +90,14 @@ Singleton {
     }
     Process { id: lockWriter }
 
+    // Only monitors that are plugged in: a saved one that isn't would burn all maxTries and leave a
+    // "gave up" status behind (all of them while the screen list is still empty at start)
     function restore() {
         root.writeLock();
-        const jobs = Object.keys(adapter.monitors).map(m => [m, adapter.monitors[m].path, adapter.monitors[m].fit || "cover"]);
+        const connected = Quickshell.screens.map(s => s.name);
+        const jobs = Object.keys(adapter.monitors)
+            .filter(m => connected.length === 0 || connected.indexOf(m) !== -1)
+            .map(m => [m, adapter.monitors[m].path, adapter.monitors[m].fit || "cover"]);
         if (jobs.length > 0)
             root.send(jobs, root.maxTries);
     }
