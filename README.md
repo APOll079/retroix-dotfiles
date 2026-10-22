@@ -1,5 +1,5 @@
 # Retroix dotfiles
-n![Side panel and bar](screenshots/panel.png)
+![Side panel and bar](screenshots/panel.png)
 
 A retro, Win95 / classic-Mac flavoured Hyprland desktop for **Artix Linux (dinit)**.
 Bevels, solid title bars, dense rows, chunky icons: everything you see besides app windows is
