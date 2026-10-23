@@ -10,6 +10,7 @@ Item numbers are the ids from the approval list. This file has two halves: **Pla
 - Small ones left from the audit: Play / Pause key with spotifyd (`playerctl -p spotify`), F12 -> Shift+Print, lazy-loaded popups, reuse of the `serve` connection
 
 ### Needs a live test (built, not yet confirmed on the desktop)
+- Autoclicker (F8): run the setup script, log in again, F8 on a safe spot clicks about 20/s, F8 again stops, a toast says on / off
 - Spotify folders: install the Spicetify extension, open the panel and the Spotify app; folders appear in Library > Playlists within a minute
 - Menus over a fullscreen video (clicks stay in the menu); Spotify: Play here from the phone, Play with nothing active carries on; Task Manager (Ctrl+Shift+Esc): End task / Kill on your own apps, Performance graphs
 - spotifyd: panel plays with the Spotify app closed; lyrics / bar text follow spotifyd. Spotify drawer closes when you click another program (same monitor and the other one)
@@ -58,6 +59,7 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 - **Desktop**: idle dim / lock / screens off (22), OSDs (23), session panel (24), HyprEmoji, Super+Q closes an open menu before it closes a window
 - **Audio (Home tab)**: Output list (click = default sink, EasyEffects follows; the EQ follows the real output, "EQ off" tag), microphone mute + volume, scrollable per-app volumes; `AudioState.qml` + `AudioTab.qml`
 - **Win+C**: Vesktop-only scratchpad (Spotify is the Quickshell panel)
+- **Autoclicker** (F8): toggles a left-click loop, about 20 clicks/s (`hypr/scripts/autoclick`, ydotool); one-time root setup with `bash scripts/autoclick-setup.sh` (`--dry-run` first), then log in again for the input group
 - **NFS drives at login**: user service `dinit.d/nfs-mounts` mounts `/mnt/disk1` and `/mnt/disk2` after `nm-online`; needs `noauto,user,exec` on the two fstab lines (outside the repo: the commands were given, not run). `nfs-utils` is in pacman.txt. Confirmed live
 - **hyprlock at boot** (29): greetd autologin plus the lock marker (`~/.config/hypr/lock-at-login`, read in `autostart.lua`), both set up by `install.sh` (asks, default no). The lock screen works (confirmed); that it comes up at boot is assumed, not watched
 - **Folder icons**: `theme/icongen.py` hue-shifts the blue of RetroismIcons to the accent into `~/.local/share/icons/QsRetroIcons` (Inherits the original; greys, reds, greens untouched); GTK settings, xsettingsd and `install.sh` use it. Confirmed live

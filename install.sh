@@ -307,7 +307,7 @@ deploy() {
     fi
     note "$changed file(s) updated"
 
-    run chmod +x "$CONFIG/quickshell/scripts/share-picker.sh" "$CONFIG/quickshell/scripts/app-owner.sh"
+    run chmod +x "$CONFIG/quickshell/scripts/share-picker.sh" "$CONFIG/quickshell/scripts/app-owner.sh" "$CONFIG/hypr/scripts/autoclick"
 
     # Fonts that can't be in the repo (see README)
     local font

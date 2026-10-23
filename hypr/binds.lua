@@ -91,5 +91,7 @@ local screenshotCmd = "bash -c 'file=$HOME/screenshots/screenshot_$(date +%Y%m%d
 -- monitor: region drag, window, screen, all, history. F12 stays instant
 hl.bind("Print", hl.dsp.exec_cmd(screenshotOverlay))  -- help: Screen | Screenshot overlay
 hl.bind("F12", hl.dsp.exec_cmd(screenshotCmd))  -- help: Screen | Instant full screenshot
+-- Autoclicker toggle (hypr/scripts/autoclick: ydotool, left button about 20 clicks/s); setup once with scripts/autoclick-setup.sh
+hl.bind("F8", hl.dsp.exec_cmd("fish ~/.config/hypr/scripts/autoclick"))  -- help: Desktop | Autoclicker (toggle)
 
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl -p spotify play-pause"), { locked = true })  -- help: Media | Play / pause Spotify
