@@ -45,6 +45,9 @@
         "wallpaper": {
             "folder": "~/Pictures/wallpapers"
         },
+        "ui": {
+            "dither": true
+        },
         "weather": {
             "location": "",
             "metric": true

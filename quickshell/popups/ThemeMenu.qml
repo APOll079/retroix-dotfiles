@@ -132,6 +132,13 @@ PopupWindow {
 
             BevelButton {
                 width: parent.width
+                text: "Dither on meters"
+                checked: Config.ui.dither
+                onClicked: Config.ui.dither = !Config.ui.dither
+            }
+
+            BevelButton {
+                width: parent.width
                 text: "Wallpapers..."
                 glyph: "\ue1bc"
                 onClicked: root.openWallpapers()
