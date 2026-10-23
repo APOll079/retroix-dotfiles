@@ -28,13 +28,26 @@ end
 # --- running: stop it (every loop with our marker, whatever the pid file says) ---
 set -l loops (pgrep -f -- "^fish -c # $tag")
 if test (count $loops) -gt 0
-    rm -f $pidfile          # the loop checks for this file on every tick and ends by itself
-    kill $loops 2>/dev/null
-    sleep 0.2
-    for pid in $loops
-        kill -0 $pid 2>/dev/null; and kill -KILL $pid 2>/dev/null
+    # Let the loop finish its click and end by itself (it checks the pid file every tick): killing it in the
+    # middle of a click can leave the button held down (then everything drags until ydotoold goes away)
+    rm -f $pidfile
+    set -l left $loops
+    for i in (seq 20)
+        set left (pgrep -f -- "^fish -c # $tag")
+        test (count $left) -eq 0; and break
+        sleep 0.05
     end
-    log stop $loops
+    # Still there after a second: force it
+    if test (count $left) -gt 0
+        kill $left 2>/dev/null
+        sleep 0.2
+        for pid in $left
+            kill -0 $pid 2>/dev/null; and kill -KILL $pid 2>/dev/null
+        end
+    end
+    # Whatever happened, the left button ends up released (0x80 = left button up)
+    ydotool click 0x80 >/dev/null 2>&1
+    log stop $loops (test (count $left) -gt 0; and echo "(forced)"; or echo "(clean)")
     toast off
     exit 0
 end
