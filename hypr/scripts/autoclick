@@ -1,12 +1,18 @@
 #!/usr/bin/env fish
 # Autoclicker toggle (F8, see hypr/binds.lua). Run once: starts clicking the left mouse button; run again: stops.
 # Needs ydotool and the one-time root setup: scripts/autoclick-setup.sh (uinput permissions, input group).
+# Every run is logged to $XDG_RUNTIME_DIR/autoclick.log (start / stop / why), so a press that did nothing shows.
 
 set -l delay 0.05   # seconds between clicks: 0.05 = about 20 clicks per second
 
 set -l dir $XDG_RUNTIME_DIR
 test -n "$dir"; or set dir /tmp
 set -l pidfile $dir/autoclick.pid
+set -l logfile $dir/autoclick.log
+# The marker in the loop's command line; running loops are found by it. AUTOCLICK_TAG is for tests only,
+# so a test can never see (or stop) a real loop.
+set -l tag autoclick-loop
+set -q AUTOCLICK_TAG; and set tag $AUTOCLICK_TAG
 
 # One socket for the daemon and the clicker (ydotool versions differ on the default path)
 set -gx YDOTOOL_SOCKET $dir/.ydotool_socket
@@ -15,47 +21,54 @@ function toast
     command -q notify-send; and notify-send -t 1500 Autoclicker $argv[1]
 end
 
-# True when $argv[1] is a live process that is OUR loop (the marker is in its command line), so a reused
-# pid is never killed
-function is_loop
-    set -l pid $argv[1]
-    test -n "$pid"; and kill -0 $pid 2>/dev/null; or return 1
-    tr '\0' ' ' </proc/$pid/cmdline 2>/dev/null | string match -q '*autoclick-loop*'
+function log --inherit-variable logfile
+    echo (date +%T) $argv >> $logfile
 end
 
-# --- running: stop it ---
-if test -f $pidfile
-    set -l pid (string trim (cat $pidfile))
-    if is_loop $pid
-        kill $pid
-        rm -f $pidfile
-        toast off
-        exit 0
+# --- running: stop it (every loop with our marker, whatever the pid file says) ---
+set -l loops (pgrep -f -- "^fish -c # $tag")
+if test (count $loops) -gt 0
+    rm -f $pidfile          # the loop checks for this file on every tick and ends by itself
+    kill $loops 2>/dev/null
+    sleep 0.2
+    for pid in $loops
+        kill -0 $pid 2>/dev/null; and kill -KILL $pid 2>/dev/null
     end
-    rm -f $pidfile   # stale: the loop is gone (or the pid belongs to something else)
+    log stop $loops
+    toast off
+    exit 0
 end
 
 # --- not running: start it ---
+rm -f $pidfile              # a stale one from a loop that is gone
 if not command -q ydotool
+    log "start failed: ydotool not installed"
     toast "ydotool is not installed (run scripts/autoclick-setup.sh)"
     exit 1
 end
 if not pgrep -x ydotoold >/dev/null
+    rm -f $YDOTOOL_SOCKET   # a dead daemon's socket would stop a new one from listening
     ydotoold --socket-path=$YDOTOOL_SOCKET >/dev/null 2>&1 </dev/null &
     disown
     sleep 0.3
     if not pgrep -x ydotoold >/dev/null
+        log "start failed: ydotoold did not start"
         toast "ydotoold did not start (run scripts/autoclick-setup.sh, then log in again)"
         exit 1
     end
 end
 
-fish -c "# autoclick-loop
-while true
-    ydotool click 0xC0
+# The pid file exists before the loop starts, so the loop's own check can't end it early; a failed click
+# (the daemon went away) ends the loop too
+echo starting > $pidfile
+fish -c "# $tag
+while test -f '$pidfile'
+    ydotool click 0xC0; or break
     sleep $delay
-end" >/dev/null 2>&1 </dev/null &
+end
+rm -f '$pidfile'" >/dev/null 2>&1 </dev/null &
 set -l loop $last_pid
 disown $loop
 echo $loop > $pidfile
+log start $loop
 toast on
