@@ -133,8 +133,8 @@ PopupWindow {
             BevelButton {
                 width: parent.width
                 text: "Dither on meters"
-                checked: Config.ui.dither
-                onClicked: Config.ui.dither = !Config.ui.dither
+                checked: Config.settings.ui.dither
+                onClicked: Config.settings.ui.dither = !Config.settings.ui.dither
             }
 
             BevelButton {

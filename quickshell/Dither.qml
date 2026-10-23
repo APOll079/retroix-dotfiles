@@ -1,6 +1,6 @@
 import QtQuick
 
-// 1px checkerboard of two colours: the classic pressed / checked button face. Config.ui.dither off
+// 1px checkerboard of two colours: the classic pressed / checked button face. Config.settings.ui.dither off
 // (Themes menu) paints the flat first colour instead.
 Canvas {
     id: root
@@ -11,7 +11,7 @@ Canvas {
     antialiasing: false
     onColor1Changed: requestPaint()
     onColor2Changed: requestPaint()
-    readonly property bool on: Config.ui.dither
+    readonly property bool on: Config.settings.ui.dither
     onOnChanged: requestPaint()
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()
