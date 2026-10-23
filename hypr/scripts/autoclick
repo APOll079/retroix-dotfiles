@@ -9,10 +9,40 @@ set -l dir $XDG_RUNTIME_DIR
 test -n "$dir"; or set dir /tmp
 set -l pidfile $dir/autoclick.pid
 set -l logfile $dir/autoclick.log
+set -l daemonfile $dir/autoclick-ydotoold.pid   # the ydotoold THIS script started (stopped again on off)
 # The marker in the loop's command line; running loops are found by it. AUTOCLICK_TAG is for tests only,
 # so a test can never see (or stop) a real loop.
 set -l tag autoclick-loop
 set -q AUTOCLICK_TAG; and set tag $AUTOCLICK_TAG
+
+# Read-only probe for the log: what the ydotoold virtual device still sends for a moment after the loop
+# ended (it reads /dev/input/eventN alongside Hyprland; it never writes)
+set -l probe '
+import os, re, select, struct, time
+try:
+    blocks = open("/proc/bus/input/devices").read().split("\n\n")
+    dev = next(("/dev/input/event" + m.group(1) for b in blocks if "ydotool" in b.lower()
+                for m in [re.search(r"event(\d+)", b)] if m), None)
+    if not dev:
+        print("probe: no ydotoold device"); raise SystemExit
+    fd = os.open(dev, os.O_RDONLY | os.O_NONBLOCK)
+    fmt = "llHHi"; size = struct.calcsize(fmt); seen = {}; end = time.time() + 0.6
+    while time.time() < end:
+        if select.select([fd], [], [], 0.05)[0]:
+            try:
+                data = os.read(fd, size * 64)
+            except BlockingIOError:
+                continue
+            for i in range(0, len(data) - size + 1, size):
+                _, _, typ, code, val = struct.unpack(fmt, data[i:i + size])
+                if typ == 1:
+                    seen[f"key{code}={val}"] = seen.get(f"key{code}={val}", 0) + 1
+    print("probe:", dev, "keys in 0.6 s after stop:", seen or "none")
+except SystemExit:
+    pass
+except Exception as e:
+    print("probe failed:", e)
+'
 
 # One socket for the daemon and the clicker (ydotool versions differ on the default path)
 set -gx YDOTOOL_SOCKET $dir/.ydotool_socket
@@ -48,6 +78,18 @@ if test (count $loops) -gt 0
     # Whatever happened, the left button ends up released (0x80 = left button up)
     ydotool click 0x80 >/dev/null 2>&1
     log stop $loops (test (count $left) -gt 0; and echo "(forced)"; or echo "(clean)")
+    # Diagnosis: clicking went on after a clean stop until ydotoold was killed. Record what is still going on
+    log "after stop: ydotool processes:" (pgrep -a ydotool | string join " | ")
+    command -q python3; and log (python3 -c $probe 2>&1)
+    # The fix that is proven to work by hand (pkill ydotoold): stop the daemon this script started
+    if test -f $daemonfile
+        set -l dpid (string trim (cat $daemonfile))
+        if test -n "$dpid"; and test "$(cat /proc/$dpid/comm 2>/dev/null)" = ydotoold
+            kill $dpid 2>/dev/null
+            log "stopped ydotoold $dpid"
+        end
+        rm -f $daemonfile
+    end
     toast off
     exit 0
 end
@@ -62,8 +104,10 @@ end
 if not pgrep -x ydotoold >/dev/null
     rm -f $YDOTOOL_SOCKET   # a dead daemon's socket would stop a new one from listening
     ydotoold --socket-path=$YDOTOOL_SOCKET >/dev/null 2>&1 </dev/null &
+    echo $last_pid > $daemonfile
     disown
-    sleep 0.3
+    # the compositor needs a moment to pick up the new virtual device before clicks count
+    sleep 0.5
     if not pgrep -x ydotoold >/dev/null
         log "start failed: ydotoold did not start"
         toast "ydotoold did not start (run scripts/autoclick-setup.sh, then log in again)"
