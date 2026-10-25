@@ -243,7 +243,7 @@ RowLayout {
         }
     }
 
-    // Compact header (lyrics view): "Title · Artist" on one line and Close
+    // Compact header (lyrics view): "Title · Artist" on one line, Like and Close
     RowLayout {
         visible: header.compact
         Layout.fillWidth: true
@@ -260,6 +260,20 @@ RowLayout {
             font.bold: true
             color: Config.colors.text
             text: header.track ? header.track.name + " · " + header.track.artists : "Nothing playing"
+        }
+        SpotifyReasonHost {
+            panel: header.panel
+            reason: SpotifyState.track === null ? "Like: nothing is playing" : ""
+            BevelButton {
+                implicitHeight: MenuStyle.spotifyButton
+                glyphSize: MenuStyle.spotifyButtonGlyph
+                glyph: SpotifyState.liked ? "\ue87d" : "\ue87e"
+                glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
+                enabled: SpotifyState.track !== null
+                focusPolicy: Qt.NoFocus
+                onClicked: SpotifyState.toggleLike()
+                SpotifyHint { panel: header.panel; text: SpotifyState.liked ? "Remove from Liked Songs (Ctrl+S)" : "Like this song (Ctrl+S)" }
+            }
         }
         BevelButton {
             implicitHeight: MenuStyle.spotifyButton

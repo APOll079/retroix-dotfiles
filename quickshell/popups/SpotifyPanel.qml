@@ -134,7 +134,7 @@ PanelWindow {
     readonly property bool showRecent: root.tab === "library" && root.view === null && !root.addMode && !root.lyricsMode
         && filterInput.text.trim() === "" && SpotifyState.recent.length > 0
     // Tooltips never cover the seek / transport rows
-    readonly property Item tipAvoid: root.lyricsMode ? null : transportRow
+    readonly property Item tipAvoid: root.lyricsMode ? lyricsControls : transportRow
     readonly property bool loadingList: root.items.length === 0 && !root.lyricsMode && ["Loading...", "Searching..."].includes(root.emptyText())
     // Pins only mean something when the rows shown are a mix of pinned and unpinned
     readonly property bool pinsMixed: {
@@ -322,12 +322,16 @@ PanelWindow {
                 }
             }
 
-            // Lyrics: a slim transport strip stays, so the drawer is never a dead end
-            SpotifyButtons {
+            // Lyrics: volume, seek and previous / play / next under the lyrics (the same components as the main
+            // view), so the drawer is never a dead end; their height comes out of the lyric area
+            ColumnLayout {
+                id: lyricsControls
                 Layout.fillWidth: true
                 visible: root.lyricsMode
-                compact: true
-                panel: root
+                spacing: MenuStyle.spotifyColumnGap
+                SpotifyVolume { Layout.fillWidth: true; panel: root }
+                SpotifySeek { Layout.fillWidth: true; panel: root }
+                SpotifyButtons { Layout.fillWidth: true; compact: true; panel: root }
             }
 
             SpotifyStatusBar { Layout.fillWidth: true; panel: root }

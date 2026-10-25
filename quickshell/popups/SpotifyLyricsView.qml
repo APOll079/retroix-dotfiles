@@ -69,8 +69,10 @@ Item {
         preferredHighlightEnd: height * MenuStyle.lyricsAnchor + MenuStyle.rowHeight
         highlightMoveDuration: MenuStyle.animScroll
         highlightFollowsCurrentItem: true
-        // Room above and below so the first and last lines can reach the reading spot too
-        header: Item { width: 1; height: lyricsView.height * MenuStyle.lyricsAnchor - MenuStyle.rowHeight }
+        spacing: MenuStyle.lyricsLineGap
+        // No room above the first line: at the start of a song the first lines sit at the top and the current one
+        // walks down to the reading spot (the view can't scroll above its first line). Room below, so the last
+        // lines can still reach the reading spot.
         footer: Item { width: 1; height: lyricsView.height * (1 - MenuStyle.lyricsAnchor) - MenuStyle.rowHeight }
         delegate: Rectangle {
             id: lyricRow

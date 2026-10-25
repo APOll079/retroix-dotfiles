@@ -119,6 +119,7 @@ Singleton {
     readonly property color likedColor: "#1db954"    // liked heart: Spotify green (the one colour not from the palette, on request; bevelLight below is the second, a derived tint)
     readonly property int lyricsFastTick: 100
     readonly property int lyricsFontSize: 16      // Monaco hints cleanly at 12 and 16
+    readonly property int lyricsLineGap: 8        // between two lyric lines; a wrapped line keeps its normal spacing, so it reads as one
     readonly property real lyricsAnchor: 0.38     // where the current lyric sits (0 top, 0.5 middle)
     readonly property int cheatKeyWidth: 140     // key chip column in the cheat sheet
     readonly property int searchHeight: 32
