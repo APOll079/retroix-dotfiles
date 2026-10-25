@@ -47,6 +47,7 @@ ColumnLayout {
         spacing: MenuStyle.gap
         BevelButton {
             visible: !SpotifyState.configured || panel.editClient
+            implicitHeight: MenuStyle.spotifyButton
             text: "Save"
             enabled: clientInput.text.trim() !== ""
             focusPolicy: Qt.NoFocus
@@ -54,8 +55,10 @@ ColumnLayout {
         }
         BevelButton {
             visible: SpotifyState.configured && !panel.editClient
+            implicitHeight: MenuStyle.spotifyButton
             text: SpotifyState.loggingIn ? "Waiting for the browser..." : "Log in"
             glyph: "\ue890"
+            glyphSize: MenuStyle.spotifyButtonGlyph
             enabled: !SpotifyState.loggingIn
             focusPolicy: Qt.NoFocus
             onClicked: SpotifyState.login()
@@ -63,6 +66,7 @@ ColumnLayout {
         Item { Layout.fillWidth: true }
         BevelButton {
             visible: SpotifyState.configured && !panel.editClient
+            implicitHeight: MenuStyle.spotifyButton
             text: "Change client ID"
             focusPolicy: Qt.NoFocus
             onClicked: {

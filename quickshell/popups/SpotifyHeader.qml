@@ -140,6 +140,7 @@ RowLayout {
         }
         LinkText {
             Layout.maximumWidth: column.width
+            visible: !panel.remote      // the "Playing on" line takes this slot, so the column stays 96 px
             linked: header.shown !== null && !!header.shown.album_uri
             text: header.track ? header.track.album : (panel.lastTrack ? panel.lastTrack.album_name || "" : "")
             onActivated: panel.openUri("album", header.shown.album_uri, header.track ? header.track.album : header.shown.album_name, header.shown.image)
@@ -167,12 +168,25 @@ RowLayout {
                     color: MenuStyle.selectText
                     text: "Playing on " + panel.deviceName()
                 }
-                BevelButton {
-                    implicitHeight: MenuStyle.spotifyStatusHeight
+                // a text link: an 18 px line has no room for a spotifyButton
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    Layout.rightMargin: MenuStyle.gap
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    font.bold: true
+                    font.underline: playHereHover.hovered
+                    color: MenuStyle.selectText
                     text: "Play here"
-                    glyph: "\ue30a"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.playHere()
+                    HoverHandler {
+                        id: playHereHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        onTapped: SpotifyState.playHere()
+                    }
+                    SpotifyHint { panel: header.panel; text: "Bring the song to this PC"; tooltip: false }
                 }
             }
         }
@@ -186,7 +200,8 @@ RowLayout {
                 panel: header.panel
                 reason: SpotifyState.track === null ? "Like: nothing is playing" : ""
                 BevelButton {
-                    implicitHeight: MenuStyle.spotifyCompactRow
+                    implicitHeight: MenuStyle.spotifyButton
+                    glyphSize: MenuStyle.spotifyButtonGlyph
                     glyph: SpotifyState.liked ? "\ue87d" : "\ue87e"
                     glyphColor: SpotifyState.liked ? MenuStyle.likedColor : "transparent"
                     enabled: SpotifyState.track !== null
@@ -199,7 +214,8 @@ RowLayout {
                 panel: header.panel
                 reason: SpotifyState.track === null ? "Add to playlist: nothing is playing" : ""
                 BevelButton {
-                    implicitHeight: MenuStyle.spotifyCompactRow
+                    implicitHeight: MenuStyle.spotifyButton
+                    glyphSize: MenuStyle.spotifyButtonGlyph
                     glyph: "\ue03b"
                     checked: panel.addMode
                     enabled: SpotifyState.track !== null
@@ -209,7 +225,8 @@ RowLayout {
                 }
             }
             BevelButton {
-                implicitHeight: MenuStyle.spotifyCompactRow
+                implicitHeight: MenuStyle.spotifyButton
+                glyphSize: MenuStyle.spotifyButtonGlyph
                 glyph: "\uec0b"
                 checked: panel.lyricsOn
                 focusPolicy: Qt.NoFocus
@@ -244,7 +261,8 @@ RowLayout {
             text: header.track ? header.track.name + " · " + header.track.artists : "Nothing playing"
         }
         BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
+            implicitHeight: MenuStyle.spotifyButton
+            glyphSize: MenuStyle.spotifyButtonGlyph
             glyph: "\ue5cd"
             focusPolicy: Qt.NoFocus
             onClicked: panel.toggleLyrics()

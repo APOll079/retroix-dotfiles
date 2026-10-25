@@ -167,6 +167,8 @@ Item {
         anchors.bottom: cover.bottom
         anchors.margins: MenuStyle.gap
         visible: root.lit && root.canPlay
+        implicitHeight: MenuStyle.spotifyButton
+        glyphSize: MenuStyle.spotifyButtonGlyph
         glyph: "\ue037"
         focusPolicy: Qt.NoFocus
         onClicked: root.playRequested()

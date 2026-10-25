@@ -62,7 +62,8 @@ Item {
             }
         }
         BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
+            implicitHeight: MenuStyle.spotifyButton
+            glyphSize: MenuStyle.spotifyButtonGlyph
             text: "Play"
             glyph: "\ue037"
             focusPolicy: Qt.NoFocus
@@ -71,7 +72,8 @@ Item {
         }
         BevelButton {
             visible: head.info !== null && head.info.songs
-            implicitHeight: MenuStyle.spotifyCompactRow
+            implicitHeight: MenuStyle.spotifyButton
+            glyphSize: MenuStyle.spotifyButtonGlyph
             text: "Shuffle"
             glyph: "\ue043"
             focusPolicy: Qt.NoFocus

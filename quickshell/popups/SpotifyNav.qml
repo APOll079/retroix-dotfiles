@@ -54,7 +54,8 @@ ColumnLayout {
         spacing: MenuStyle.gap
         visible: panel.addMode || panel.view !== null
         BevelButton {
-            implicitHeight: MenuStyle.spotifyCompactRow
+            implicitHeight: MenuStyle.spotifyButton
+            glyphSize: MenuStyle.spotifyButtonGlyph
             text: panel.addMode ? "Cancel" : "Back"
             glyph: "\ue5c4"
             focusPolicy: Qt.NoFocus
@@ -79,7 +80,8 @@ ColumnLayout {
         }
         BevelButton {
             visible: panel.showViewToggle && panel.view !== null
-            implicitHeight: MenuStyle.spotifyCompactRow
+            implicitHeight: MenuStyle.spotifyButton
+            glyphSize: MenuStyle.spotifyButtonGlyph
             glyph: SpotifyState.grid ? "\ue8ef" : "\ue9b0"
             focusPolicy: Qt.NoFocus
             onClicked: {
@@ -123,14 +125,29 @@ ColumnLayout {
             }
         }
         Item { Layout.fillWidth: true }
-        BevelButton {
+        // Rows / covers: a flat glyph in the chip style (it sits in the chip row, which is lighter than buttons)
+        Item {
             visible: panel.showViewToggle && panel.view === null
             implicitHeight: MenuStyle.spotifyChipHeight
-            glyph: SpotifyState.grid ? "\ue8ef" : "\ue9b0"
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                SpotifyState.grid = !SpotifyState.grid;
-                panel.focusKeys();
+            implicitWidth: viewGlyph.implicitWidth + 2 * MenuStyle.gap
+            Text {
+                id: viewGlyph
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                anchors.centerIn: parent
+                font.family: MenuStyle.iconFont
+                font.pixelSize: MenuStyle.iconSize
+                color: Config.colors.text
+                text: SpotifyState.grid ? "\ue8ef" : "\ue9b0"
+            }
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
+            TapHandler {
+                onTapped: {
+                    SpotifyState.grid = !SpotifyState.grid;
+                    panel.focusKeys();
+                }
             }
             SpotifyHint { panel: nav.panel; text: SpotifyState.grid ? "Show as rows" : "Show as covers" }
         }

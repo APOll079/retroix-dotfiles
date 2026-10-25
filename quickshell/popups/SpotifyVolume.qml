@@ -17,7 +17,8 @@ RowLayout {
         text: "100%"
     }
     BevelButton {
-        implicitHeight: MenuStyle.spotifyCompactRow
+        implicitHeight: MenuStyle.spotifyButton
+        glyphSize: MenuStyle.spotifyButtonGlyph
         glyph: SpotifyState.volume === 0 ? "\ue04f" : "\ue050"
         checked: SpotifyState.volume === 0
         enabled: SpotifyState.volume >= 0
@@ -31,6 +32,7 @@ RowLayout {
     RetroSlider {
         id: slider
         Layout.fillWidth: true
+        Layout.alignment: Qt.AlignVCenter
         from: 0
         to: 100
         stepSize: 1

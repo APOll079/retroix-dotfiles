@@ -104,10 +104,9 @@ Singleton {
     readonly property int spotifyListHeader: 30     // the list header: name, count, Play, Shuffle
     readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
     readonly property int spotifyChipUnderline: 2   // the active chip's accent underline
+    readonly property int spotifyButton: 30         // every button in the drawer: square icon buttons are this wide and tall; text buttons and the transport columns this tall
+    readonly property int spotifyButtonGlyph: 20    // the icon on those buttons
     readonly property int spotifyTitleSize: 16      // the now-playing title when it fits on one line (Monaco hints cleanly at 16)
-    readonly property int spotifyTransportSide: 32  // previous / next: squares; play is twice as wide
-    readonly property int spotifyPlayHeight: 36     // play / pause: taller than the buttons beside it
-    readonly property int spotifyPlayGlyph: 24      // its icon
     readonly property int spotifyEmptyBigChars: 28  // empty / error messages up to this long use the 16 px size, longer ones 12
     readonly property int spotifyTipMs: 600        // ms the pointer rests on a control before its tooltip shows (the status bar shows it at once)
     readonly property int spotifyRestoreMs: 1500    // ms the remembered cursor / scroll position is put back while the list settles after opening

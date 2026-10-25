@@ -321,7 +321,7 @@ PanelWindow {
             SpotifyButtons {
                 Layout.fillWidth: true
                 visible: root.lyricsMode
-                full: false
+                compact: true
                 panel: root
             }
 

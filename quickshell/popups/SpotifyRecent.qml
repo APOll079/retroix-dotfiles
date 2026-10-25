@@ -114,7 +114,8 @@ ColumnLayout {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     anchors.margins: 2
-                    implicitHeight: MenuStyle.rowHeight - 2
+                    implicitHeight: MenuStyle.spotifyButton
+                    glyphSize: MenuStyle.spotifyButtonGlyph
                     glyph: "\ue037"
                     focusPolicy: Qt.NoFocus
                     onClicked: SpotifyState.play(tile.modelData.kind === "liked" ? "liked" : tile.modelData.uri)

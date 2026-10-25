@@ -227,7 +227,8 @@ SunkenField {
                 anchors.rightMargin: MenuStyle.pad
                 anchors.verticalCenter: parent.verticalCenter
                 visible: row.isTrack && !panel.addMode && panel.tab !== "queue" && (rowHover.hovered || row.sel)
-                implicitHeight: MenuStyle.spotifyCompactRow
+                implicitHeight: MenuStyle.spotifyButton
+                glyphSize: MenuStyle.spotifyButtonGlyph
                 glyph: "\ue03c"
                 focusPolicy: Qt.NoFocus
                 onClicked: panel.queueSong(row.modelData)
@@ -239,6 +240,8 @@ SunkenField {
                 anchors.rightMargin: MenuStyle.pad
                 anchors.verticalCenter: parent.verticalCenter
                 visible: row.showPlay
+                implicitHeight: MenuStyle.spotifyButton
+                glyphSize: MenuStyle.spotifyButtonGlyph
                 glyph: "\ue037"
                 focusPolicy: Qt.NoFocus
                 onClicked: panel.playItem(row.modelData)
