@@ -14,6 +14,8 @@ Item {
     property bool selected: false
     property bool showSub: true
     property bool hideSub: false    // keep the caption's second line empty (artists on the Artists chip)
+    // no subtitle (artists): the name may use the subtitle's line too
+    readonly property bool twoLineName: root.showSub && (root.hideSub || !root.entry.sub)
     readonly property bool hasMosaic: root.entry.mosaic !== undefined && root.entry.mosaic.length > 0
     property bool canPlay: entry.kind !== "folder"
     signal activated()
@@ -129,8 +131,11 @@ Item {
             font.hintingPreference: Font.PreferFullHinting
             textFormat: Text.PlainText
             width: parent.width
-            height: MenuStyle.rowHeight
-            verticalAlignment: Text.AlignVCenter
+            height: root.twoLineName ? 2 * MenuStyle.rowHeight : MenuStyle.rowHeight
+            verticalAlignment: root.twoLineName ? Text.AlignTop : Text.AlignVCenter
+            topPadding: root.twoLineName ? (MenuStyle.rowHeight - MenuStyle.fontSize) / 2 - 1 : 0
+            wrapMode: root.twoLineName ? Text.WrapAtWordBoundaryOrAnywhere : Text.NoWrap
+            maximumLineCount: root.twoLineName ? 2 : 1
             elide: Text.ElideRight
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
@@ -141,7 +146,7 @@ Item {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             textFormat: Text.PlainText
-            visible: root.showSub
+            visible: root.showSub && !root.twoLineName
             width: parent.width
             height: MenuStyle.rowHeight
             verticalAlignment: Text.AlignVCenter

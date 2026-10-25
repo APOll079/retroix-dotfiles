@@ -19,7 +19,12 @@ Item {
         width: label.width + 2 * MenuStyle.pad
         height: label.height + 2 * MenuStyle.gap
         x: Math.max(MenuStyle.gap, Math.min(at.x, tipRoot.width - width - MenuStyle.gap))
-        y: below + height <= tipRoot.height - MenuStyle.spotifyStatusHeight ? below : Math.max(0, at.y - height - MenuStyle.gap / 2)
+        readonly property real wanted: below + height <= tipRoot.height - MenuStyle.spotifyStatusHeight ? below : Math.max(0, at.y - height - MenuStyle.gap / 2)
+        // never over the seek / transport rows: pushed below them
+        readonly property var avoid: tipRoot.panel.tipAvoid && tipRoot.panel.tipAvoid.visible && tipRoot.tip
+            ? tipRoot.panel.tipAvoid.mapToItem(tipRoot, 0, 0) : null
+        readonly property real avoidBottom: avoid ? avoid.y + tipRoot.panel.tipAvoid.height : 0
+        y: avoid && wanted < avoidBottom && wanted + height > avoid.y ? avoidBottom + MenuStyle.gap / 2 : wanted
         color: Config.colors.base
         border.width: 1
         border.color: Config.colors.outline

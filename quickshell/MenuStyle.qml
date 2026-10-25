@@ -106,6 +106,7 @@ Singleton {
     readonly property int spotifyChipUnderline: 2   // the active chip's accent underline
     readonly property int spotifyButton: 30         // every button in the drawer: square icon buttons are this wide and tall; text buttons and the transport columns this tall
     readonly property int spotifyButtonGlyph: 20    // the icon on those buttons
+    readonly property real spotifyIdleOpacity: 0.5  // the volume slider while nothing plays here (it shows the last known level)
     readonly property int spotifyTitleSize: 16      // the now-playing title when it fits on one line (Monaco hints cleanly at 16)
     readonly property int spotifyEmptyBigChars: 28  // empty / error messages up to this long use the 16 px size, longer ones 12
     readonly property int spotifyTipMs: 600        // ms the pointer rests on a control before its tooltip shows (the status bar shows it at once)

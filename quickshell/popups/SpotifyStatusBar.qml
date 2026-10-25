@@ -21,7 +21,7 @@ Item {
     readonly property bool isState: message === ""
     readonly property string stateText: SpotifyState.player
         ? (SpotifyState.player.playing ? "Playing" : "Paused") + " on " + panel.deviceName()
-        : "Nothing playing"
+        : (panel.lastTrack ? "Last played" : "Nothing playing")
 
     RowLayout {
         anchors.fill: parent

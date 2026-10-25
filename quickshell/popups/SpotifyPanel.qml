@@ -56,6 +56,7 @@ PanelWindow {
     property string hint: ""               // what the control under the pointer does (the status bar shows it)
     property var tip: null                 // the tooltip: { text, item } (SpotifyHint sets it after a pause)
     property string queueFor: ""           // the track the queue tab was last loaded for
+    property bool cursorShown: false       // the list cursor shows once the keyboard is used (arrows, typing in the filter)
     property bool restored: false          // the remembered view was applied (once per start)
     property var pendingRestore: null      // { index, y }: the cursor and scroll position to put back once the list is there
     property bool editClient: false        // setup page: typing a new client ID
@@ -129,6 +130,11 @@ PanelWindow {
         return null;
     }
     // The list is empty because it is still on its way: the list shows placeholder rows
+    // Recent tops the Library list (its header) with nothing typed and nothing opened
+    readonly property bool showRecent: root.tab === "library" && root.view === null && !root.addMode && !root.lyricsMode
+        && filterInput.text.trim() === "" && SpotifyState.recent.length > 0
+    // Tooltips never cover the seek / transport rows
+    readonly property Item tipAvoid: root.lyricsMode ? null : transportRow
     readonly property bool loadingList: root.items.length === 0 && !root.lyricsMode && ["Loading...", "Searching..."].includes(root.emptyText())
     // Pins only mean something when the rows shown are a mix of pinned and unpinned
     readonly property bool pinsMixed: {
@@ -290,7 +296,7 @@ PanelWindow {
 
             SpotifyHeader { panel: root }
 
-            SpotifyTransport { Layout.fillWidth: true; panel: root }
+            SpotifyTransport { id: transportRow; Layout.fillWidth: true; panel: root }
 
             Local.MenuSeparator {
                 Layout.fillWidth: true
@@ -312,7 +318,6 @@ PanelWindow {
                         visible: !root.lyricsMode && (root.addMode || root.view !== null || root.tab === "library")
                         panel: root
                     }
-                    SpotifyRecent { Layout.fillWidth: true; panel: root }
                     SpotifyList { id: spotifyList; Layout.fillWidth: true; Layout.fillHeight: true; panel: root }
                 }
             }
@@ -540,6 +545,7 @@ PanelWindow {
 
     function showTab(key) {
         root.pendingRestore = null;
+        root.cursorShown = false;
         root.tab = key;
         root.lyricsOn = false;
         root.stack = [];
@@ -910,6 +916,7 @@ PanelWindow {
     }
 
     function openMenu() {
+        root.cursorShown = false;
         root.addMode = false;
         root.stack = [];
         root.note = "";

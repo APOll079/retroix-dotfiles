@@ -38,6 +38,7 @@ RowLayout {
         stepSize: 1
         implicitHeight: MenuStyle.spotifyCompactRow
         enabled: SpotifyState.volume >= 0
+        opacity: enabled ? 1 : MenuStyle.spotifyIdleOpacity
         // Every change (drag, click, release) goes straight to SpotifyState, which decides
         // where it goes (PipeWire here, Spotify for another device) and what to show
         onMoved: SpotifyState.setVolume(value)
@@ -49,7 +50,7 @@ RowLayout {
         // RestoreNone: switching this off must never move the knob.
         Binding on value {
             when: !slider.pressed
-            value: Math.max(0, SpotifyState.volume)
+            value: Math.max(0, SpotifyState.shownVolume)
             restoreMode: Binding.RestoreNone
         }
         SpotifyHint { panel: volume.panel; text: "Volume (the wheel: 5 %, Ctrl+Up / Down)" }
@@ -61,11 +62,15 @@ RowLayout {
         horizontalAlignment: Text.AlignRight
         font.family: MenuStyle.bodyFont
         font.pixelSize: MenuStyle.fontSize
-        color: Config.colors.text
-        text: SpotifyState.volume >= 0 ? SpotifyState.volume + "%" : ""
+        color: SpotifyState.volume >= 0 ? Config.colors.text : Config.colors.shadow
+        text: SpotifyState.shownVolume >= 0 ? SpotifyState.shownVolume + "%" : ""
     }
     // a disabled slider gets no hover: the row says why
-    SpotifyHint { panel: volume.panel; text: SpotifyState.volume < 0 ? "Volume shows once this PC plays" : "" }
+    SpotifyHint {
+        panel: volume.panel
+        text: SpotifyState.volume >= 0 ? "" : SpotifyState.shownVolume >= 0 ? "Volume: nothing plays here right now (last " + SpotifyState.shownVolume + "%)" : "Volume shows once this PC plays"
+        tooltip: true
+    }
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {

@@ -11,5 +11,5 @@ Item {
     default property alias content: host.data
     implicitWidth: childrenRect.width
     implicitHeight: childrenRect.height
-    SpotifyHint { panel: host.panel; text: host.reason }
+    SpotifyHint { panel: host.panel; text: host.reason; tooltip: true }
 }

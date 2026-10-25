@@ -302,6 +302,7 @@ Singleton {
         JsonAdapter {
             id: viewAdapter
             property bool grid: false
+            property var lastVolumes: ({ daemon: -1, app: -1 })   // the last stream volume per player, for the slider while idle
             property bool recentShown: true       // the Recent strip is expanded (a new key, so an old collapsed state starts open again)
             // { tab: library | liked, kind: the Library chip, filter: the box text, index: the selected row,
             //   scrollY: how far the list was scrolled }
@@ -379,6 +380,22 @@ Singleton {
         else
             root.lastAppVolume = root.liveLocalVolume;
     }
+    onLastDaemonVolumeChanged: volumeSave.restart()
+    onLastAppVolumeChanged: volumeSave.restart()
+    // Saved in spotify-view.json (one object, a second after the last change), so a fresh start shows it too
+    readonly property var savedVolumes: viewAdapter.lastVolumes || ({})
+    Timer {
+        id: volumeSave
+        interval: 1000
+        onTriggered: viewAdapter.lastVolumes = {
+            daemon: root.lastDaemonVolume >= 0 ? root.lastDaemonVolume : (root.savedVolumes.daemon ?? -1),
+            app: root.lastAppVolume >= 0 ? root.lastAppVolume : (root.savedVolumes.app ?? -1)
+        }
+    }
+    readonly property int lastKnownVolume: [root.lastDaemonVolume, root.lastAppVolume, root.savedVolumes.daemon, root.savedVolumes.app]
+        .find(v => typeof v === "number" && v >= 0) ?? -1
+    // What the slider shows: the live (or pending) volume, else the last one known (the slider is disabled then)
+    readonly property int shownVolume: root.volume >= 0 ? root.volume : root.lastKnownVolume
     // Spotify Connect volume only when it really plays on another device; -1 (slider disabled) when
     // this PC's player has had no stream yet this session
     readonly property bool remoteDevice: root.player !== null && !root.local && (root.player.device || "") !== ""

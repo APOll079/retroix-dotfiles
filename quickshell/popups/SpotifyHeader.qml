@@ -13,7 +13,8 @@ RowLayout {
     readonly property var track: SpotifyState.track
     // what the names open: the song now, else the last played one
     readonly property var shown: header.track !== null ? header.track : panel.lastTrack
-    readonly property string titleText: header.track ? header.track.name : (panel.lastTrack ? "Last played: " + panel.lastTrack.name : "Nothing playing")
+    // the song name gets the whole line (the status bar says "Last played")
+    readonly property string titleText: header.track ? header.track.name : (panel.lastTrack ? panel.lastTrack.name : "Nothing playing")
     readonly property int coverSize: compact ? MenuStyle.spotifyLyricsCover : MenuStyle.spotifyCoverSize
     Layout.fillWidth: true
     Layout.preferredHeight: coverSize
@@ -129,7 +130,7 @@ RowLayout {
             font.bold: !big
             color: Config.colors.text
             text: header.titleText
-            SpotifyHint { panel: header.panel; text: titleLabel.truncated ? header.titleText : "" }
+            SpotifyHint { panel: header.panel; text: titleLabel.truncated ? header.titleText : ""; tooltip: true }
         }
         LinkText {
             Layout.maximumWidth: column.width

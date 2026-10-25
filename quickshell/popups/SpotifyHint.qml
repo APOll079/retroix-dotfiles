@@ -9,7 +9,8 @@ HoverHandler {
     id: hint
     required property var panel
     property string text: ""
-    property bool tooltip: true
+    // the tooltip is for cut-off names and disabled controls; plain hints only go to the status bar
+    property bool tooltip: false
     onHoveredChanged: {
         if (hovered && hint.text !== "") {
             panel.hint = hint.text;

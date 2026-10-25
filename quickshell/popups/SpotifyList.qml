@@ -25,31 +25,6 @@ SunkenField {
     padding: MenuStyle.spotifyInset
     clip: true
 
-    // A divider row: a dim bold label (may be empty) and an etched line to the right
-    component HeadingRow: Item {
-        property string label: ""
-        Text {
-            id: headingText
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            anchors.left: parent.left
-            anchors.leftMargin: MenuStyle.pad
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            font.bold: true
-            color: MenuStyle.bevelDark
-            text: parent.label
-        }
-        Local.MenuSeparator {
-            anchors.left: headingText.right
-            anchors.leftMargin: parent.label === "" ? 0 : MenuStyle.pad
-            anchors.right: parent.right
-            anchors.rightMargin: MenuStyle.pad
-            anchors.verticalCenter: parent.verticalCenter
-        }
-    }
-
     NumberAnimation { id: listFade; target: listArea; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animFade }
 
     SpotifyLyricsView {
@@ -119,6 +94,15 @@ SunkenField {
         }
     }
 
+    // Recent on top of the Library list / grid (the same scroll area and background as the rest)
+    Component {
+        id: recentComp
+        SpotifyRecent {
+            panel: listArea.panel
+            width: parent ? parent.width : 0
+        }
+    }
+
     // Rows: the accent bar spans the whole row; the play button sits inside it, on hover
     // or when selected. A song plays on click (no play button); right-click / the Menu key opens its
     // options, middle-click queues it.
@@ -127,7 +111,7 @@ SunkenField {
         anchors.fill: parent
         visible: !panel.lyricsMode && !panel.useGrid
         model: panel.items
-        header: panel.listHead !== null ? headComp : null
+        header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
         currentIndex: 0
         // Results of an older query (a new one is typed or on its way) look old
         opacity: panel.searchMode && panel.searchResults.length > 0 && (panel.searchLoading || panel.filterInput.text.trim() !== panel.searchQuery) ? 0.5 : 1
@@ -144,14 +128,24 @@ SunkenField {
             if (!moving)
                 lastMoved = Date.now();
         }
-        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+        // Only the keyboard cursor scrolls the list; on the first row the whole header (Recent, the list header)
+        // comes back into view too (Contain alone would scroll it away)
+        onCurrentIndexChanged: {
+            if (!panel.cursorShown)
+                return;
+            if (panel.items.slice(0, currentIndex).every(i => i.kind === "heading"))
+                positionViewAtBeginning();
+            else
+                positionViewAtIndex(currentIndex, ListView.Contain);
+        }
         delegate: Item {
             id: row
             required property int index
             required property var modelData
             readonly property bool isTrack: modelData.kind === "track"
             readonly property bool isHeading: modelData.kind === "heading"
-            readonly property bool sel: index === listView.currentIndex
+            // the cursor shows only once the keyboard is used (arrows, typing), like a Win95 focus ring
+            readonly property bool sel: index === listView.currentIndex && panel.cursorShown
             readonly property bool playing: panel.isPlaying(modelData)
             // The title is cut off: the full name (and artist) shows on hover
             readonly property real titleRoom: width - 4 * MenuStyle.pad - (isTrack ? MenuStyle.spotifyThumb + clockWidth.width + MenuStyle.pad : MenuStyle.iconSize + MenuStyle.iconSize)
@@ -174,12 +168,14 @@ SunkenField {
             SpotifyHint {
                 panel: listArea.panel
                 text: row.elided ? row.modelData.name + (row.modelData.sub ? "  -  " + row.modelData.sub : "") : ""
+                tooltip: true
             }
 
             // A divider row (search groups, "Pinned"): a plain dim heading with an etched line
-            HeadingRow {
+            SpotifyHeading {
                 anchors.fill: parent
                 visible: row.isHeading
+                panel: listArea.panel
                 label: row.isHeading ? row.modelData.name : ""
             }
 
@@ -258,7 +254,7 @@ SunkenField {
         anchors.fill: parent
         visible: !panel.lyricsMode && panel.useGrid
         model: panel.gridRows
-        header: panel.listHead !== null ? headComp : null
+        header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         readonly property real cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
@@ -274,8 +270,12 @@ SunkenField {
         Connections {
             target: listView
             function onCurrentIndexChanged() {
+                if (!panel.cursorShown)
+                    return;
                 const r = panel.gridRowOf(listView.currentIndex);
-                if (r >= 0)
+                if (r >= 0 && panel.gridRows.slice(0, r).every(x => x.tiles === undefined))
+                    grid.positionViewAtBeginning();
+                else if (r >= 0)
                     grid.positionViewAtIndex(r, ListView.Contain);
             }
         }
@@ -289,9 +289,10 @@ SunkenField {
             required property var modelData
             width: grid.width
             height: modelData.tiles === undefined ? MenuStyle.rowHeight : gridProbe.implicitHeight
-            HeadingRow {
+            SpotifyHeading {
                 anchors.fill: parent
                 visible: gridRow.modelData.tiles === undefined
+                panel: listArea.panel
                 label: gridRow.modelData.heading ? gridRow.modelData.heading.name : ""
             }
             Row {
@@ -304,7 +305,7 @@ SunkenField {
                         height: gridProbe.implicitHeight
                         entry: modelData.item
                         hideSub: modelData.item.kind === "artist"
-                        selected: modelData.index === listView.currentIndex
+                        selected: modelData.index === listView.currentIndex && panel.cursorShown
                         canPlay: !panel.addMode && modelData.item.kind !== "folder" && modelData.item.kind !== "searchrow"
                         onActivated: panel.clickItem(modelData.index, modelData.item, grid.justMoved())
                         onPlayRequested: panel.playItem(modelData.item)

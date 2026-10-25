@@ -34,6 +34,7 @@ RowLayout {
         from: 0
         to: SpotifyState.track && SpotifyState.track.duration > 0 ? SpotifyState.track.duration : 1
         enabled: SpotifyState.track !== null
+        dim: SpotifyState.track === null
         // the jump happens on release, not at every pixel of the drag
         onPressedChanged: {
             if (!pressed)
@@ -60,7 +61,8 @@ RowLayout {
         font.family: MenuStyle.bodyFont
         font.pixelSize: MenuStyle.fontSize
         color: Config.colors.text
-        text: panel.clock(SpotifyState.track ? SpotifyState.track.duration : 0)
+        // nothing playing: the last played song's length (the bar itself is disabled and empty)
+        text: panel.clock(SpotifyState.track ? SpotifyState.track.duration : (panel.lastTrack ? panel.lastTrack.duration : 0))
     }
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad

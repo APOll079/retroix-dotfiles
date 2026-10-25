@@ -1,68 +1,28 @@
 import QtQuick
-import QtQuick.Layouts
 import ".."
 
-// Recent: the 3 newest covers in ONE row of squares (about 120 px, so text printed on album art stays readable),
-// no captions: hovering names one (status bar + tooltip). Only on the Library tab with nothing typed and
-// nothing opened. Its own "Recent" line has the collapse arrow ("Hide" / "Show", remembered, open by
-// default). A click opens, the play button on a hovered cover plays.
-ColumnLayout {
+// Recent: the top of the list / grid's own scroll area (the list's header), so it shares the content box and
+// lines up with the grid below: the same 3 columns, the cover at the same place in each cell. The 3 newest, one
+// row, no captions (hovering names one: status bar + tooltip). Its "Recent" heading (the same style as "Pinned")
+// has Hide / Show at the right end (remembered, open by default). A click opens, the play button on a hovered
+// cover plays. The panel only puts it there on the Library tab with nothing typed and nothing opened.
+Column {
     id: recent
     required property var panel
-    spacing: 0
-    visible: panel.tab === "library" && panel.view === null && !panel.addMode && !panel.lyricsMode
-        && panel.filterInput.text.trim() === "" && SpotifyState.recent.length > 0
-    readonly property int cell: Math.floor((width - (MenuStyle.spotifyRecentCount - 1) * MenuStyle.gap) / MenuStyle.spotifyRecentCount)
+    readonly property real cellWidth: width / MenuStyle.spotifyGridColumnsLibrary
 
-    // the "Recent" line: a label and a clearly labelled arrow that collapses / expands the strip
-    Item {
-        Layout.fillWidth: true
-        implicitHeight: MenuStyle.spotifyStatusHeight
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            font.bold: true
-            color: Config.colors.text
-            text: "Recent"
-        }
-        Row {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                anchors.verticalCenter: parent.verticalCenter
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: MenuStyle.bevelDark
-                text: SpotifyState.recentOpen ? "Hide" : "Show"
-            }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                anchors.verticalCenter: parent.verticalCenter
-                font.family: MenuStyle.iconFont
-                font.pixelSize: MenuStyle.iconSize
-                color: MenuStyle.bevelDark
-                text: SpotifyState.recentOpen ? "\ue5ce" : "\ue5cf"
-            }
-        }
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: SpotifyState.recentOpen = !SpotifyState.recentOpen
-            SpotifyHint { panel: recent.panel; text: SpotifyState.recentOpen ? "Hide Recent" : "Show Recent" }
-        }
+    SpotifyHeading {
+        width: recent.width
+        panel: recent.panel
+        label: "Recent"
+        actionText: SpotifyState.recentOpen ? "Hide" : "Show"
+        actionGlyph: SpotifyState.recentOpen ? "\ue5ce" : "\ue5cf"
+        actionHint: SpotifyState.recentOpen ? "Hide Recent" : "Show Recent"
+        onActionClicked: SpotifyState.recentOpen = !SpotifyState.recentOpen
     }
 
-    // the strip
     Row {
         visible: SpotifyState.recentOpen
-        Layout.fillWidth: true
-        spacing: MenuStyle.gap
         Repeater {
             model: SpotifyState.recent.slice(0, MenuStyle.spotifyRecentCount)
             Item {
@@ -70,11 +30,21 @@ ColumnLayout {
                 required property var modelData
                 readonly property bool lit: hover.hovered
                 readonly property bool playing: recent.panel.isPlaying(modelData)
-                width: recent.cell
-                height: recent.cell
+                width: recent.cellWidth
+                height: recent.cellWidth - MenuStyle.gap
+                // the same square as a grid tile's cover (CoverTile: gap in from the cell's corner)
                 SunkenField {
-                    anchors.fill: parent
+                    id: cover
+                    x: MenuStyle.gap
+                    y: MenuStyle.gap
+                    width: recent.cellWidth - 2 * MenuStyle.gap
+                    height: width
                     padding: MenuStyle.spotifyInset
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: img.status !== Image.Ready
+                        color: Config.colors.shadow
+                    }
                     Image {
                         id: img
                         anchors.fill: parent
@@ -88,14 +58,14 @@ ColumnLayout {
                         anchors.centerIn: parent
                         visible: img.status !== Image.Ready
                         font.family: MenuStyle.iconFont
-                        font.pixelSize: MenuStyle.iconSize
-                        color: MenuStyle.bevelDark
+                        font.pixelSize: MenuStyle.spotifyTileIcon
+                        color: Config.colors.text
                         text: recent.panel.kindGlyph(tile.modelData.kind)
                     }
                 }
                 // hover / now-playing frame
                 Rectangle {
-                    anchors.fill: parent
+                    anchors.fill: cover
                     color: "transparent"
                     border.width: 2
                     border.color: MenuStyle.selectBar
@@ -105,22 +75,29 @@ ColumnLayout {
                     id: hover
                     cursorShape: Qt.PointingHandCursor
                 }
-                SpotifyHint { panel: recent.panel; text: tile.modelData.name }
+                // no caption: the name is a tooltip too
+                SpotifyHint { panel: recent.panel; text: tile.modelData.name; tooltip: true }
                 TapHandler {
                     onTapped: recent.panel.clickItem(-1, tile.modelData, false)
                 }
                 BevelButton {
                     visible: tile.lit
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 2
+                    anchors.right: cover.right
+                    anchors.bottom: cover.bottom
+                    anchors.margins: MenuStyle.gap
                     implicitHeight: MenuStyle.spotifyButton
                     glyphSize: MenuStyle.spotifyButtonGlyph
                     glyph: "\ue037"
                     focusPolicy: Qt.NoFocus
-                    onClicked: SpotifyState.play(tile.modelData.kind === "liked" ? "liked" : tile.modelData.uri)
+                    onClicked: recent.panel.playItem(tile.modelData)
                 }
             }
         }
+    }
+    // a little air between Recent and the grid
+    Item {
+        width: 1
+        height: MenuStyle.gap
+        visible: SpotifyState.recentOpen
     }
 }
