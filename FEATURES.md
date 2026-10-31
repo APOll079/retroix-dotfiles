@@ -7,9 +7,10 @@ Item numbers are the ids from the approval list. This file has two halves: **Pla
 
 ### Next up
 - Bluetooth PIN agent: only devices that ask for a PIN need it (blueman's agent works until then)
-- Small ones left from the audit: Play / Pause key with spotifyd (`playerctl -p spotify`), F12 -> Shift+Print, lazy-loaded popups, reuse of the `serve` connection
+- Small ones left from the audit: F12 -> Shift+Print, lazy-loaded popups, reuse of the `serve` connection
 
 ### Needs a live test (built, not yet confirmed on the desktop)
+- Desktop overhaul (branch `desktop-overhaul`): Task Manager window (opens floating + centred, resize sticks, Super+Q closes, title bar drags, Ctrl+Shift+Esc again focuses it, from a fullscreen game it leaves fullscreen first); CPU button (left = Task Manager on Performance, right = temperatures, GPU part hides only when the lyric line needs the room); side panel (Home full height, history scrolls, chevron unfolds, times line up); clock (weather, forecast tooltip, right-click DND); Quick Launch strip (all six buttons); EQ preset row (fill `audio.eqPresets`, click loads, sunken one survives a restart)
 - Autoclicker (F8): run the setup script, log in again, F8 on a safe spot clicks about 20/s, F8 again stops, a toast says on / off
 - Spotify folders: install the Spicetify extension, open the panel and the Spotify app; folders appear in Library > Playlists within a minute
 - Menus over a fullscreen video (clicks stay in the menu); Spotify: Play here from the phone, Play with nothing active carries on; Task Manager (Ctrl+Shift+Esc): End task / Kill on your own apps, Performance graphs
@@ -49,10 +50,10 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 - Old files left in the live `~/.config/quickshell` (not in the repo, unused): `popups/MenuFrame.qml`, `popups/NetworkMenu.qml`, `taskbar/TaskbarButton.qml`, `preview.qml`, `fonts/MaterialSymbolsSharp_Filled_36pt-Regular.ttf`. Your sync doesn't delete, so remove them by hand if wanted.
 
 ## Done
-- **Bar**: gripper, workspaces box, divider, Start / Theme; Spotify lyric line (3); privacy icons (6), caffeine (5), sysmon with popup, ETH, Bluetooth, tray, bell + clock
-- **Side panel** (Super+N): power buttons with confirm, now playing, per-app volume, DND (18), notification history, calendar with weather (7)
+- **Bar**: gripper, workspaces box, divider, Start / Theme, Quick Launch strip (clipboard, screenshots, wallpapers, games, keys, services); Spotify lyric line (3); privacy icons (6), caffeine (5), sysmon with popup, ETH, Bluetooth, tray, bell + clock
+- **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (one entry each: app, time, 16 px title, 3-line body with a chevron), calendar (7); weather (7) and DND (18) live on the bar clock (forecast tooltip, right-click DND)
 - **Launcher** (Super+D): tabs Apps / Games (cover grid) / Clipboard (Ctrl+Tab), fuzzy apps, calculator (10), session actions (11), "," window search, Super+V clipboard (4) with delete (Delete / Shift+Delete) and Clear all (confirm), usage ranking (13), categories, options menu with pin / move (15 partial). Super+Tab window switcher (the launcher's windows search)
-- **Notifications**: toasts with actions (19), position / stack / monitor settings (20), history that keeps the live notification; grouped by app (toasts and history), progress bars, inline reply, history saved across restarts
+- **Notifications**: toasts with actions (19), position / stack / monitor settings (20), history that keeps the live notification; one toast per app (history: one entry per notification), progress bars, inline reply, history saved across restarts
 - **Bluetooth** (2): native BlueZ, connect / trust / forget / pair
 - **Screenshots** (21): snipping overlay (Super+Shift+S / Print: Region, Window, Screen, All), toast with thumbnail, History viewer with multi-select; no annotation by choice
 - **Games** (34): cover grid with filter chips (All / Recent / Steam / Other / Hidden), as the standalone menu (Super+Shift+G) and as the launcher's Games tab; Steam, Steam shortcuts, own entries; `scripts/games.py` + `GamesState.qml` + `GamesView.qml`
@@ -71,7 +72,7 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 - **Theme manager core** (30): `themes.json` + `apply.py` + templates drive kitty, Hyprland borders, hyprlock, fastfetch, btop, fish and the emoji picker; `dusty` alongside cherry
 - Steam games open on workspace 2
 - **Spotify panel** (Super+S): a drawer: now playing (cover, title, artist / album links, heart / add / lyrics, mute + volume), seek, a five-column transport, one search box (filter; Spotify search in place), Library | Liked | Queue tabs with flat chips, Recent (3 covers on top of the Library grid), rows or cover tiles with Pinned / folder mosaics, list headers with Play / Shuffle, a row menu, a lyrics view (volume, seek, transport under the lines), status bar hints, a shared key map, remembers where you left it; `scripts/spotify.py` + `SpotifyState.qml`
-- **Task Manager** (Ctrl+Shift+Esc): Apps / Processes / Performance, Win95 style; replaces btm
+- **Task Manager** (Ctrl+Shift+Esc or the bar's CPU button): a real floating window (one for the desktop), Apps / Processes / Performance, Win95 style; replaces btm
 - **Launcher cleanup**: Hide / Unhide + Hidden (n) chip, Uninstall via pacman / flatpak owner lookup
 - **Cheat sheet** (Super+F1), **Services** panel (dinit), **Phone** tab in the side panel (KDE Connect); Services and Keys open from the Start menu
 - **Look**: Win95 title bars, etched separators, grippers, dithered meters, dotted focus rect, sunken pressed states

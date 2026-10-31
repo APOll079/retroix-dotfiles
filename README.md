@@ -5,12 +5,14 @@ A retro, Win95 / classic-Mac flavoured Hyprland desktop for **Artix Linux (dinit
 Bevels, solid title bars, dense rows, chunky icons: everything you see besides app windows is
 [Quickshell](https://quickshell.org) (QML).
 
-- **Bar**: workspaces, Start / Themes menus, a Spotify lyric line, system monitor, Bluetooth, tray, clock.
+- **Bar**: workspaces, Start / Themes menus, a Quick Launch strip (clipboard, screenshots, wallpapers, games,
+  shortcuts, services), a Spotify lyric line, CPU / GPU / RAM monitor (click: Task Manager, right click:
+  temperatures), Bluetooth, tray, weather + clock (right click: Do Not Disturb).
 - **Launcher** (Super+D): apps, calculator, session actions, window search, Games tab, clipboard history.
 - **Spotify panel** (Super+S): player, Recent, your whole library with folders and pins, lyrics.
   Works with the Spotify app or headless through `spotifyd`.
-- **Task Manager** (Ctrl+Shift+Esc), snipping tool (Super+Shift+S), notifications with history,
-  screen-share picker, cheat sheet (Super+F1), Bluetooth, KDE Connect, dinit services panel.
+- **Task Manager** (Ctrl+Shift+Esc; a real window), snipping tool (Super+Shift+S), notifications with a full-height history,
+  EasyEffects preset buttons (`audio.eqPresets` in settings.json), screen-share picker, cheat sheet (Super+F1), Bluetooth, KDE Connect, dinit services panel.
 - **Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland,
   hyprlock, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), VSCodium and Zen in one go
   (`quickshell/theme/apply.py`, run by Quickshell on a theme change; also `python3 ~/.config/quickshell/theme/apply.py dusty`).
