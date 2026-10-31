@@ -6,6 +6,9 @@ import QtQuick.Controls.Basic
 import ".."
 
 // Notification history for the Home tab of the side panel. `active` is true while Home is showing.
+// It takes all the height the panel has left and scrolls inside. One entry per notification, newest
+// first: app and time, the title (16 px), the body wrapped to notificationBodyLines (the chevron
+// shows the rest). A click opens it in its app while it is alive.
 ColumnLayout {
     id: root
     property bool active: false
@@ -23,8 +26,11 @@ ColumnLayout {
         }
     }
 
+    // Today: "14:05"; older (the history keeps a week): "Thu 14:05"
     function timeText(t) {
-        return Qt.formatDateTime(t, "hh:mm");
+        const today = new Date();
+        const same = t.getFullYear() === today.getFullYear() && t.getMonth() === today.getMonth() && t.getDate() === today.getDate();
+        return Qt.formatDateTime(t, same ? "hh:mm" : "ddd hh:mm");
     }
 
     RowLayout {
@@ -53,39 +59,12 @@ ColumnLayout {
         }
     }
 
-    // Rows: one per app group. A group of one is the notification itself; a bigger group is a
-    // header ("App · 3", newest summary) that a click expands into its notifications.
-    property var expanded: ({})
+    property var expanded: ({})          // entry key -> true while its whole body shows
     property var replyTo: null           // history entry whose reply box is open
-    readonly property var rows: {
-        const groups = [];
-        const byApp = {};
-        for (const e of NotificationStore.items) {
-            const app = e.appName || "Unknown";
-            if (!(app in byApp)) {
-                byApp[app] = { app: app, entries: [] };
-                groups.push(byApp[app]);
-            }
-            byApp[app].entries.push(e);
-        }
-        const out = [];
-        for (const g of groups) {
-            if (g.entries.length === 1) {
-                out.push({ kind: "entry", entry: g.entries[0], nested: false });
-                continue;
-            }
-            const open = !!root.expanded[g.app];
-            out.push({ kind: "group", app: g.app, count: g.entries.length, newest: g.entries[0], open: open });
-            if (open)
-                for (const e of g.entries)
-                    out.push({ kind: "entry", entry: e, nested: true });
-        }
-        return out;
-    }
 
-    function toggleGroup(app) {
+    function toggleExpanded(key) {
         const x = Object.assign({}, root.expanded);
-        x[app] = !x[app];
+        x[key] = !x[key];
         root.expanded = x;
     }
 
@@ -95,51 +74,173 @@ ColumnLayout {
         return e.appIcon ? Quickshell.iconPath(e.appIcon, true) : "";
     }
 
-    // Only as tall as its rows (rows are 1.5 rows high), up to notificationListRows, then it scrolls
     SunkenField {
         Layout.fillWidth: true
-        visible: root.rows.length > 0
-        Layout.preferredHeight: Math.min(root.rows.length, MenuStyle.notificationListRows) * MenuStyle.rowHeight * 3 / 2 + 2 * padding
+        Layout.fillHeight: true
+        visible: NotificationStore.items.length > 0
         padding: 2
         clip: true
 
         ListView {
             id: list
             anchors.fill: parent
-            model: root.rows
-            delegate: Item {
+            model: NotificationStore.items
+            clip: true
+            spacing: MenuStyle.gap
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollIndicator.vertical: ScrollIndicator {
+                active: list.moving
+            }
+            delegate: Rectangle {
                 id: row
                 required property var modelData
-                readonly property var entry: modelData.kind === "entry" ? modelData.entry : null
-                readonly property bool canReply: entry !== null && entry.notif !== null && entry.notif.hasInlineReply
-                readonly property real progress: entry ? NotificationStore.progressOf(entry.notif) : -1
+                readonly property var entry: modelData
+                readonly property bool canReply: entry.notif !== null && entry.notif.hasInlineReply
+                readonly property real progress: NotificationStore.progressOf(entry.notif)
+                readonly property bool open: root.expanded[entry.key] === true
+                // Rows hover as a solid accent bar with inverted text, like MenuRow
+                readonly property bool lit: rowMouse.containsMouse || expandButton.hovered || replyButton.hovered
+                readonly property color ink: lit ? MenuStyle.selectText : Config.colors.text
+                readonly property color dimInk: lit ? MenuStyle.selectText : MenuStyle.bevelDark
                 width: list.width
-                height: MenuStyle.rowHeight * 3 / 2
+                height: content.implicitHeight + 2 * MenuStyle.gap
+                color: lit ? MenuStyle.selectBar : "transparent"
 
-                MenuRow {
-                    anchors.left: parent.left
-                    anchors.leftMargin: row.modelData.nested ? MenuStyle.iconSize : 0
-                    anchors.right: replyButton.visible ? replyButton.left : parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    iconSource: row.modelData.kind === "group" ? root.iconFor(row.modelData.newest) : root.iconFor(row.entry)
-                    glyph: row.modelData.kind === "group" ? (row.modelData.open ? "\ue5cf" : "\ue5cc") : (row.entry.urgency === NotificationUrgency.Critical ? "\ue000" : "\ue7f4")
-                    text: row.modelData.kind === "group" ? row.modelData.app + " \u00b7 " + row.modelData.count : row.entry.summary
-                    subtext: row.modelData.kind === "group" ? row.modelData.newest.summary : row.entry.body.replace(/\n/g, " ")
-                    trailing: row.modelData.kind === "group" ? root.timeText(row.modelData.newest.time) : (row.progress >= 0 ? Math.round(row.progress) + "%" : root.timeText(row.entry.time))
-                    // A group toggles; a notification opens in its app (default action) while it is alive
-                    onClicked: row.modelData.kind === "group" ? root.toggleGroup(row.modelData.app) : NotificationStore.open(row.entry.key)
+                // A click opens the notification in its app (default action) while it is alive
+                MouseArea {
+                    id: rowMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: NotificationStore.open(row.entry.key)
                 }
-                BevelButton {
-                    id: replyButton
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: row.canReply
-                    glyph: "\ue15e"
-                    focusPolicy: Qt.NoFocus
-                    onClicked: {
-                        root.replyTo = row.entry;
-                        historyReply.text = "";
-                        historyReply.focusInput();
+
+                RowLayout {
+                    id: content
+                    x: MenuStyle.pad
+                    y: MenuStyle.gap
+                    width: parent.width - 2 * MenuStyle.pad
+                    spacing: MenuStyle.pad
+
+                    // The notification's image or app icon, else a bell (critical: a warning sign)
+                    Item {
+                        Layout.preferredWidth: MenuStyle.notificationIconSize
+                        Layout.preferredHeight: MenuStyle.notificationIconSize
+                        Layout.alignment: Qt.AlignTop
+                        Image {
+                            id: icon
+                            anchors.fill: parent
+                            visible: status === Image.Ready
+                            asynchronous: true
+                            smooth: false
+                            fillMode: Image.PreserveAspectFit
+                            sourceSize.width: MenuStyle.notificationIconSize
+                            sourceSize.height: MenuStyle.notificationIconSize
+                            source: root.iconFor(row.entry)
+                        }
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            anchors.centerIn: parent
+                            visible: icon.status !== Image.Ready
+                            font.family: MenuStyle.iconFont
+                            font.pixelSize: MenuStyle.iconSize
+                            color: row.ink
+                            text: row.entry.urgency === NotificationUrgency.Critical ? "\ue000" : "\ue7f4"
+                        }
+                    }
+
+                    ColumnLayout {
+                        // Exactly the room the icon and the button column leave, whatever it holds (also
+                        // only the app line: no title, no body), so the time always sits at the right edge
+                        Layout.preferredWidth: content.width - MenuStyle.notificationIconSize - expandButton.implicitWidth - 2 * content.spacing
+                        Layout.alignment: Qt.AlignTop
+                        spacing: 2
+
+                        // App on the left, time (or progress) on the right
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: MenuStyle.pad
+                            Text {
+                                renderType: Text.NativeRendering
+                                font.hintingPreference: Font.PreferFullHinting
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                font.family: MenuStyle.titleFont
+                                font.pixelSize: MenuStyle.fontSize
+                                color: row.dimInk
+                                textFormat: Text.PlainText
+                                text: row.entry.appName || "Unknown"
+                            }
+                            Text {
+                                renderType: Text.NativeRendering
+                                font.hintingPreference: Font.PreferFullHinting
+                                font.family: MenuStyle.bodyFont
+                                font.pixelSize: MenuStyle.fontSize
+                                color: row.dimInk
+                                text: row.progress >= 0 ? Math.round(row.progress) + "%" : root.timeText(row.entry.time)
+                            }
+                        }
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            Layout.fillWidth: true
+                            visible: text !== ""
+                            elide: Text.ElideRight
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.notificationTitleSize
+                            color: row.ink
+                            textFormat: Text.PlainText
+                            text: row.entry.summary
+                        }
+                        Text {
+                            id: bodyText
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            Layout.fillWidth: true
+                            visible: text !== ""
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            maximumLineCount: row.open ? MenuStyle.notificationExpandedLines : MenuStyle.notificationBodyLines
+                            elide: Text.ElideRight
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.fontSize
+                            color: row.ink
+                            textFormat: Text.PlainText
+                            text: row.entry.body
+                        }
+                        // Progress (downloads, copies): the "value" hint, 0-100
+                        SegmentBar {
+                            Layout.fillWidth: true
+                            visible: row.progress >= 0
+                            implicitHeight: MenuStyle.rowHeight - 6
+                            value: row.progress / 100
+                        }
+                    }
+
+                    // Show the whole body / fold it back; reply (apps that offer it). The column keeps
+                    // its width on every row, so the times line up.
+                    ColumnLayout {
+                        Layout.alignment: Qt.AlignTop
+                        Layout.preferredWidth: expandButton.implicitWidth
+                        spacing: MenuStyle.gap
+                        BevelButton {
+                            id: expandButton
+                            visible: bodyText.truncated || row.open
+                            glyph: row.open ? "\ue5ce" : "\ue5cf"
+                            focusPolicy: Qt.NoFocus
+                            onClicked: root.toggleExpanded(row.entry.key)
+                        }
+                        BevelButton {
+                            id: replyButton
+                            visible: row.canReply
+                            glyph: "\ue15e"
+                            focusPolicy: Qt.NoFocus
+                            onClicked: {
+                                root.replyTo = row.entry;
+                                historyReply.text = "";
+                                historyReply.focusInput();
+                            }
+                        }
                     }
                 }
             }

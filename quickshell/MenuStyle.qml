@@ -169,7 +169,15 @@ Singleton {
     readonly property int weatherRetry: 60000           // after a failed fetch
     // Phone tab: device list re-read while it is open, ms
     readonly property int phoneRefresh: 5000
-    readonly property int notificationListRows: 6
+    // Side panel: full height, from the bar down to this far above the screen's bottom edge
+    readonly property int sidePanelBottomMargin: 32
+    // Notification entries (history and toasts): title size (Monaco hints cleanly at 16), body lines
+    // before the rest folds away (history: the chevron unfolds it, up to notificationExpandedLines;
+    // toasts show notificationToastBodyLines)
+    readonly property int notificationTitleSize: 16
+    readonly property int notificationBodyLines: 3
+    readonly property int notificationExpandedLines: 40
+    readonly property int notificationToastBodyLines: 6
     // Home tab: the Applications volume list scrolls after this height (about five apps)
     readonly property int audioAppsMaxHeight: 240
     // Bluetooth menu: rows per list before it scrolls, and how long a scan runs (ms)

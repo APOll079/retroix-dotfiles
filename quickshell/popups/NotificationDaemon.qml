@@ -153,7 +153,7 @@ Scope {
                         // App name (+ how many arrived from it meanwhile); the summary is the first body line
                         windowTitle: (notifItem.modelData.appName || notifItem.modelData.summary) + (notifItem.count > 1 ? " \u00b7 " + notifItem.count : "")
                         active: false
-                        windowTitleIcon: ""
+                        windowTitleIcon: "\ue7f4"
                         titleColor: notifItem.critical ? Config.colors.urgent : "transparent"
                         
                         // Left-click opens it (the app's default action, e.g. the Discord chat);
@@ -198,8 +198,9 @@ Scope {
                                         font.hintingPreference: Font.PreferFullHinting
                                         Layout.fillWidth: true
                                         visible: text !== "" && notifItem.modelData.appName !== ""
-                                        font.family: MenuStyle.titleFont
-                                        font.pixelSize: MenuStyle.fontSize
+                                        // Same as the history: the title at 16 px, the body at 12
+                                        font.family: MenuStyle.bodyFont
+                                        font.pixelSize: MenuStyle.notificationTitleSize
                                         color: Config.colors.text
                                         elide: Text.ElideRight
                                         maximumLineCount: 2
@@ -217,7 +218,7 @@ Scope {
                                         color: Config.colors.text
                                         wrapMode: Text.Wrap
                                         elide: Text.ElideRight
-                                        maximumLineCount: 6
+                                        maximumLineCount: MenuStyle.notificationToastBodyLines
                                         textFormat: Text.PlainText
                                         text: notifItem.modelData.body
                                     }

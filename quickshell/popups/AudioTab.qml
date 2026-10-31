@@ -5,57 +5,11 @@ import QtQuick.Controls.Basic
 import Quickshell.Services.Pipewire
 import ".."
 
-// Audio section of the Home tab: now playing with controls, the output (EasyEffects-aware routing), the microphone, and per-app volume (the overall volume is on the DAC). `active` is true while Home is showing.
+// Audio section of the Home tab: the output (EasyEffects-aware routing), the microphone, and per-app volume (the overall volume is on the DAC). `active` is true while Home is showing.
 ColumnLayout {
     id: root
     property bool active: false
     spacing: MenuStyle.pad
-
-    // === NOW PLAYING ===
-    SunkenField {
-        Layout.fillWidth: true
-        implicitHeight: trackLabel.implicitHeight + 2 * padding + 4
-        Text {
-            id: trackLabel
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            width: parent.width
-            anchors.verticalCenter: parent.verticalCenter
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            maximumLineCount: 2
-            elide: Text.ElideRight
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: Config.colors.text
-            textFormat: Text.PlainText
-            text: Media.label
-        }
-    }
-
-    // Previous / play-pause / next: Spotify if it is running, else whatever plays (Media.player)
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: MenuStyle.pad
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: "\ue045"
-            enabled: Media.player !== null && Media.player.canGoPrevious
-            onClicked: Media.player.previous()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: Media.playing ? "\ue034" : "\ue037"
-            enabled: Media.player !== null && Media.player.canTogglePlaying
-            onClicked: Media.player.togglePlaying()
-        }
-        BevelButton {
-            Layout.fillWidth: true
-            glyph: "\ue044"
-            enabled: Media.player !== null && Media.player.canGoNext
-            onClicked: Media.player.next()
-        }
-    }
 
     // === OUTPUT ===
     // The hardware sinks. EasyEffects sits in front of them and follows the default sink (see

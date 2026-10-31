@@ -4,7 +4,9 @@ import QtQuick
 import QtQuick.Layouts
 import ".."
 
-// One panel for notifications + calendar, audio + media, and power. Anchored to the right edge.
+// One panel for notifications + calendar, audio, and power. Anchored to the right edge. Home runs
+// from the bar down to sidePanelBottomMargin above the screen's bottom and the notification history
+// takes all the height the audio part leaves; Calendar and Phone keep their natural height.
 PanelWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)
@@ -27,8 +29,8 @@ PanelWindow {
     WlrLayershell.namespace: "qs-menu"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
     visible: false
-    implicitWidth: MenuStyle.widthMedium
-    implicitHeight: MenuStyle.chromeHeight + column.implicitHeight
+    implicitWidth: MenuStyle.widthLarge
+    implicitHeight: root.tab === 0 && root.screen ? root.screen.height - MenuStyle.barHeight - MenuStyle.sidePanelBottomMargin : MenuStyle.chromeHeight + column.implicitHeight
     color: "transparent"
 
     // Tell the toast window this screen's Home tab is showing (no toasts there; see NotificationDaemon)
@@ -60,8 +62,7 @@ PanelWindow {
 
         ColumnLayout {
             id: column
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors.fill: parent
             spacing: MenuStyle.pad
 
             // Quick power buttons
@@ -137,8 +138,9 @@ PanelWindow {
 
             StackLayout {
                 Layout.fillWidth: true
-                // Each tab takes its own height; the panel is anchored at the top, so only its bottom moves
-                Layout.preferredHeight: root.tab === 0 ? homeTab.implicitHeight : root.tab === 1 ? calendarTab.implicitHeight : phoneTab.implicitHeight
+                Layout.fillHeight: true
+                // Calendar / Phone: their own height (Home fills the full-height panel)
+                Layout.preferredHeight: root.tab === 1 ? calendarTab.implicitHeight : root.tab === 2 ? phoneTab.implicitHeight : -1
                 currentIndex: root.tab
 
                 ColumnLayout {
@@ -151,6 +153,7 @@ PanelWindow {
                     MenuSeparator { Layout.fillWidth: true }
                     NotificationList {
                         Layout.fillWidth: true
+                        Layout.fillHeight: true
                         active: root.visible && root.tab === 0
                     }
                 }
