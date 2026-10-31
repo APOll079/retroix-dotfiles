@@ -1,4 +1,4 @@
-# pawtix dotfiles
+# Retroix dotfiles
 ![Side panel and bar](screenshots/panel.png)
 
 A retro, Win95 / classic-Mac flavoured Hyprland desktop for **Artix Linux (dinit)**.
