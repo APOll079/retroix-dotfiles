@@ -23,7 +23,6 @@ PanelWindow {
         right: true
     }
     margins.top: MenuStyle.barHeight
-    margins.right: MenuStyle.gap
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-menu"

@@ -51,7 +51,7 @@ Rules relaxed for the theming run only: CLAUDE.md says not to touch non-cherry t
 
 ## Done
 - **Bar**: gripper, workspaces box, divider, Start / Theme, Wallpapers and Services buttons; Spotify lyric line (3); privacy icons (6), caffeine (5), sysmon with popup, ETH, Bluetooth, tray, bell + clock
-- **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (one entry each: app, time, 16 px title, 3-line body with a chevron), calendar (7); weather (7) and DND (18) live on the bar clock (temperature in the label, right-click DND)
+- **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (each entry a small raised window on a recessed well: title strip with app + time, 16 px title, 3-line body with a chevron), calendar (7); weather (7) and DND (18) live on the bar clock (temperature in the label, right-click DND)
 - **Launcher** (Super+D): tabs Apps / Games (cover grid) / Clipboard (Ctrl+Tab), fuzzy apps, calculator (10), session actions (11), "," window search, Super+V clipboard (4) with delete (Delete / Shift+Delete) and Clear all (confirm), usage ranking (13), categories, options menu with pin / move (15 partial). Super+Tab window switcher (the launcher's windows search)
 - **Notifications**: toasts with actions (19), position / stack / monitor settings (20), history that keeps the live notification; one toast per app (history: one entry per notification), progress bars, inline reply, history saved across restarts
 - **Bluetooth** (2): native BlueZ, connect / trust / forget / pair

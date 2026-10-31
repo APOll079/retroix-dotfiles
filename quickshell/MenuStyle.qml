@@ -178,6 +178,11 @@ Singleton {
     readonly property int notificationBodyLines: 3
     readonly property int notificationExpandedLines: 40
     readonly property int notificationToastBodyLines: 6
+    // History: the well the entries sit in, a shade below the theme's shadow (so the cards and their
+    // muted title bars stand up out of it in every theme), and each entry's frame (1px outline + 2px
+    // raised bevel)
+    readonly property color notificationWell: Qt.darker(Config.colors.shadow, 1.25)
+    readonly property int notificationCardInset: 3
     // Home tab: the Applications volume list scrolls after this height (about five apps)
     readonly property int audioAppsMaxHeight: 240
     // Home tab: EQ preset buttons per row before they wrap
