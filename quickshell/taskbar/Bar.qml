@@ -144,8 +144,7 @@ screenHeight: modelData.height
 }
 
 Popups.BluetoothMenu { bar: taskbar; id: bluetoothMenu; closeCallback: taskbar.closeAllPopups }
-Popups.SysMonMenu { bar: taskbar; id: sysMonMenu; closeCallback: taskbar.closeAllPopups; openTaskManager: function() { taskbar.toggleMenu(taskManager, Config.SystemPopup.TaskManager, null, "keep") } }
-Popups.TaskManager { screen: root.modelData; bar: taskbar; id: taskManager; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.SysMonMenu { bar: taskbar; id: sysMonMenu; closeCallback: taskbar.closeAllPopups; openTaskManager: function() { TaskWindow.open("") } }
 Popups.SessionPanel { bar: taskbar; id: sessionPanel; closeCallback: taskbar.closeAllPopups }
 Popups.ScreenshotPanel { screen: root.modelData; bar: taskbar; id: screenshotPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ScreenshotOverlay {
@@ -161,7 +160,7 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, spotifyPanel, taskManager, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -280,15 +279,17 @@ taskbar.openLauncherMode("windows");
 }
 }
 
-// Super+Q: close an open menu (or the snipping overlay) instead of the window behind it.
-// Answers "true" when it closed something, so the bind knows not to close the window.
+// The Task Manager is one window for every monitor (TaskWindow.qml); this old target still
+// opens / focuses it
 IpcHandler {
 target: "taskmanager_" + taskbar.screen.name
 function toggle() {
-taskbar.toggleMenu(taskManager, Config.SystemPopup.TaskManager, null, "keep");
+TaskWindow.open("");
 }
 }
 
+// Super+Q: close an open menu (or the snipping overlay) instead of the window behind it.
+// Answers "true" when it closed something, so the bind knows not to close the window.
 IpcHandler {
 target: "menus_" + taskbar.screen.name
 function closeAny(): string {

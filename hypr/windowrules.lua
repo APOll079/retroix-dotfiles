@@ -138,6 +138,23 @@ hl.window_rule({
     size   = { 720, 420 }
 })
 
+-- Quickshell's Task Manager (popups/TaskManager.qml, a FloatingWindow titled "Task Manager"): float,
+-- centred, 760x560 by default and never smaller than 600x420 (MenuStyle.task* in quickshell);
+-- persistent_size keeps the size you last gave it. Matched by its first title because the class
+-- Quickshell gives its windows is not checked yet (probably org.quickshell). Field names from the
+-- wiki (Window Rules > Effects); not seen running here
+hl.window_rule({
+    name  = "task-manager",
+    match = {
+        initial_title = "^Task Manager$"
+    },
+    float           = true,
+    center          = true,
+    size            = { 760, 560 },
+    min_size        = { 600, 420 },
+    persistent_size = true
+})
+
 -- HyprEmoji (SUPER + period): float near the cursor. Rule taken from the package's own
 -- /usr/share/hypremoji/hypremoji.lua; without it the picker tiles and fills half the screen.
 hl.window_rule({

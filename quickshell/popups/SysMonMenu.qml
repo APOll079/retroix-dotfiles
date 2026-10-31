@@ -19,7 +19,7 @@ PopupWindow {
 
     PopupWindowFrame {
         windowTitle: "System"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue322"
 
         ColumnLayout {
             id: column
@@ -93,7 +93,7 @@ PopupWindow {
     }
 
     onVisibleChanged: {
-        SysMon.detailed = visible;
+        SysMon.popupOpen = visible;
         if (visible)
             SysMon.update();
     }

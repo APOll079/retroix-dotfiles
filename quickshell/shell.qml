@@ -9,6 +9,7 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 import "taskbar" as Taskbar
 import "popups" as Popups
@@ -18,6 +19,12 @@ Scope {
     Taskbar.Bar {}
     Popups.OsdPopup {}
     Popups.NotificationDaemon {}
+    // Task Manager window (TaskWindow.qml): Ctrl+Shift+Esc runs `qs ipc call taskmanager open`
+    IpcHandler {
+        target: "taskmanager"
+        function open(): void { TaskWindow.open(""); }
+        function performance(): void { TaskWindow.open("performance"); }
+    }
     Variants {
         model: Quickshell.screens
         IdleDim {}

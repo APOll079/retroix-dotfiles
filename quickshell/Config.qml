@@ -111,7 +111,6 @@ Games,
 CheatSheet,
 Services,
 Spotify,
-TaskManager,
 Wallpapers,
 None
 }

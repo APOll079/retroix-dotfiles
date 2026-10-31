@@ -23,9 +23,18 @@ hl.bind(mainMod .. " + SHIFT" .. " + " .. "S", hl.dsp.exec_cmd(screenshotOverlay
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd("hyprpicker -a"))  -- help: Screen | Pick a colour
--- Task Manager (quickshell TaskManager.qml) on the focused monitor
-local taskManager = [[bash -c 'qs ipc call taskmanager_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
-hl.bind("CTRL + SHIFT" .. " + " .. "ESCAPE", hl.dsp.exec_cmd(taskManager))  -- help: Apps | Task Manager
+-- Task Manager (quickshell TaskManager.qml): one real window; opens it, or focuses it when it is
+-- already open. Over a fullscreen game or video it leaves fullscreen first, so the window can't
+-- open hidden behind it (misc.on_focus_under_fullscreen only covers tiled windows).
+-- fullscreen == 2 is real fullscreen (1 = maximised, kept); the no-argument
+-- hl.dsp.window.fullscreen() toggles it off, like SUPER + SHIFT + F above (GUESS: not seen running)
+hl.bind("CTRL + SHIFT" .. " + " .. "ESCAPE", function()  -- help: Apps | Task Manager
+    local w = hl.get_active_window()
+    if w and w.fullscreen == 2 then
+        hl.dispatch(hl.dsp.window.fullscreen())
+    end
+    hl.dispatch(hl.dsp.exec_cmd("qs ipc call taskmanager open"))
+end)
 -- Spotify panel (quickshell SpotifyPanel.qml) on the focused monitor
 local spotifyPanel = [[bash -c 'qs ipc call spotify_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + " .. "S", hl.dsp.exec_cmd(spotifyPanel))  -- help: Apps | Spotify panel

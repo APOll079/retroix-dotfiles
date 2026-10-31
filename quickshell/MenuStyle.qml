@@ -139,6 +139,13 @@ Singleton {
     readonly property int taskInterval: 2000        // Task Manager refresh (ms)
     readonly property int taskHistory: 60           // samples per Performance graph (2 min at 2 s)
     readonly property int taskColumnWidth: 80       // CPU / Memory / Procs columns
+    // Task Manager window (a real window): default size (Hyprland keeps the last one, persistent_size)
+    // and the smallest it can be made, where the 2 x 2 Performance graphs and the five action
+    // buttons still fit without clipping
+    readonly property int taskWindowWidth: 760
+    readonly property int taskWindowHeight: 560
+    readonly property int taskMinWidth: 600
+    readonly property int taskMinHeight: 420
     readonly property int sysMonInterval: 2000      // CPU / RAM / temperature read interval
     readonly property int lyricsTick: 250
     // Animations: short, no bounce. Menus fade + slide in on open (closing is instant), hover

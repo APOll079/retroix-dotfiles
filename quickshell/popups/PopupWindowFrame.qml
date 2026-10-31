@@ -22,6 +22,11 @@ Rectangle {
 
     default property alias content: body.data
 
+    // Real windows (Task Manager): pressing the title bar emits titlePressed (the window then calls
+    // startSystemMove). Menus leave it off.
+    property bool titleDrag: false
+    signal titlePressed()
+
     color: Config.colors.base
 
     // Menus (active frames) fade in and slide down a few px when their window opens; toasts and
@@ -63,6 +68,12 @@ Rectangle {
         width: root.width - 2 * MenuStyle.frameInset
         height: MenuStyle.titleHeight
         color: root.barColor
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: root.titleDrag
+            onPressed: root.titlePressed()
+        }
 
         RowLayout {
             anchors.fill: parent

@@ -11,8 +11,11 @@ Singleton {
     id: root
 
     readonly property int interval: MenuStyle.sysMonInterval
-    // The SysMon popup is open: also read the GPU temperatures (only shown there)
-    property bool detailed: false
+    // The SysMon popup or the Task Manager is open: also read the GPU temperatures (only shown
+    // there). Two flags, so closing one doesn't stop the reads the other still shows.
+    property bool popupOpen: false
+    property bool taskOpen: false
+    readonly property bool detailed: popupOpen || taskOpen
 
     property real cpuLoad: 0          // 0..1
     property real memLoad: 0          // 0..1, used = total - available

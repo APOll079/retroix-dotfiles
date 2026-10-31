@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
@@ -7,35 +6,28 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// Task Manager (Ctrl+Shift+Esc, SysMon popup > Task Manager, `qs ipc call taskmanager_<mon> toggle`),
-// Win95 style, centred like the launcher. Tabs:
+// Task Manager (Ctrl+Shift+Esc, left click on the bar's CPU button, `qs ipc call taskmanager open`),
+// Win95 style. A normal window Hyprland manages (an xdg toplevel: move, resize, tile, Super+Q), one for
+// the whole desktop (TaskWindow.qml owns it). Tabs:
 // - Apps: open windows (Hyprland). Switch to, End task (SIGTERM to the window's process), Kill (SIGKILL).
 // - Processes: grouped by program (scripts/procs.py), sortable columns, filter, Mine / All, End task / Kill
 //   for your own processes (others are listed only).
 // - Performance: CPU, RAM, GPU and VRAM history graphs plus temperatures (SysMon.qml).
 // Ending things always goes through a confirm row, and only ever signals the pids of the row you picked.
 // The data helper runs only while the window is open.
-PanelWindow {
+FloatingWindow {
     id: root
 
-    required property var bar
-    property int screenHeight: 0
-    property var closeCallback: function () {}
-
-    // An Overlay-layer panel (like the launcher), so it also works over fullscreen windows
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    margins.top: MenuStyle.barHeight
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qs-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // Hyprland matches this title (windowrules.lua "task-manager": float, size, centre, min size)
+    title: "Task Manager"
+    implicitWidth: MenuStyle.taskWindowWidth
+    implicitHeight: MenuStyle.taskWindowHeight
+    minimumSize: Qt.size(MenuStyle.taskMinWidth, MenuStyle.taskMinHeight)
     visible: false
-    color: "transparent"
+    color: Config.colors.base
+
+    // Closed by Hyprland (Super+Q, the close dispatcher): reset like closeMenu()
+    onClosed: root.visible = false
 
     property string tab: "processes"     // apps | processes | performance
     property var sample: null            // the last procs.py line
@@ -64,23 +56,9 @@ PanelWindow {
     readonly property var apps: Hyprland.toplevels.values.filter(t => t.title !== "" && t.lastIpcObject && t.lastIpcObject.pid > 0)
     readonly property var selectedApp: root.apps[root.appIndex] || null
 
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: root.closeCallback()
-    }
-
     Item {
         id: frame
-        width: MenuStyle.launcherWidth
-        height: MenuStyle.launcherHeight
-        x: (root.width - width) / 2
-        y: root.screenHeight / 2 - height / 2 - MenuStyle.barHeight
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
-        }
+        anchors.fill: parent
 
         // Keys for the tabs without a text field (Apps, Performance)
         Item {
@@ -97,8 +75,11 @@ PanelWindow {
         }
 
         PopupWindowFrame {
-            windowTitle: "Task Manager"
-            windowTitleIcon: ""
+            windowTitle: root.title
+            // Dragging the title bar moves the window, like any Win95 window
+            titleDrag: true
+            onTitlePressed: root.startSystemMove()
+            windowTitleIcon: "\ue1db"
 
             ColumnLayout {
                 anchors.fill: parent
@@ -109,9 +90,9 @@ PanelWindow {
                     spacing: MenuStyle.gap
                     Repeater {
                         model: [
-                            { key: "apps", text: "Apps", glyph: "" },
-                            { key: "processes", text: "Processes", glyph: "" },
-                            { key: "performance", text: "Performance", glyph: "" }
+                            { key: "apps", text: "Apps", glyph: "\ue8b0" },
+                            { key: "processes", text: "Processes", glyph: "\ue8ef" },
+                            { key: "performance", text: "Performance", glyph: "\ue922" }
                         ]
                         BevelButton {
                             Layout.fillWidth: true
@@ -155,7 +136,7 @@ PanelWindow {
                             width: appList.width
                             selected: index === root.appIndex
                             iconSource: Quickshell.iconPath(String(modelData.lastIpcObject.class || "").toLowerCase(), true)
-                            glyph: ""
+                            glyph: "\ue8b0"
                             text: modelData.title
                             subtext: (modelData.lastIpcObject.class || "") + "  ·  pid " + modelData.lastIpcObject.pid
                             trailing: modelData.workspace ? modelData.workspace.name.replace("special:", "*") : ""
@@ -200,7 +181,7 @@ PanelWindow {
                     }
                     BevelButton {
                         text: root.mineOnly ? "Mine" : "All"
-                        glyph: root.mineOnly ? "" : ""
+                        glyph: root.mineOnly ? "\ue7fd" : "\ue7ef"
                         focusPolicy: Qt.NoFocus
                         onClicked: root.mineOnly = !root.mineOnly
                     }
@@ -513,7 +494,6 @@ PanelWindow {
         if (!t)
             return;
         Hyprland.dispatch("hl.dsp.focus({ window = \"address:0x" + t.address + "\" })");
-        root.closeCallback();
     }
 
     // What happens if a core process is ended; "" = an ordinary program
@@ -621,7 +601,7 @@ PanelWindow {
         if (root.confirm)
             root.confirm = null;
         else
-            root.closeCallback();
+            root.closeMenu();
     }
 
     function showTab(key) {
@@ -639,7 +619,7 @@ PanelWindow {
     }
 
     onVisibleChanged: {
-        SysMon.detailed = visible;
+        SysMon.taskOpen = visible;
         if (!visible) {
             root.sample = null;
             root.cpuHist = [];
@@ -649,12 +629,28 @@ PanelWindow {
         }
     }
 
-    function openMenu() {
+    // Open on `tab` ("" = the tab it had). Already open: focus it where it is (it is never moved
+    // to another monitor; you move windows with the mouse), never a second window.
+    function open(tab) {
+        if (tab !== "")
+            root.tab = tab;
+        if (root.visible) {
+            root.focusSelf();
+            root.showTab(root.tab);
+            return;
+        }
         root.confirm = null;
         filter.text = "";
         Hyprland.refreshToplevels();
         root.visible = true;
         root.showTab(root.tab);
+    }
+
+    // Our own toplevel: this title, this process (the address form switchToApp uses)
+    function focusSelf() {
+        const t = Hyprland.toplevels.values.find(w => w.title === root.title && w.lastIpcObject && w.lastIpcObject.pid === Quickshell.processId);
+        if (t)
+            Hyprland.dispatch("hl.dsp.focus({ window = \"address:0x" + t.address + "\" })");
     }
 
     function closeMenu() {
