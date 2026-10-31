@@ -235,6 +235,58 @@ anchors.verticalCenter: parent.verticalCenter
 anchors.leftMargin: 4
 onClicked: taskbar.toggleMenu(themeMenu, Config.SystemPopup.ThemePicker, themeMenuButton, "left")
 }
+// Quick Launch (the Win95 strip next to Start): one click to the shell's own panels that are
+// otherwise only on a key or a few menus deep. Shell panels only: no apps, no windows (not a dock).
+Popups.MenuSeparator {
+id: quickDivider
+vertical: true
+anchors.verticalCenter: parent.verticalCenter
+anchors.left: themeMenuButton.right
+anchors.leftMargin: MenuStyle.gap
+}
+Row {
+id: quickLaunch
+anchors.left: quickDivider.right
+anchors.leftMargin: MenuStyle.gap
+anchors.verticalCenter: parent.verticalCenter
+spacing: MenuStyle.gap
+BarButton {
+iconFontValue: "\ue14f"
+tooltip: "Clipboard history (Super+V)"
+isToggled: root.currentPopup == Config.SystemPopup.AppLauncher && appLauncher.mode === "clipboard"
+onClicked: taskbar.openLauncherMode("clipboard")
+}
+BarButton {
+iconFontValue: "\ue3b0"
+tooltip: "Screenshot history (new shot: Super+Shift+S)"
+isToggled: root.currentPopup == Config.SystemPopup.Screenshot
+onClicked: taskbar.toggleMenu(screenshotPanel, Config.SystemPopup.Screenshot, null, "keep")
+}
+BarButton {
+iconFontValue: "\ue1bc"
+tooltip: "Wallpapers"
+isToggled: root.currentPopup == Config.SystemPopup.Wallpapers
+onClicked: taskbar.toggleMenu(wallpaperBrowser, Config.SystemPopup.Wallpapers, null, "keep")
+}
+BarButton {
+iconFontValue: "\ue338"
+tooltip: "Games (Super+Shift+G)"
+isToggled: root.currentPopup == Config.SystemPopup.Games
+onClicked: taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep")
+}
+BarButton {
+iconFontValue: "\ue312"
+tooltip: "Keyboard shortcuts (Super+F1)"
+isToggled: root.currentPopup == Config.SystemPopup.CheatSheet
+onClicked: taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep")
+}
+BarButton {
+iconFontValue: "\ue8b8"
+tooltip: "Services"
+isToggled: root.currentPopup == Config.SystemPopup.Services
+onClicked: taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep")
+}
+}
 // Bar middle: the current Spotify lyric line (Lyrics.qml), else "Artist - Title"; dimmed while
 // paused; nothing at all when Spotify is closed or another player is active.
 BarButton {
@@ -366,7 +418,7 @@ taskbar.openSidePanel(0, null);
 // Room for the centre text's label: it is centred, so twice the smaller distance from the middle
 // to either side, minus its own padding and a gap of clearance on each side. Never overlaps.
 function centreRoom(rightStart) {
-var leftEnd = themeMenuButton.x + themeMenuButton.width;
+var leftEnd = quickLaunch.x + quickLaunch.width;
 return 2 * Math.min(taskbar.width / 2 - leftEnd, rightStart - taskbar.width / 2) - 4 * MenuStyle.gap;
 }
 // The sysmon button's GPU part goes first when the centre text needs more room than is left
