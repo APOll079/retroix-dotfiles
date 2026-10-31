@@ -45,13 +45,6 @@ ColumnLayout {
             color: Config.colors.text
             text: NotificationStore.items.length === 0 ? "No notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
         }
-        // Do Not Disturb: notifications still land here, they just don't pop up
-        BevelButton {
-            text: "DND"
-            glyph: Config.settings.notifications.dnd ? "\ue7f6" : "\ue7f4"
-            checked: Config.settings.notifications.dnd
-            onClicked: Config.settings.notifications.dnd = !Config.settings.notifications.dnd
-        }
         BevelButton {
             text: "Clear all"
             visible: NotificationStore.items.length > 0
