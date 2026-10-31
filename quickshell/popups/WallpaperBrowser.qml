@@ -23,7 +23,7 @@ PanelWindow {
         left: true
         right: true
     }
-    margins.top: MenuStyle.barHeight
+    // Covers the bar strip too: a click on the bar (its own button included) closes it
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-menu"
@@ -43,7 +43,7 @@ PanelWindow {
         width: MenuStyle.launcherWidth
         height: MenuStyle.launcherHeight
         x: (root.width - width) / 2
-        y: root.screenHeight / 2 - height / 2 - MenuStyle.barHeight
+        y: root.screenHeight / 2 - height / 2
 
         MouseArea {
             anchors.fill: parent
@@ -52,7 +52,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: "Wallpapers"
-            windowTitleIcon: ""
+            windowTitleIcon: "\ue1bc"
 
             ColumnLayout {
                 anchors.fill: parent

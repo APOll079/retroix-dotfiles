@@ -235,8 +235,8 @@ anchors.verticalCenter: parent.verticalCenter
 anchors.leftMargin: 4
 onClicked: taskbar.toggleMenu(themeMenu, Config.SystemPopup.ThemePicker, themeMenuButton, "left")
 }
-// Quick Launch (the Win95 strip next to Start): one click to the shell's own panels that are
-// otherwise only on a key or a few menus deep. Shell panels only: no apps, no windows (not a dock).
+// Wallpapers and Services: labelled buttons next to Start / Theme (otherwise a few menus deep).
+// Their panels cover the bar strip while open, so a click on the bar (this button too) closes them.
 Popups.MenuSeparator {
 id: quickDivider
 vertical: true
@@ -251,38 +251,14 @@ anchors.leftMargin: MenuStyle.gap
 anchors.verticalCenter: parent.verticalCenter
 spacing: MenuStyle.gap
 BarButton {
-iconFontValue: "\ue14f"
-tooltip: "Clipboard history (Super+V)"
-isToggled: root.currentPopup == Config.SystemPopup.AppLauncher && appLauncher.mode === "clipboard"
-onClicked: taskbar.openLauncherMode("clipboard")
-}
-BarButton {
-iconFontValue: "\ue3b0"
-tooltip: "Screenshot history (new shot: Super+Shift+S)"
-isToggled: root.currentPopup == Config.SystemPopup.Screenshot
-onClicked: taskbar.toggleMenu(screenshotPanel, Config.SystemPopup.Screenshot, null, "keep")
-}
-BarButton {
 iconFontValue: "\ue1bc"
-tooltip: "Wallpapers"
+label: "Wallpapers"
 isToggled: root.currentPopup == Config.SystemPopup.Wallpapers
 onClicked: taskbar.toggleMenu(wallpaperBrowser, Config.SystemPopup.Wallpapers, null, "keep")
 }
 BarButton {
-iconFontValue: "\ue338"
-tooltip: "Games (Super+Shift+G)"
-isToggled: root.currentPopup == Config.SystemPopup.Games
-onClicked: taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep")
-}
-BarButton {
-iconFontValue: "\ue312"
-tooltip: "Keyboard shortcuts (Super+F1)"
-isToggled: root.currentPopup == Config.SystemPopup.CheatSheet
-onClicked: taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep")
-}
-BarButton {
 iconFontValue: "\ue8b8"
-tooltip: "Services"
+label: "Services"
 isToggled: root.currentPopup == Config.SystemPopup.Services
 onClicked: taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep")
 }

@@ -49,7 +49,7 @@ PanelWindow {
         left: true
         right: true
     }
-    margins.top: MenuStyle.barHeight
+    // Covers the bar strip too: a click on the bar (its own button included) closes it
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-menu"
@@ -68,7 +68,7 @@ PanelWindow {
         width: MenuStyle.launcherWidth
         height: MenuStyle.launcherHeight
         x: (root.width - width) / 2
-        y: root.screenHeight / 2 - height / 2 - MenuStyle.barHeight
+        y: root.screenHeight / 2 - height / 2
 
         MouseArea {
             anchors.fill: parent
@@ -77,7 +77,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: "Services"
-            windowTitleIcon: ""
+            windowTitleIcon: "\ue8b8"
 
             ColumnLayout {
                 anchors.fill: parent
@@ -139,7 +139,7 @@ PanelWindow {
                     }
                     BevelButton {
                         text: "Refresh"
-                        glyph: ""
+                        glyph: "\ue5d5"
                         focusPolicy: Qt.NoFocus
                         onClicked: {
                             root.refresh();
@@ -185,7 +185,7 @@ PanelWindow {
                             text: modelData.name
                             subtext: modelData.info
                             trailing: modelData.failed ? "failed" : modelData.state
-                            glyph: modelData.failed ? "" : modelData.state === "running" ? "" : ""
+                            glyph: modelData.failed ? "\ue000" : modelData.state === "running" ? "\ue037" : "\ue047"
                             onClicked: {
                                 root.cursor = index;
                                 searchInput.focusInput();
@@ -213,21 +213,21 @@ PanelWindow {
                     }
                     BevelButton {
                         text: "Start"
-                        glyph: ""
+                        glyph: "\ue037"
                         enabled: root.current !== null && !root.busy
                         focusPolicy: Qt.NoFocus
                         onClicked: root.act("start")
                     }
                     BevelButton {
                         text: "Stop"
-                        glyph: ""
+                        glyph: "\ue047"
                         enabled: root.current !== null && !root.busy
                         focusPolicy: Qt.NoFocus
                         onClicked: root.act("stop")
                     }
                     BevelButton {
                         text: "Restart"
-                        glyph: ""
+                        glyph: "\ue042"
                         enabled: root.current !== null && !root.busy
                         focusPolicy: Qt.NoFocus
                         onClicked: root.act("restart")

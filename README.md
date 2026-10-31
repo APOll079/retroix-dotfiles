@@ -5,8 +5,7 @@ A retro, Win95 / classic-Mac flavoured Hyprland desktop for **Artix Linux (dinit
 Bevels, solid title bars, dense rows, chunky icons: everything you see besides app windows is
 [Quickshell](https://quickshell.org) (QML).
 
-- **Bar**: workspaces, Start / Themes menus, a Quick Launch strip (clipboard, screenshots, wallpapers, games,
-  shortcuts, services), a Spotify lyric line, CPU / GPU / RAM monitor (click: Task Manager, right click:
+- **Bar**: workspaces, Start / Themes menus, Wallpapers / Services buttons, a Spotify lyric line, CPU / GPU / RAM monitor (click: Task Manager, right click:
   temperatures), Bluetooth, tray, weather + clock (right click: Do Not Disturb).
 - **Launcher** (Super+D): apps, calculator, session actions, window search, Games tab, clipboard history.
 - **Spotify panel** (Super+S): player, Recent, your whole library with folders and pins, lyrics.
