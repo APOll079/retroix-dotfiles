@@ -11,6 +11,8 @@ Item {
     property var toggleMenu: function(menu, popup, item) {}
     property var bluetoothMenuRef: null
     property var sysMonMenuRef: null
+    // Bar.qml turns the GPU part of the sysmon button off when the centre text needs the room
+    property bool showGpu: true
 
 
     property string netText: "OFF"
@@ -21,7 +23,11 @@ Item {
     readonly property string btText: btOn ? "ON" : "OFF"
     readonly property string btIconVal: !btOn ? "\ue1a9" : (btConnected ? "\ue1a8" : "\ue1a7")
 
-    implicitWidth: (privacyRow.width > 0 ? privacyRow.width + MenuStyle.gap : 0) + caffeineBtn.width + MenuStyle.gap + sysBtn.width + MenuStyle.gap + ethLabel.width + MenuStyle.gap + btBtn.width
+    // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
+    // without reading anything that changes when it hides (that would be a binding loop)
+    readonly property real otherWidth: (privacyRow.width > 0 ? privacyRow.width + MenuStyle.gap : 0) + caffeineBtn.width + MenuStyle.gap + MenuStyle.gap + ethLabel.width + MenuStyle.gap + btBtn.width
+    readonly property real widthWithGpu: otherWidth + MenuStyle.barSysMonWidth
+    implicitWidth: otherWidth + sysBtn.width
     implicitHeight: MenuStyle.barButtonHeight
 
     // Privacy: mic / screen-share icons in the urgent colour, only while something records
@@ -61,7 +67,8 @@ Item {
         onClicked: Idle.caffeine = !Idle.caffeine
     }
 
-    // CPU load, CPU temperature and RAM use; click opens the full sysmon popup (no hover-open)
+    // CPU load + temperature, GPU temperature, RAM use. Left click: the Task Manager on Performance;
+    // right click: the sysmon popup (GPU hotspot / memory). Fixed width so it never jitters.
     BarButton {
         id: sysBtn
         anchors.left: caffeineBtn.right
@@ -69,10 +76,14 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         // No icon: the CPU/RAM labels say what it is (BarButton defaults to the Start grid icon)
         iconFontValue: ""
-        label: "CPU " + Math.round(SysMon.cpuLoad * 100) + "% " + SysMon.tempText(SysMon.cpuTemp) + " RAM " + SysMon.memPercent + "%"
-        minWidth: MenuStyle.barSysMonWidth
+        label: "CPU " + Math.round(SysMon.cpuLoad * 100) + "% " + SysMon.tempShort(SysMon.cpuTemp)
+            + (root.showGpu ? " GPU " + SysMon.tempShort(SysMon.gpuEdge) : "")
+            + " RAM " + SysMon.memPercent + "%"
+        minWidth: root.showGpu ? MenuStyle.barSysMonWidth : MenuStyle.barSysMonNoGpuWidth
         isToggled: root.currentPopup === Config.SystemPopup.SysMonMenu
-        onClicked: root.toggleMenu(root.sysMonMenuRef, Config.SystemPopup.SysMonMenu, sysBtn)
+        tooltip: "Left click: Task Manager \u00b7 Right click: temperatures"
+        onClicked: TaskWindow.open("performance")
+        onRightClicked: root.toggleMenu(root.sysMonMenuRef, Config.SystemPopup.SysMonMenu, sysBtn)
     }
 
     // Network: a status indicator (the desktop is wired), not a button

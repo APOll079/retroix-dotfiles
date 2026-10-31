@@ -247,7 +247,7 @@ tucked: true
 strong: true
 dim: Media.paused
 label: Lyrics.line !== "" && !Media.paused ? Lyrics.line : Media.text
-maxLabelWidth: MenuStyle.barMediaMaxWidth
+maxLabelWidth: Math.max(0, Math.min(MenuStyle.barMediaMaxWidth, taskbar.centreRoom(rightGripper.x)))
 // Left click: the Spotify drawer; middle click: play / pause
 MouseArea {
 anchors.fill: parent
@@ -363,8 +363,27 @@ taskbar.openSidePanel(0, null);
 }
 }
 
+// Room for the centre text's label: it is centred, so twice the smaller distance from the middle
+// to either side, minus its own padding and a gap of clearance on each side. Never overlaps.
+function centreRoom(rightStart) {
+var leftEnd = themeMenuButton.x + themeMenuButton.width;
+return 2 * Math.min(taskbar.width / 2 - leftEnd, rightStart - taskbar.width / 2) - 4 * MenuStyle.gap;
+}
+// The sysmon button's GPU part goes first when the centre text needs more room than is left
+// (up to barMediaMinWidth; a short title never costs the GPU part).
+// Worked out as if the GPU part were shown (so hiding it can't flip it back): where the right
+// section's gripper would start then.
+readonly property real rightStartWithGpu: sysTray.x - laptopControls.anchors.rightMargin - laptopControls.widthWithGpu - MenuStyle.gap - MenuStyle.gripperWidth
+TextMetrics {
+id: nowPlayingMetrics
+font.family: MenuStyle.barStrongFont
+font.pixelSize: MenuStyle.barStrongFontSize
+text: nowPlaying.label
+}
+
 // Right section: gripper, then raised buttons (sysmon, ETH, Bluetooth), tray, bell/clock
 Gripper {
+id: rightGripper
 anchors.verticalCenter: parent.verticalCenter
 anchors.right: laptopControls.left
 anchors.rightMargin: MenuStyle.gap
@@ -378,6 +397,7 @@ currentPopup: root.currentPopup
 toggleMenu: taskbar.toggleMenu
 bluetoothMenuRef: bluetoothMenu
 sysMonMenuRef: sysMonMenu
+showGpu: Media.text === "" || taskbar.centreRoom(taskbar.rightStartWithGpu) >= Math.min(MenuStyle.barMediaMinWidth, nowPlayingMetrics.advanceWidth)
 }
 
 /*=== System tray + clock ===*/

@@ -3,7 +3,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// CPU load, RAM use and CPU/GPU temperatures, read from /proc and hwmon every few seconds.
+// CPU load, RAM use and CPU/GPU temperatures, read from /proc and hwmon every few seconds (the bar
+// shows CPU load + temp, GPU edge temp and RAM; hotspot and memory temps only while detailed).
 // hwmon numbers change between boots, so the sensors are found by driver name at startup:
 // k10temp (Ryzen, Tctl) and the amdgpu node that has a junction sensor (the RX 9070 XT;
 // the 7800X3D's iGPU is also amdgpu but only reports an edge temperature).
@@ -11,8 +12,8 @@ Singleton {
     id: root
 
     readonly property int interval: MenuStyle.sysMonInterval
-    // The SysMon popup or the Task Manager is open: also read the GPU temperatures (only shown
-    // there). Two flags, so closing one doesn't stop the reads the other still shows.
+    // The SysMon popup or the Task Manager is open: also read the GPU hotspot and memory
+    // temperatures (only shown there). Two flags, so closing one doesn't stop the reads the other still shows.
     property bool popupOpen: false
     property bool taskOpen: false
     readonly property bool detailed: popupOpen || taskOpen
@@ -85,8 +86,9 @@ Singleton {
             root.memLoad = (kb.MemTotal - kb.MemAvailable) / kb.MemTotal;
 
         root.cpuTemp = readTemp(cpuTempFile);
+        // Edge is on the bar: one more sysfs read per tick
+        root.gpuEdge = readTemp(gpuEdgeFile);
         if (root.detailed) {
-            root.gpuEdge = readTemp(gpuEdgeFile);
             root.gpuJunction = readTemp(gpuJunctionFile);
             root.gpuMem = readTemp(gpuMemFile);
         }
@@ -102,5 +104,9 @@ Singleton {
 
     function tempText(t) {
         return t < 0 ? "--" : Math.round(t) + "°C";
+    }
+    // The bar's short form: "54°"
+    function tempShort(t) {
+        return t < 0 ? "--" : Math.round(t) + "°";
     }
 }

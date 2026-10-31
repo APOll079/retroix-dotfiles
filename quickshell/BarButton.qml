@@ -19,8 +19,8 @@ Button {
     property bool strong: false
     // 0 = no limit; longer labels are elided
     property int maxLabelWidth: 0
-    property string iconFontValue: ""
-    property string toggledIconFontValue: ""
+    property string iconFontValue: "\ue5c3"
+    property string toggledIconFontValue: "\ue5c5"
     property string label: ""
     property int minWidth: MenuStyle.barButtonHeight
     // glyphOn: draw the glyph in the darkened accent (a switch that is on, e.g. caffeine)
@@ -82,6 +82,15 @@ Button {
                 text: root.label
             }
         }
+    }
+
+    // Right click (sysmon details, clock DND); left clicks pass through to the button
+    signal rightClicked()
+    MouseArea {
+        anchors.fill: parent
+        enabled: root.interactive
+        acceptedButtons: Qt.RightButton
+        onClicked: root.rightClicked()
     }
 
     Timer {
