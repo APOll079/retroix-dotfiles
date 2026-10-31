@@ -180,6 +180,8 @@ Singleton {
     readonly property int notificationToastBodyLines: 6
     // Home tab: the Applications volume list scrolls after this height (about five apps)
     readonly property int audioAppsMaxHeight: 240
+    // Home tab: EQ preset buttons per row before they wrap
+    readonly property int eqPresetColumns: 4
     // Bluetooth menu: rows per list before it scrolls, and how long a scan runs (ms)
     readonly property int bluetoothListRows: 5
     readonly property int bluetoothScanTime: 30000

@@ -25,6 +25,9 @@ import Quickshell.Services.Pipewire
 //                    to it, so EasyEffects and every app hear the change.
 // The flatpak (com.github.wwmm.easyeffects) when it is installed, else a native `easyeffects` on
 // PATH; QS_EASYEFFECTS_CMD replaces both (tests: a fake). A failed call is retried up to 3 times.
+//  - Presets         settings.json "audio.eqPresets": one button each; a click runs `easyeffects -l
+//                    <name>` (the same command as above). Loading a preset never touches the bypass.
+//                    The last one loaded is kept in eq-preset.json (state dir).
 Singleton {
     id: root
 
@@ -163,6 +166,40 @@ Singleton {
         id: eqRetry
         interval: 3000
         onTriggered: eqSettle.restart()
+    }
+
+    // --- EQ presets ---
+    readonly property var eqPresets: Array.from((Config.settings.audio && Config.settings.audio.eqPresets) || []).map(String)
+    readonly property string activePreset: presetAdapter.preset
+    property string presetPending: ""       // the name being loaded right now
+    function loadPreset(name) {
+        if (name === "" || preset.running)
+            return;
+        root.presetPending = name;
+        const base = Quickshell.env("QS_EASYEFFECTS_CMD");
+        preset.command = base ? [base, "-l", name] : ["sh", "-c",
+            "if flatpak info com.github.wwmm.easyeffects >/dev/null 2>&1; then exec flatpak run com.github.wwmm.easyeffects -l \"$1\"; "
+            + "elif command -v easyeffects >/dev/null; then exec easyeffects -l \"$1\"; else exit 127; fi", "sh", name];
+        preset.running = true;
+    }
+    Process {
+        id: preset
+        // Only a load EasyEffects accepted becomes the sunken (remembered) one
+        onExited: code => {
+            if (code === 0)
+                presetAdapter.preset = root.presetPending;
+            else
+                console.warn("[AudioState] loading EasyEffects preset \"" + root.presetPending + "\" failed (exit " + code + ")");
+            root.presetPending = "";
+        }
+    }
+    GuardedFileView {
+        path: Quickshell.statePath("eq-preset.json")
+        printErrors: false
+        JsonAdapter {
+            id: presetAdapter
+            property string preset: ""
+        }
     }
 
     // --- microphone ---

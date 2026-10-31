@@ -52,6 +52,37 @@ ColumnLayout {
         text: "EasyEffects isn't following the default output. Turn on \"Use default output\" in its PipeWire settings."
     }
 
+    // === EQ PRESETS ===
+    // settings.json "audio.eqPresets" (empty = hidden): one click loads that EasyEffects preset; the
+    // one loaded last is sunken. Separate from the automatic "EQ off" bypass above.
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        visible: AudioState.eqPresets.length > 0
+        font.family: MenuStyle.titleFont
+        font.pixelSize: MenuStyle.fontSize
+        color: Config.colors.text
+        text: "EQ preset"
+    }
+    GridLayout {
+        Layout.fillWidth: true
+        visible: AudioState.eqPresets.length > 0
+        columns: Math.min(Math.max(1, AudioState.eqPresets.length), MenuStyle.eqPresetColumns)
+        columnSpacing: MenuStyle.gap
+        rowSpacing: MenuStyle.gap
+        Repeater {
+            model: AudioState.eqPresets
+            BevelButton {
+                required property string modelData
+                Layout.fillWidth: true
+                text: modelData
+                checked: AudioState.activePreset === modelData
+                enabled: AudioState.presetPending === ""
+                onClicked: AudioState.loadPreset(modelData)
+            }
+        }
+    }
+
     // === MICROPHONE ===
     Text {
         renderType: Text.NativeRendering

@@ -1,7 +1,8 @@
 {
     "settings": {
         "audio": {
-            "eqOutputMatch": "DM15"
+            "eqOutputMatch": "DM15",
+            "eqPresets": []
         },
         "bar": {
             "fontSize": 12,

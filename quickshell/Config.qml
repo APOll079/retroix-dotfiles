@@ -178,8 +178,10 @@ property bool metric: true
 }
 // Audio (Home tab): routing to a sink whose name / description contains eqOutputMatch (e.g. "DM15", the
 // DAC) turns the EasyEffects EQ on, routing to any other sink turns it off. Empty = never touch the EQ.
+// eqPresets: EasyEffects output preset names, one button each in the Home tab (empty = no row).
 property JsonObject audio: JsonObject {
 property string eqOutputMatch: ""
+property var eqPresets: []
 }
 // Wallpaper browser (Themes > Wallpapers...): the folder it lists (top level only; ~ allowed)
 property JsonObject wallpaper: JsonObject {
