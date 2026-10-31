@@ -90,3 +90,6 @@ These are best guesses at what each app reads, so expect to fix a variable name 
 - `MAINTENANCE.md`: plain-English upkeep guide (updates, what to check when something breaks).
 - `FEATURES.md`: what exists and what's planned.
 - `CLAUDE.md`: the design rules and a detailed map of everything.
+- `docs/`: how each part works (`desktop.md`, `spotify.md`, `theming.md`); `CLAUDE.md` says which file covers what.
+
+The Quickshell shell started from the Quickshell frontend of [linux-retroism](https://github.com/diinki/linux-retroism) and has since been rebuilt for this desktop.

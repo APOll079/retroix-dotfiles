@@ -9,7 +9,7 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 - **Quickshell** (`quickshell/`): everything you see besides windows: the bar, menus, launcher, notifications, side panel, screenshots, games. QML files. `shell.qml` is the entry point, `taskbar/Bar.qml` creates one bar plus its popups per monitor.
 - **Theme**: `quickshell/theme/themes.json` holds the palettes. `quickshell/theme/apply.py` turns them into colour files for kitty, Hyprland, hyprlock, fastfetch, btop, fish and the emoji picker (it writes into `~/.config`, never into this folder). Quickshell runs it when you pick a theme and at start. You can also run it by hand: `python3 ~/.config/quickshell/theme/apply.py dusty`.
 - **Helpers** in `quickshell/scripts/` (plain Python / sh, standard tools only): `games.py` (lists games), `spotify.py` (Spotify login and API), `binds.py` (cheat sheet), `procs.py` (Task Manager), `app-owner.sh` (launcher Uninstall), `share-picker.sh` (screen-share dialog, started by the portal).
-- **Docs for the next assistant**: `CLAUDE.md` (rules and what exists) and `FEATURES.md` (feature list). Any AI assistant can read them; paste them in first.
+- **Docs for the next assistant**: `CLAUDE.md` (rules, and a table of which doc covers what), `docs/` (how each part works: `desktop.md`, `spotify.md`, `theming.md`) and `FEATURES.md` (feature list, what still needs a live test). Any AI assistant can read them; paste `CLAUDE.md` in first.
 
 ## Where to look when something is wrong
 
@@ -34,6 +34,7 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 | Spotify panel errors / stops working | Run `python3 ~/.config/quickshell/scripts/spotify.py --state ~/.local/state/quickshell/by-shell/*/spotify state` and read the error. "Not logged in": log in again from the panel. A 403/404 after a Spotify change: the endpoint list is at the top of `scripts/spotify.py`, fix it there. To start over, delete the `spotify` folder in Quickshell's state dir |
 | Spotify panel says no device / spotifyd silent | `dinitctl --user status spotifyd`; run `spotifyd --no-daemon` in a terminal to see its errors; log in again with `spotifyd authenticate`. Config: `~/.config/spotifyd/spotifyd.conf` (option names: `spotifyd --help`) |
 | Task Manager empty / wrong numbers | `python3 ~/.config/quickshell/scripts/procs.py --once` prints one sample; `quickshell/popups/TaskManager.qml` |
+| Task Manager opens tiled, wrong size or not centred | the `task-manager` rule in `hypr/windowrules.lua` (matches the title "Task Manager") |
 | Spotify folders / Library tab missing or stale | The Spicetify extension `~/.config/spicetify/Extensions/qs-folders.js` only sends while the Spotify app runs and the panel is open (a plain POST to 127.0.0.1:8899). If a Spotify update ever starts blocking that (Chromium's Local Network Access), adding `--disable-features=LocalNetworkAccessChecks` to `~/.config/spotify-flags.conf` is the known workaround. After a Spotify update run `spicetify apply` again. To see errors: `spicetify enable-devtools`, then Ctrl+Shift+J in Spotify. The saved tree: `folders.json` in the panel's state dir |
 | Spotify black after an update or a Spicetify change | Spicetify's backup is from an older Spotify, so `spicetify restore` puts old interface files into the new Spotify. Fix: `yay -S spotify` (fresh, matching files), check it opens, then `spicetify backup apply`. After every Spotify update use exactly that, never `spicetify restore backup apply` on an old backup |
 | A file named `<name>.bad-<timestamp>` next to a state file (`settings.json`, `launcher.json`, `games.json`, `wallpaper.json`, `notifications.json`, `spotify-view.json`) | The original had invalid JSON. Quickshell kept a copy, ran on defaults and does not overwrite the original. Open the `.bad-` copy, fix the JSON, put it back under the real name, restart Quickshell |
@@ -58,7 +59,7 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 3. **Steam's file layout** (cover art folder, shortcuts file). Symptom: games show as letter tiles or some are missing. Only `scripts/games.py` needs fixing.
 4. **hyprlock** config syntax. Symptom: lock screen looks wrong. It falls back to built-in colours if the generated colour file is missing; test from a second TTY, not your only session.
 
-Not yet seen working on the real desktop (this run's fixes): wallpaper restore on login, the `qs-dialog` window rule, the Spotify listener Origin, power confirms, toast changes, launcher armed confirm, clipboard footer, games scan with the NAS off, Task Manager core-process confirm, Services doas terminal, cheat sheet scroll, `yay --sudo doas`, hyprlock first at login.
+What hasn't been seen working on the real desktop yet: `FEATURES.md`, "Needs a live test".
 
 Stable and unlikely to break: the Python scripts, grim, wl-copy, cliphist, PipeWire, BlueZ, the fonts.
 
@@ -89,4 +90,4 @@ Every feature is its own file(s). To remove a menu: delete its `popups/` file, i
 
 ## Getting help
 
-Quickshell: quickshell.org and its Discord/Matrix. Hyprland: wiki.hypr.land and its Discord. Hand any assistant `CLAUDE.md`, `FEATURES.md` and the failing file plus the error line.
+Quickshell: quickshell.org and its Discord/Matrix. Hyprland: wiki.hypr.land and its Discord. Hand any assistant `CLAUDE.md`, the `docs/` file for that area, and the failing file plus the error line.
