@@ -190,6 +190,11 @@ Singleton {
     // Bluetooth menu: rows per list before it scrolls, and how long a scan runs (ms)
     readonly property int bluetoothListRows: 5
     readonly property int bluetoothScanTime: 30000
+    // Bluetooth pairing prompt: the code to type / compare is Monaco 16 in a sunken box this high
+    readonly property int bluetoothCodeSize: 16
+    readonly property int bluetoothCodeHeight: 32
+    // ... and a device name in the prompt title is cut to this many characters (the longest sentence, "Type this passkey on", still fits)
+    readonly property int bluetoothNameChars: 14
     readonly property int notificationTimeout: 10000
     readonly property int notificationFade: 400
     readonly property int osdMargin: 90
