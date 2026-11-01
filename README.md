@@ -88,7 +88,7 @@ Windows move with Super+drag or the mouse's side buttons; Super+G turns the side
 
 - **Spotify panel**: needs Spotify Premium and your own (free) Spotify developer app; Super+S walks you through it once. For folders and pins, enable the Spicetify extension: `spicetify config extensions qs-folders.js && spicetify apply`.
 - **App themes**: VSCodium (restart, then Ctrl+K Ctrl+T > "Retro (quickshell)"; run "Developer: Reload Window" after a theme switch) and Zen (add `@import "/home/<you>/.config/zen-qs/theme.css";` to your profile's `chrome/userChrome.css` and set `toolkit.legacyUserProfileCustomizations.stylesheets` to true). Best guesses at what each app reads; expect to fix a variable or two.
-- **Qt apps (VLC etc.)**: install `qt6ct`, log out and in once (`hypr/env.lua` sets `QT_QPA_PLATFORMTHEME=qt6ct`), then in qt6ct pick Style "Fusion", Palette "Custom" and the "qsretro" scheme.
+- **Qt apps (VLC etc.)**: install `qt6ct`, log out and in once (`hypr/env.lua` sets `QT_QPA_PLATFORMTHEME=qt6ct`), then in qt6ct pick Style "Fusion" and Color scheme "qsretro".
 - **Wallpapers**: the browser lists `~/Pictures/wallpapers`; `~/Pictures/wallpaper.png` is the lock screen's fallback. Profile picture: `~/Pictures/profile.PNG`.
 
 ## Docs

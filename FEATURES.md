@@ -88,7 +88,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Phone tab: needs the KDE Connect app on the phone, the same Wi-Fi, firewall ports 1714-1764
 
 ### Theming and wallpapers
-- [ ] Qt theme: install qt6ct, log out and in, pick Fusion + Custom palette "qsretro" in qt6ct; VLC (and another Qt app) takes the colours, a theme switch shows after restarting the app. Check that Quickshell itself looks unchanged with `QT_QPA_PLATFORMTHEME=qt6ct` set (text fields, scrollbars). The 21-entry palette order and the disabled / link colours are unverified
+- [ ] Qt theme: install qt6ct, log out and in, pick Style "Fusion" and Color scheme "qsretro" in qt6ct; VLC (and another Qt app) takes the colours, a theme switch shows after restarting the app. Check that Quickshell itself looks unchanged with `QT_QPA_PLATFORMTHEME=qt6ct` set (text fields, scrollbars). The 21-entry palette order and the disabled / link colours are unverified
 - [ ] GTK theme: restart Quickshell once (it writes QsRetro), then `gsettings set org.gnome.desktop.interface gtk-theme QsRetro`: Nemo, a GTK 4 app, a theme switch re-colouring open windows (the Adwaita flip), buttons / checkboxes / selections in every theme
 - [ ] App themes: each app's one-time setup (`docs/theming.md`), then a theme switch. Does Zen's `@import` take effect? (VSCodium works; it needs Reload Window after a switch)
 - [ ] Wallpaper colours: "Set + colours" on a real wallpaper, the Themes menu card "wallpaper", plain Set while that theme is active, the palette surviving a restart
