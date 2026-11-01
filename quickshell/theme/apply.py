@@ -51,6 +51,8 @@ OUTPUTS = {
     "vscodium-package.json": ("~/.vscode-oss/extensions/qs.qs-retro-theme-1.0.0/package.json", None, "~/.vscode-oss/extensions"),
     "vscodium-theme.json": ("~/.vscode-oss/extensions/qs.qs-retro-theme-1.0.0/themes/qs-retro-color-theme.json", None, "~/.vscode-oss/extensions"),
     "zen.css": ("zen-qs/theme.css", None, "~/.zen"),
+    # Qt apps through qt6ct (colours only, qt6ct.conf is never touched)
+    "qt6ct-colors.conf": ("qt6ct/colors/qsretro.conf", None, "qt6ct"),
 }
 
 
@@ -140,6 +142,9 @@ def syntax_roles(roles):
             break
         comment = c
     out["syn_comment"] = comment
+    # Qt links sit on the window colour (base), not on highlight: 4.5:1 against base
+    out["syn_link"] = readable(hue + 200, 0.55, roles["base"])
+    out["syn_visited"] = readable(hue - 60, 0.55, roles["base"])
     return out
 
 
