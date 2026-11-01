@@ -1,95 +1,107 @@
-# Retroix dotfiles
-![Side panel and bar](screenshots/panel.png)
+# Retroix
 
-A retro, Win95 / classic-Mac flavoured Hyprland desktop for **Artix Linux (dinit)**.
-Bevels, solid title bars, dense rows, chunky icons: everything you see besides app windows is
-[Quickshell](https://quickshell.org) (QML).
+A retro Hyprland desktop: Win95 bevels and classic-Mac Platinum details on **Artix Linux (dinit)**. Everything you see besides app windows (bar, menus, launcher, notifications, Spotify player, Task Manager) is [Quickshell](https://quickshell.org) (QML), and one palette file recolours the whole system.
 
-- **Bar**: workspaces, Start / Themes menus, Wallpapers / Services buttons, a Spotify lyric line, CPU / GPU / RAM monitor (click: Task Manager, right click:
-  temperatures), Bluetooth, tray, weather + clock (right click: Do Not Disturb).
-- **Launcher** (Super+D): apps, calculator, session actions, window search, Games tab, clipboard history.
-- **Spotify panel** (Super+S): player, Recent, your whole library with folders and pins, lyrics.
-  Works with the Spotify app or headless through `spotifyd`.
-- **Task Manager** (Ctrl+Shift+Esc; a real window), snipping tool (Super+Shift+S), notifications with a full-height history,
-  EasyEffects preset buttons (`audio.eqPresets` in settings.json), screen-share picker, cheat sheet (Super+F1), Bluetooth, KDE Connect, dinit services panel.
-- **Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland,
-  hyprlock, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), VSCodium and Zen in one go
-  (`quickshell/theme/apply.py`, run by Quickshell on a theme change; also `python3 ~/.config/quickshell/theme/apply.py dusty`).
+![Bar and side panel](screenshots/panel.png)
 
-## Install (fresh Artix + dinit)
+> This is my personal desktop, shared as-is. It works on my machine; read [Before you install](#before-you-install) for what it assumes.
+
+## What's in it
+
+**Bar**: workspaces, Start and Themes menus, Wallpapers / Services buttons, the current Spotify lyric line, CPU / GPU / RAM (click: Task Manager, right click: temperatures), caffeine, Bluetooth, tray, weather + clock (right click: Do Not Disturb).
+
+| | |
+|---|---|
+| **Launcher** (Super+D) | Apps (fuzzy, usage-ranked, pins), calculator, session actions, window search, Games tab with cover art, clipboard history with previews |
+| **Spotify panel** (Super+S) | Player, Recent, your whole library with folders and pins, search, queue, synced lyrics. Works with the Spotify app or headless through `spotifyd` |
+| **Side panel** (Super+N) | Power buttons, audio output / EQ presets / mic / per-app volume, full-height notification history, calendar, phone (KDE Connect) |
+| **Task Manager** (Ctrl+Shift+Esc) | A real window: Apps, Processes (grouped by program), Performance graphs |
+| **Snipping tool** (Super+Shift+S, Print) | Region, window, screen, all monitors; a history viewer |
+| **And** | Themed notifications with inline reply, screen-share picker, keybind cheat sheet (Super+F1), Bluetooth menu, dinit services panel, wallpaper browser |
+
+**Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland, hyprlock, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), Qt apps (through qt6ct), VSCodium and Zen in one go. It can also build a palette from your wallpaper.
+
+## Before you install
+
+It's built for one machine. Expect to edit:
+
+- **Monitors**: `hypr/monitors.lua` and the workspace rules in `hypr/binds.lua` name two outputs (`DP-1` on top, `DP-2` main with workspaces 1-4). Change them to yours (`hyprctl monitors`).
+- **Keyboard**: Swedish layout (`se`) in `hypr/inputs.lua`.
+- **Sensors**: the CPU / GPU readout looks for an AMD CPU and GPU (hwmon names).
+- **Hyprland 0.56+ with the Lua config**: the `hypr/*.lua` files don't work on the old config language.
+- **Artix + dinit**: services are dinit units and the tools are `doas`, `yay` and fish. Other distros will need the package names and service setup adjusted.
+- **Fonts**: Monaco and Charcoal are proprietary and not included (see [Fonts](#fonts)).
+
+## Install
 
 ```sh
-git clone https://github.com/APOll079/pawtix-dotfiles.git
-cd pawtix-dotfiles
+git clone https://github.com/APOll079/retroix-dotfiles.git
+cd retroix-dotfiles
 bash install.sh --dry-run   # read what it would do first
 bash install.sh
 ```
 
 `install.sh` is safe to re-run and never deletes anything. It:
 
-1. installs the package lists in `packages/` (pacman, then the AUR with `yay`, then Flatpak). If `yay` is missing it builds `yay-bin` first; on a doas-only system that uses `PACMAN_AUTH=doas` and `yay --sudo doas --save` (not yet tried on a real reinstall);
-2. copies the configs to `~/.config` (files it overwrites are backed up to `~/config-backup-<date>/`);
-3. enables the dinit services listed in `packages/services-dinit.txt`;
-4. stops mako and dunst from grabbing notifications (Quickshell owns them);
-5. checks the locale is UTF-8;
-6. copies the GTK and icon themes from `themes/` and `icons/` to `~/.local/share` (only folders
-   that aren't there yet);
-7. recolours the GTK theme into `QsRetro` / `QsRetroIcons` from the active palette and writes the other colour files (`apply.py`), and asks before pointing GTK at them (gsettings);
-8. prints `run 'spotifyd authenticate' once` after enabling spotifyd.
+1. installs the package lists in `packages/` (pacman, then the AUR with `yay`, then Flatpak). If `yay` is missing it builds `yay-bin` first; on a doas-only system it uses `PACMAN_AUTH=doas` and `yay --sudo doas --save` (not yet tried on a real reinstall);
+2. copies the configs to `~/.config`, backing up what it overwrites to `~/config-backup-<date>/`;
+3. enables the dinit services in `packages/services-dinit.txt`;
+4. stops mako and dunst from taking notifications (Quickshell owns them);
+5. checks that the locale is UTF-8;
+6. copies the GTK and icon themes from `themes/` and `icons/` to `~/.local/share` (only folders that aren't there yet);
+7. recolours the GTK theme into `QsRetro` / `QsRetroIcons` and writes the other colour files (`apply.py`);
+8. reminds you to run `spotifyd authenticate` once.
 
-It asks first before installing Flatpak apps, linking the GTK theme, and setting up autologin with greetd plus locking at login (default **no**:
-test `hyprlock` from a second TTY first).
+It asks before installing Flatpak apps, pointing GTK at the theme, and setting up greetd autologin with a lock at login (default **no**; test `hyprlock` from a second TTY first).
 
-The lists in `packages/` are plain text: comment a line out with `#` to skip it. Each file has a
-separate "apps I use" section you can trim.
+The lists in `packages/` are plain text: comment a line out with `#` to skip it. Each has an "apps I use" section you can trim.
 
-## Deploy changes
+**Updating later**: edit the repo, run `bash install.sh` again (it only copies what changed), then `hyprctl reload` and restart Quickshell (`pkill quickshell; quickshell &`).
 
-After editing this folder, copy it over again: `bash install.sh` (it only copies what changed),
-then `hyprctl reload` and restart Quickshell (`pkill quickshell; quickshell &`).
+## Fonts
 
-## Fonts you have to get yourself
+Not in this repo (proprietary):
 
-These are proprietary, so they are not in this repo:
-
-- **Monaco**: put `Monaco.ttf` in `~/.config/quickshell/fonts/` *and* `~/.local/share/fonts/`
-  (kitty and hyprlock use it too). `install.sh` does not check or copy it: do it by hand.
+- **Monaco**: put `Monaco.ttf` in `~/.config/quickshell/fonts/` *and* `~/.local/share/fonts/` (kitty and hyprlock use it too). `install.sh` doesn't check for it.
 - **Charcoal**: put `Charcoal.ttf` in `~/.config/quickshell/fonts/` (menu titles).
 
-Bundled here: Liberation Sans (with its licence) and Material Symbols (the icons).
+Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 
-## Themes and icons
+## Main keys
 
-The GTK theme **ClassicPlatinumStreamlined** and the icon theme **RetroismIcons** come from
-[linux-retroism](https://github.com/diinki/linux-retroism) by diinki (MIT licence, see
-`themes/LICENSE-linux-retroism`). They are stored unmodified in this repo (`themes/` and `icons/`,
-copied from upstream commit `255eb6a`); `install.sh` copies them into `~/.local/share/themes/` and
-`~/.local/share/icons/`, leaving a folder that is already there alone. The GTK theme is then recoloured with the active palette into a copy called
-`QsRetro` (the original is never touched), so GTK apps follow the theme manager too.
+| Key | Does |
+|---|---|
+| Super+D | Launcher |
+| Super+S | Spotify panel |
+| Super+N | Side panel (notifications, audio, calendar, phone) |
+| Super+V | Clipboard history |
+| Super+Tab | Window switcher |
+| Super+Shift+S, Print | Snipping tool (F12: instant full screenshot) |
+| Ctrl+Shift+Esc | Task Manager |
+| Super+Shift+G | Games |
+| Super+Q | Close the open menu, else the window |
+| Super+F1 | Every key (read from `hypr/binds.lua`) |
 
-## App themes
+Windows move with Super+drag or the mouse's side buttons; Super+G turns the side buttons off for games.
 
-VSCodium and Zen follow the active theme too. The theme manager writes
-a CSS / colour file for each app that is installed, and you switch each one on once:
+## Extras outside this repo
 
-- **VSCodium**: restart it, then Ctrl+K Ctrl+T > "Retro (quickshell)". After a theme switch run "Developer: Reload Window".
-- **Zen**: add `@import "/home/<you>/.config/zen-qs/theme.css";` to your profile's
-  `chrome/userChrome.css`, and set `toolkit.legacyUserProfileCustomizations.stylesheets` to true.
-
-These are best guesses at what each app reads, so expect to fix a variable name or two.
-
-## Also outside this repo
-
-- **Spotify panel**: needs Spotify Premium and your own Spotify developer app (free). Super+S
-  walks you through it once. For folders and pins, also enable the Spicetify extension:
-  `spicetify config extensions qs-folders.js && spicetify apply`.
-- Wallpapers: the browser (Themes > Wallpapers...) lists `~/Pictures/wallpapers`. `~/Pictures/wallpaper.png` is the lock screen's fallback background (`hypr/hyprlock.conf`). Profile picture: `~/Pictures/profile.PNG`.
+- **Spotify panel**: needs Spotify Premium and your own (free) Spotify developer app; Super+S walks you through it once. For folders and pins, enable the Spicetify extension: `spicetify config extensions qs-folders.js && spicetify apply`.
+- **App themes**: VSCodium (restart, then Ctrl+K Ctrl+T > "Retro (quickshell)"; run "Developer: Reload Window" after a theme switch) and Zen (add `@import "/home/<you>/.config/zen-qs/theme.css";` to your profile's `chrome/userChrome.css` and set `toolkit.legacyUserProfileCustomizations.stylesheets` to true). Best guesses at what each app reads; expect to fix a variable or two.
+- **Qt apps (VLC etc.)**: install `qt6ct`, log out and in once (`hypr/env.lua` sets `QT_QPA_PLATFORMTHEME=qt6ct`), then in qt6ct pick Style "Fusion", Palette "Custom" and the "qsretro" scheme.
+- **Wallpapers**: the browser lists `~/Pictures/wallpapers`; `~/Pictures/wallpaper.png` is the lock screen's fallback. Profile picture: `~/Pictures/profile.PNG`.
 
 ## Docs
 
-- `MAINTENANCE.md`: plain-English upkeep guide (updates, what to check when something breaks).
-- `FEATURES.md`: what exists and what's planned.
-- `CLAUDE.md`: the design rules and a detailed map of everything.
-- `docs/`: how each part works (`desktop.md`, `spotify.md`, `theming.md`); `CLAUDE.md` says which file covers what.
+| File | For |
+|---|---|
+| [`MAINTENANCE.md`](MAINTENANCE.md) | Plain-English upkeep: updates, rollback, where to look when something breaks |
+| [`FEATURES.md`](FEATURES.md) | What exists, what's planned, what still needs a live test |
+| [`docs/`](docs) | How each part works: [`desktop.md`](docs/desktop.md), [`spotify.md`](docs/spotify.md), [`theming.md`](docs/theming.md) |
+| [`CLAUDE.md`](CLAUDE.md) | Design and code rules for AI assistants working on this repo |
 
-The Quickshell shell started from the Quickshell frontend of [linux-retroism](https://github.com/diinki/linux-retroism) and has since been rebuilt for this desktop.
+## Credits
+
+- The Quickshell shell started from the Quickshell frontend of [linux-retroism](https://github.com/diinki/linux-retroism) by diinki and has since been rebuilt for this desktop.
+- The GTK theme **ClassicPlatinumStreamlined** and the icon theme **RetroismIcons** are from linux-retroism (MIT licence, `themes/LICENSE-linux-retroism`), stored unmodified in `themes/` and `icons/` (upstream commit `255eb6a`). `install.sh` copies them to `~/.local/share`; the theme manager recolours a copy (`QsRetro`), never the original.
+- Liberation Sans: SIL Open Font License (`quickshell/fonts/LiberationSans-LICENSE.txt`). Material Symbols: Google, Apache 2.0.
