@@ -262,9 +262,28 @@ def api(method, endpoint, query=None, body=None, allow_empty=True):
         raise ApiError("Spotify sent an unreadable answer", status)
 
 
-# serve mode keeps one HTTPS connection open (no new handshake per request)
+# serve mode keeps HTTPS connections open (no new handshake per request): a small pool, because
+# every request runs in its own thread
 KEEPALIVE = False
-_LOCAL = threading.local()          # one kept-alive connection per serve() thread
+POOL_MAX = 4
+_POOL = []                          # idle (netloc, connection) pairs
+_POOL_LOCK = threading.Lock()
+
+
+def pool_take(netloc):
+    with _POOL_LOCK:
+        for i, (n, c) in enumerate(_POOL):
+            if n == netloc:
+                return _POOL.pop(i)[1]
+    return None
+
+
+def pool_give(netloc, conn):
+    with _POOL_LOCK:
+        if len(_POOL) < POOL_MAX:
+            _POOL.append((netloc, conn))
+            return
+    conn.close()
 
 
 def retry_after(headers):
@@ -288,20 +307,26 @@ def send(method, url, data, headers):
     u = urllib.parse.urlparse(url)
     target = u.path + ("?" + u.query if u.query else "")
     for attempt in (1, 2):
-        conn = getattr(_LOCAL, "conn", None)
+        # The second attempt always uses a fresh connection (the pooled one may be stale)
+        conn = pool_take(u.netloc) if attempt == 1 else None
         try:
             if conn is None:
-                conn = _LOCAL.conn = http.client.HTTPSConnection(u.netloc, timeout=15)
+                conn = http.client.HTTPSConnection(u.netloc, timeout=15)
             conn.request(method, target, body=data, headers=headers)
             r = conn.getresponse()
-            return r.status, r.read(), retry_after(r.headers)
+            result = r.status, r.read(), retry_after(r.headers)
         except (http.client.HTTPException, OSError) as e:
             # The server closed the idle connection: reconnect once
             if conn is not None:
                 conn.close()
-            _LOCAL.conn = None
             if attempt == 2:
                 raise ApiError("No connection: %s" % e, 0)
+            continue
+        if r.will_close:
+            conn.close()
+        else:
+            pool_give(u.netloc, conn)
+        return result
 
 
 FOLDERS_PORT = int(os.environ.get("SPOTIFY_FOLDERS_PORT") or 8899)   # the Spicetify extension qs-folders.js posts here (env: test hook)
@@ -458,7 +483,7 @@ def serve():
     """Long-running mode for the panel: one JSON request per stdin line,
     {"id": n, "cmd": <any command but login>, "args": [...]}, one JSON answer per stdout line,
     {"id": n, "result": ...} or {"id": n, "error": msg, "status": code}. Ends when stdin closes.
-    Every request runs in its own thread with its own kept-alive HTTPS connection, so a slow one
+    Every request runs in its own thread on a kept-alive HTTPS connection from a small pool, so a slow one
     (the library) never holds up play / pause. Queued volume requests collapse to the newest, so a
     fast drag never builds a backlog. Also runs the folder / library listener."""
     global KEEPALIVE
