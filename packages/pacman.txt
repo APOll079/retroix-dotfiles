@@ -44,6 +44,7 @@ pipewire-alsa
 wireplumber
 bluez
 bluez-utils
+python-dbus                 # scripts/bt-agent.py (Bluetooth PIN / passkey pairing agent)
 networkmanager              # nmcli: the ETH indicator
 
 # --- phone / spotify ---

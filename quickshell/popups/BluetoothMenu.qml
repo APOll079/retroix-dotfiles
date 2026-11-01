@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Bluetooth
@@ -9,13 +10,19 @@ import ".."
 // - Paired devices: click to connect / disconnect; Trust (= BlueZ lets it auto-reconnect) and
 //   Forget (asks first) per row; battery when the device reports it.
 // - While scanning, unpaired devices show under "Available": click pairs, then trusts and
-//   connects. Headphones and speakers pair without a PIN; PIN devices need an agent (not here).
+//   connects. Headphones and speakers pair without a PIN.
+// - PIN / passkey / number-comparison devices: while the menu is open, scripts/bt-agent.py runs as a
+//   BlueZ pairing agent (registered only, not the default agent). Each request it forwards shows as a
+//   prompt block above the lists (type the PIN, read the code to type on the device, compare six
+//   digits, Allow); the answer goes back to it as one JSON line. Protocol: see the script's header.
 PopupWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)
     required property var bar
     property var closeCallback: function() {}
     property var forgetting: null     // device waiting for "Forget?" confirm
+    // The pairing request waiting for an answer from bt-agent.py: {id, method, name, code, uuid} or null
+    property var prompt: null
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool powered: adapter !== null && adapter.enabled
@@ -50,6 +57,64 @@ PopupWindow {
     // The status line: no adapter, else a failed pair
     readonly property string statusText: root.adapter === null ? "No Bluetooth adapter" : root.pairError
 
+    // What the prompt block says for each request kind
+    // The device name is shortened, never the sentence around it
+    function shortName(n) {
+        const max = MenuStyle.bluetoothNameChars;
+        const name = n || "device";
+        return name.length > max ? name.slice(0, max - 1) + "\u2026" : name;
+    }
+    function promptTitle(p) {
+        const who = root.shortName(p.name);
+        switch (p.method) {
+        case "pin": return "PIN for " + who;
+        case "passkey": return "Passkey for " + who;
+        case "displayPin": return "Type this PIN on " + who;
+        case "displayPasskey": return "Type this passkey on " + who;
+        case "confirm": return "Does " + who + " match?";
+        case "authorize": return "Let " + who + " pair?";
+        default: return "Let " + who + " use a service?";
+        }
+    }
+    readonly property bool promptTyped: prompt !== null && (prompt.method === "pin" || prompt.method === "passkey")
+    readonly property bool promptShown: prompt !== null && (prompt.method === "displayPin" || prompt.method === "displayPasskey" || prompt.method === "confirm")
+    readonly property bool promptAnswers: prompt !== null && prompt.method !== "displayPin" && prompt.method !== "displayPasskey"
+    readonly property string promptVerb: prompt !== null && (prompt.method === "authorize" || prompt.method === "service") ? "Allow" : "Pair"
+
+    // Answer the pending request (ok = Pair / Allow), or turn it down; a display-only prompt just goes away
+    function answerPrompt(ok, value) {
+        const p = root.prompt;
+        root.prompt = null;
+        if (p && p.id > 0)
+            agent.write(JSON.stringify({ id: p.id, ok: ok, value: value }) + "\n");
+        else if (!ok && pairWatch.device)
+            pairWatch.device.cancelPair();
+    }
+
+    // The pairing helper: runs while the menu is open
+    Process {
+        id: agent
+        command: ["python3", "-I", Quickshell.shellDir + "/scripts/bt-agent.py"]
+        stdinEnabled: true
+        stderr: StdioCollector {
+            onStreamFinished: if (text.trim() !== "") console.warn("bt-agent: " + text.trim())
+        }
+        stdout: SplitParser {
+            onRead: line => {
+                let r = null;
+                try {
+                    r = JSON.parse(line);
+                } catch (e) {
+                    return;
+                }
+                if (r.method === "cancel" || r.method === "release")
+                    root.prompt = null;
+                else if (r.method !== "ready")
+                    root.prompt = r;
+            }
+        }
+    }
+
     // Pair, then trust (auto-reconnect) and connect once BlueZ reports it paired
     function pairDevice(d) {
         root.pairError = "";
@@ -68,9 +133,11 @@ PopupWindow {
                 pairWatch.device = null;
             }
         }
-        // BlueZ stopped pairing without it being paired: say so (PIN devices end up here, no agent)
+        // BlueZ stopped pairing without it being paired (rejected, timed out, wrong PIN): drop any
+        // prompt and say so
         function onPairingChanged() {
             if (pairWatch.device && !pairWatch.device.pairing && !pairWatch.device.paired) {
+                root.prompt = null;
                 root.pairError = "Pairing " + root.label(pairWatch.device) + " failed";
                 pairWatch.device = null;
             }
@@ -119,7 +186,7 @@ PopupWindow {
             // Status: no adapter, or the last pairing failure (urgent icon, normal text)
             RowLayout {
                 Layout.fillWidth: true
-                visible: root.statusText !== ""
+                visible: root.statusText !== "" && root.prompt === null
                 spacing: MenuStyle.gap
                 Text {
                     renderType: Text.NativeRendering
@@ -139,6 +206,78 @@ PopupWindow {
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text
                     text: root.statusText
+                }
+            }
+
+            // Pairing request from the agent: title, the code or a field to type in, verb buttons
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: root.prompt !== null
+                spacing: MenuStyle.gap
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    textFormat: Text.PlainText
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    font.family: MenuStyle.titleFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.text
+                    text: root.prompt ? root.promptTitle(root.prompt) : ""
+                }
+                SunkenField {
+                    Layout.fillWidth: true
+                    visible: root.promptShown
+                    implicitHeight: MenuStyle.bluetoothCodeHeight
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        textFormat: Text.PlainText
+                        anchors.centerIn: parent
+                        font.family: MenuStyle.bodyFont
+                        font.pixelSize: MenuStyle.bluetoothCodeSize
+                        color: Config.colors.text
+                        text: root.prompt && root.prompt.code ? root.prompt.code : ""
+                    }
+                }
+                SearchBox {
+                    id: pinField
+                    Layout.fillWidth: true
+                    visible: root.promptTyped
+                    showIcon: false
+                    placeholder: root.prompt && root.prompt.method === "passkey" ? "6 digits" : "PIN"
+                    onEscaped: root.answerPrompt(false, "")
+                    onKeyPressed: event => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            event.accepted = true;
+                            if (pinField.text !== "")
+                                root.answerPrompt(true, pinField.text);
+                        }
+                    }
+                    Connections {
+                        target: root
+                        function onPromptChanged() {
+                            pinField.text = "";
+                            if (root.promptTyped)
+                                pinField.focusInput();
+                        }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: MenuStyle.pad
+                    BevelButton {
+                        Layout.fillWidth: true
+                        visible: root.promptAnswers
+                        enabled: !root.promptTyped || pinField.text !== ""
+                        text: root.promptVerb
+                        onClicked: root.answerPrompt(true, root.promptTyped ? pinField.text : "")
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Cancel"
+                        onClicked: root.answerPrompt(false, "")
+                    }
                 }
             }
 
@@ -277,11 +416,15 @@ PopupWindow {
 
     function openMenu() {
         root.forgetting = null;
+        root.prompt = null;
+        agent.running = true;
         root.visible = true;
     }
 
     function closeMenu() {
         root.forgetting = null;
+        root.prompt = null;
+        agent.running = false;
         if (root.adapter && root.adapter.discovering)
             root.adapter.discovering = false;
         root.visible = false;
