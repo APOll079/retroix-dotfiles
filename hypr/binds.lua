@@ -19,6 +19,8 @@ hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("hypremoji"))  -- help: Apps | E
 -- Snipping overlay on the focused monitor (quickshell ScreenshotOverlay.qml)
 local screenshotOverlay = [[bash -c 'qs ipc call screenshot_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "S", hl.dsp.exec_cmd(screenshotOverlay))  -- help: Screen | Screenshot overlay
+local screenshotHistory = [[bash -c 'qs ipc call screenshot_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") history']]
+hl.bind(mainMod .. " + SHIFT" .. " + " .. "H", hl.dsp.exec_cmd(screenshotHistory))  -- help: Screen | Screenshot history
 -- Games menu (quickshell GamesMenu.qml) on the focused monitor
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu

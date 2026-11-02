@@ -28,6 +28,8 @@ PanelWindow {
     property string filter: "all"          // all | running | stopped
     property string scope: "user"          // user | system
     property string error: ""
+    // The last Start / Stop / Restart failure; kept apart from `error`, which a list refresh clears
+    property string actionError: ""
     property int cursor: 0
 
     readonly property var shown: {
@@ -132,6 +134,7 @@ PanelWindow {
                                 root.scope = modelData.key;
                                 root.services = [];
                                 root.error = "";
+                                root.actionError = "";
                                 root.refresh();
                                 searchInput.focusInput();
                             }
@@ -194,6 +197,37 @@ PanelWindow {
                         ScrollIndicator.vertical: ScrollIndicator {
                             active: list.moving
                         }
+                    }
+                }
+
+                // A failed Start / Stop / Restart: urgent icon, normal text, like the Bluetooth menu's
+                // status line. Stays until the next action or the menu opens again.
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: root.actionError !== ""
+                    spacing: MenuStyle.gap
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        font.family: MenuStyle.iconFont
+                        font.pixelSize: MenuStyle.iconSize
+                        Layout.alignment: Qt.AlignTop
+                        color: Config.colors.urgent
+                        text: "error"
+                    }
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        textFormat: Text.PlainText
+                        Layout.fillWidth: true
+                        // dinitctl's reason can be long: wrap rather than cut it off
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                        maximumLineCount: 3
+                        elide: Text.ElideRight
+                        font.family: MenuStyle.bodyFont
+                        font.pixelSize: MenuStyle.fontSize
+                        color: Config.colors.text
+                        text: root.actionError
                     }
                 }
 
@@ -293,6 +327,8 @@ PanelWindow {
             termProc.running = true;
             root.closeCallback();
         } else {
+            root.actionError = "";
+            actProc.verb = verb;
             actProc.command = ["dinitctl", "--user", verb, s.name];
             actProc.running = true;
         }
@@ -335,17 +371,19 @@ PanelWindow {
 
     Process {
         id: actProc
+        property string verb: ""
         stderr: StdioCollector {
             id: actErr
         }
         onExited: code => {
-            if (code !== 0 && actErr.text.trim() !== "")
-                root.error = actErr.text.trim();
+            if (code !== 0)
+                root.actionError = actErr.text.trim() !== "" ? actErr.text.trim() : "dinitctl " + actProc.verb + " failed (exit " + code + ")";
             root.refresh();
         }
     }
 
     function openMenu() {
+        root.actionError = "";
         searchInput.text = "";
         root.filter = "all";
         root.cursor = 0;

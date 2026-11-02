@@ -77,7 +77,7 @@ Stable and unlikely to break: the Python scripts, grim, wl-copy, cliphist, PipeW
 
 ## IPC handlers nothing in the repo calls
 
-These exist for `qs ipc call` by hand or a future bind, so they are not orphans: `osd volume` (OsdPopup), `services_<monitor> toggle`, `session_<monitor> toggle`, `screenshot_<monitor> history`.
+These exist for `qs ipc call` by hand or a future bind, so they are not orphans: `osd volume` (OsdPopup), `services_<monitor> toggle`, `session_<monitor> toggle`, `taskmanager performance`, and the old `taskmanager_<monitor> toggle` (kept for old binds; Ctrl+Shift+Esc calls `taskmanager open`). `screenshot_<monitor> history` now has a key (Super+Shift+H).
 
 ## Games
 

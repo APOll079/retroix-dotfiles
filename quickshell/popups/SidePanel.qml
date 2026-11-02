@@ -52,8 +52,8 @@ PanelWindow {
             root.setHome(root.screen.name, root.homeShowing);
     }
 
-    // Shared with the launcher and the session panel (Session.qml)
-    readonly property var actions: Session.builtins
+    // Shared with the launcher and the session panel (Session.qml), your own actions included
+    readonly property var actions: Session.all
 
     PopupWindowFrame {
         windowTitle: root.tab === 0 ? "Home" : root.tab === 1 ? "Calendar" : "Phone"
@@ -72,8 +72,13 @@ PanelWindow {
                 Repeater {
                     model: root.actions
                     BevelButton {
+                        // Equal widths whatever the content. Your own actions show their name: their
+                        // icon is a generic tick unless you set one, and a tick alone says nothing
+                        readonly property bool custom: !Session.builtins.some(b => b.name === modelData.name)
                         Layout.fillWidth: true
-                        glyph: modelData.icon
+                        Layout.preferredWidth: 1
+                        glyph: custom ? "" : modelData.icon
+                        text: custom ? modelData.name : ""
                         onClicked: {
                             if (modelData.confirm) {
                                 root.pending = modelData

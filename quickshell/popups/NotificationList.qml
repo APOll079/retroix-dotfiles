@@ -45,7 +45,19 @@ ColumnLayout {
             color: Config.colors.text
             text: NotificationStore.items.length === 0 ? "No notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
         }
+        // Do Not Disturb (same switch as a right click on the bar clock): notifications still land
+        // here, they just don't pop up. Sunken while on.
         BevelButton {
+            id: dndButton
+            Layout.preferredWidth: Math.max(dndButton.implicitWidth, clearButton.implicitWidth)
+            text: "DND"
+            glyph: Config.settings.notifications.dnd ? "\ue7f6" : "\ue7f4"
+            checked: Config.settings.notifications.dnd
+            onClicked: Config.settings.notifications.dnd = !Config.settings.notifications.dnd
+        }
+        BevelButton {
+            id: clearButton
+            Layout.preferredWidth: Math.max(dndButton.implicitWidth, clearButton.implicitWidth)
             text: "Clear all"
             visible: NotificationStore.items.length > 0
             onClicked: NotificationStore.clear()
@@ -122,13 +134,20 @@ ColumnLayout {
                         raised: true
                     }
 
-                    // A click opens the notification in its app (default action) while it is alive
+                    // Left-click opens the notification in its app (default action) while it is alive;
+                    // right-click removes it from the history without opening it
                     MouseArea {
                         id: rowMouse
                         anchors.fill: parent
                         hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: NotificationStore.open(row.entry.key)
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton)
+                                NotificationStore.remove(row.entry.key);
+                            else
+                                NotificationStore.open(row.entry.key);
+                        }
                     }
 
                     ColumnLayout {

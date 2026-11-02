@@ -15,13 +15,13 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 ### Backlog from the desktop-overhaul audit (Claude Code's suggestions, not picked yet)
 | # | Fix | Size |
 |---|---|---|
-| 1 | Esc closes Start, Theme, Bluetooth, Session and the side panel | S-M |
+| 1 | Esc closes Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried: it broke clicks in the Themes menu, reverted) | S-M |
 | 2 | Modal dialogs float and centre | S |
 | 3 | Super+P pins a floating window (always on top) | S |
 | 4 | Zen Picture-in-Picture: float, pin, a corner of DP-2 | S |
 | 5 | Tooltips: ETH (IP, speed), privacy icons, cut-off lyric line | S |
 | 6 | BevelButton tooltip + elide; one tooltip delay everywhere | M |
-| 7 | Services: show action errors (bug, `ServicesPanel.qml:165`); terminal from settings | S |
+| 7 | Services: terminal from settings | S |
 | 8 | Monaco 14 / 11 → 16 / 12 (launcher search, tucked labels): breaks the font rule | S |
 | 9 | Screenshot History: type to filter, Ctrl+C / Ctrl+O | S |
 | 10 | Loupe float rule on the class only | S |
@@ -43,7 +43,10 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [x] Task Manager window (window confirmed working; the rest of this line not individually checked): opens floating and centred, a resize sticks, Super+Q closes it, the title bar drags it, Ctrl+Shift+Esc again focuses it, from a fullscreen game it leaves fullscreen first; End task / Kill on your own apps; core-process confirm; Performance graphs
 - [ ] CPU button: left = Task Manager on Performance, right = temperatures, the GPU part hides only when the lyric line needs the room
 - [ ] Side panel: Home runs full height, the history scrolls, the chevron unfolds, times line up
-- [ ] Clock: temperature in the label, right-click toggles DND
+- [ ] Clock: temperature with its unit ("8°C") in the label, right-click toggles DND; the Calendar tab shows the weather and the next days again; the DND button in the history header toggles the same switch (sunken while on)
+- [ ] Super+Shift+H opens and closes Screenshot History; keypad Enter shoots in the snipping overlay (Screen / All) and confirms in the Task Manager; Esc in the Task Manager filter backs out of an open End / Kill confirm first
+- [ ] Notification history: right-click an entry removes it without opening it; the rest stay, and it is gone after a Quickshell restart
+- [ ] Services: a failing Start / Stop / Restart shows the dinitctl error above the buttons; a `session.customActions` entry shows by name in the side panel power row
 - [ ] Wallpapers / Services buttons: a click opens, the same click closes, any bar click closes
 - [ ] EQ preset row: fill `audio.eqPresets`, a click loads the preset, the sunken one survives a restart
 
@@ -97,15 +100,15 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Lock screen wallpaper: after Set, `hyprlock` (from a second TTY) shows the same picture per monitor; the `$var` in `path` and the `##` escape are unverified
 
 ## Done
-- **Bar**: gripper, workspaces, Start / Themes, Wallpapers and Services buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + weather + clock (right click: DND)
-- **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (each entry a small raised window on a recessed well: title strip with app + time, 16 px title, 3-line body with a chevron), calendar; weather and DND live on the bar clock
+- **Bar**: gripper, workspaces, Start / Themes, Wallpapers and Services buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + temperature + clock (right click: DND)
+- **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (each entry a small raised window on a recessed well: title strip with app + time, 16 px title, 3-line body with a chevron), weather and calendar, DND button in the history header (also a right click on the clock); power row includes your custom session actions
 - **Launcher** (Super+D): tabs Apps / Games / Clipboard (Ctrl+Tab), fuzzy apps with usage ranking and categories, calculator, session actions, "," window search (also Super+Tab), Super+V clipboard with delete and Clear all, options menu (pin, move, Hide / Unhide with a Hidden chip, Uninstall via pacman / flatpak)
 - **Notifications**: toasts with actions, one per app; position / stack / monitor settings; history with one entry per notification that keeps the live notification, progress bars, inline reply, saved across restarts
 - **Task Manager** (Ctrl+Shift+Esc or the CPU button): a real floating window, one for the desktop; Apps / Processes / Performance, Win95 style; replaces btm
 - **Spotify panel** (Super+S): a drawer with now playing (cover, title, artist / album links, heart / add / lyrics, mute + volume), seek, a five-column transport, one search box (filter; Spotify search in place), Library | Liked | Queue tabs with flat chips, Recent, rows or cover tiles with Pinned / folder mosaics, list headers with Play / Shuffle, a row menu, a lyrics view, status-bar hints, a shared key map, remembers where you left it
 - **Audio (Home tab)**: output list (click = default sink, EasyEffects follows; the EQ follows the real output, "EQ off" tag), EQ preset buttons, microphone mute + volume, scrollable per-app volumes
 - **Bluetooth**: native BlueZ, connect / trust / forget / pair; PIN / passkey / compare prompts through a helper agent while the menu is open
-- **Screenshots**: snipping overlay (Super+Shift+S / Print: Region, Window, Screen, All), toast with thumbnail, History viewer with multi-select; no annotation by choice
+- **Screenshots**: snipping overlay (Super+Shift+S / Print: Region, Window, Screen, All), toast with thumbnail, History viewer with multi-select (Super+Shift+H); no annotation by choice
 - **Games**: cover grid with filter chips (All / Recent / Steam / Other / Hidden), as its own menu (Super+Shift+G) and as the launcher's Games tab; Steam, Steam shortcuts, own entries. Steam games open on workspace 2
 - **Screen-share picker**: themed dialog (Screens / Windows tabs, thumbnails, Remember my choice) replacing the portal's default; no region sharing by choice
 - **Cheat sheet** (Super+F1, read from the `-- help:` comments in `binds.lua`), **Services** panel (dinit; Start menu or the bar), **Phone** tab (KDE Connect)

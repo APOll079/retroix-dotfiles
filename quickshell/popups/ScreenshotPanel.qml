@@ -385,7 +385,7 @@ PanelWindow {
 
     // --- selection ---
 
-    // The newest shot is selected from the start, so Copy / Open / Delete and Ctrl+C work at once.
+    // The newest shot is selected from the start, so Copy / Open / Delete work at once.
     // The list can still be loading (or the old filter's rows still there), so it is picked again
     // whenever the model reports new content, until the user selects something themselves.
     function resetSelection() {

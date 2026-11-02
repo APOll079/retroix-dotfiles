@@ -23,6 +23,89 @@ ColumnLayout {
         }
     }
 
+    // Weather (Weather.qml): now, then the next days; a plain line while it can't be fetched
+    Text {
+        renderType: Text.NativeRendering
+        font.hintingPreference: Font.PreferFullHinting
+        Layout.fillWidth: true
+        visible: !Weather.ok && Weather.failed
+        font.family: MenuStyle.bodyFont
+        font.pixelSize: MenuStyle.fontSize
+        color: MenuStyle.bevelDark
+        text: "Weather unavailable"
+    }
+    SunkenField {
+        Layout.fillWidth: true
+        visible: Weather.ok
+        implicitHeight: weatherCol.implicitHeight + 2 * padding
+        ColumnLayout {
+            id: weatherCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: MenuStyle.gap
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: MenuStyle.pad
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    font.family: MenuStyle.iconFont
+                    font.pixelSize: MenuStyle.iconSize
+                    color: Config.colors.text
+                    text: Weather.icon
+                }
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    font.family: MenuStyle.titleFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.text
+                    textFormat: Text.PlainText
+                    text: Weather.temp + Weather.unit + "  " + Weather.desc
+                }
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.text
+                    textFormat: Text.PlainText
+                    text: Weather.place
+                }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: MenuStyle.pad
+                Repeater {
+                    model: Weather.days
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: MenuStyle.gap
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            font.family: MenuStyle.iconFont
+                            font.pixelSize: MenuStyle.iconSize
+                            color: Config.colors.text
+                            text: modelData.icon
+                        }
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            Layout.fillWidth: true
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.fontSize
+                            color: Config.colors.text
+                            text: modelData.name + " " + modelData.lo + "/" + modelData.hi + Weather.unit
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
         spacing: MenuStyle.pad

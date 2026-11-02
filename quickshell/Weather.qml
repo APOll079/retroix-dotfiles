@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 
 // Weather from wttr.in (no key). settings.json "weather": location ("" = guessed from your IP),
-// metric. Refreshes every 30 minutes; shown in the side panel's Calendar tab.
+// metric. Refreshes every 30 minutes; shown in the side panel's Calendar tab and on the bar clock.
 Singleton {
     id: root
 

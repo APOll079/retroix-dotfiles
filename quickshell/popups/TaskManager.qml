@@ -68,6 +68,7 @@ FloatingWindow {
             Keys.onUpPressed: root.appIndex = Math.max(0, root.appIndex - 1)
             Keys.onDownPressed: root.appIndex = Math.min(root.apps.length - 1, root.appIndex + 1)
             Keys.onReturnPressed: root.confirm ? root.doConfirm() : root.switchToApp()
+            Keys.onEnterPressed: root.confirm ? root.doConfirm() : root.switchToApp()
             Keys.onTabPressed: event => {
                 if (event.modifiers & Qt.ControlModifier)
                     root.cycleTab(1);
@@ -172,6 +173,10 @@ FloatingWindow {
                                 event.accepted = true;
                             } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
                                 root.doConfirm();
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Escape && root.confirm) {
+                                // An open confirm row backs out first, before the filter is cleared
+                                root.confirm = null;
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
                                 root.cycleTab(1);

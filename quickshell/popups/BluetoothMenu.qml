@@ -12,9 +12,10 @@ import ".."
 // - While scanning, unpaired devices show under "Available": click pairs, then trusts and
 //   connects. Headphones and speakers pair without a PIN.
 // - PIN / passkey / number-comparison devices: while the menu is open, scripts/bt-agent.py runs as a
-//   BlueZ pairing agent (registered only, not the default agent). Each request it forwards shows as a
-//   prompt block above the lists (type the PIN, read the code to type on the device, compare six
-//   digits, Allow); the answer goes back to it as one JSON line. Protocol: see the script's header.
+//   BlueZ pairing agent and is the default agent until the menu closes (then blueman's takes over
+//   again). Each request it forwards shows as a prompt block above the lists (type the PIN, read the
+//   code to type on the device, compare six digits, Allow); the answer goes back to it as one JSON
+//   line. Protocol: see the script's header.
 PopupWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)

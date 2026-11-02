@@ -270,6 +270,16 @@ Singleton {
         }
     }
 
+    // Right-click in the history: drop one entry without opening it (a live one is dismissed in its app too)
+    function remove(key) {
+        const e = root.items.find(i => i.key === key);
+        if (!e)
+            return;
+        root.items = root.items.filter(i => i.key !== key);
+        if (e.notif)
+            e.notif.dismiss();
+    }
+
     function clear() {
         for (var e of root.items)
             if (e.notif)

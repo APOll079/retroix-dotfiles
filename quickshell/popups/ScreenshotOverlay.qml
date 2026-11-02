@@ -207,6 +207,7 @@ PanelWindow {
         focus: true
         Keys.onEscapePressed: root.close()
         Keys.onReturnPressed: if (root.mode === "screen" || root.mode === "all") root.shoot()
+        Keys.onEnterPressed: if (root.mode === "screen" || root.mode === "all") root.shoot()
         Keys.onPressed: event => {
             const i = ["1", "2", "3", "4"].indexOf(event.text);
             if (i >= 0)

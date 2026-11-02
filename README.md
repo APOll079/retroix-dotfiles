@@ -16,7 +16,7 @@ A retro Hyprland desktop: Win95 bevels and classic-Mac Platinum details on **Art
 | **Spotify panel** (Super+S) | Player, Recent, your whole library with folders and pins, search, queue, synced lyrics. Works with the Spotify app or headless through `spotifyd` |
 | **Side panel** (Super+N) | Power buttons, audio output / EQ presets / mic / per-app volume, full-height notification history, calendar, phone (KDE Connect) |
 | **Task Manager** (Ctrl+Shift+Esc) | A real window: Apps, Processes (grouped by program), Performance graphs |
-| **Snipping tool** (Super+Shift+S, Print) | Region, window, screen, all monitors; a history viewer |
+| **Snipping tool** (Super+Shift+S, Print) | Region, window, screen, all monitors; a history viewer (Super+Shift+H) |
 | **And** | Themed notifications with inline reply, screen-share picker, keybind cheat sheet (Super+F1), Bluetooth menu, dinit services panel, wallpaper browser |
 
 **Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland, hyprlock, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), Qt apps (through qt6ct), VSCodium and Zen in one go. It can also build a palette from your wallpaper.
@@ -77,6 +77,7 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+V | Clipboard history |
 | Super+Tab | Window switcher |
 | Super+Shift+S, Print | Snipping tool (F12: instant full screenshot) |
+| Super+Shift+H | Screenshot history |
 | Ctrl+Shift+Esc | Task Manager |
 | Super+Shift+G | Games |
 | Super+Q | Close the open menu, else the window |
