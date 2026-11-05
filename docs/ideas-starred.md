@@ -14,6 +14,25 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Limine: boot CachyOS without choosing**: Limine waits at its menu and you pick an entry by hand. Set the default entry and a short timeout in `limine.conf` (`default_entry`, `timeout`), so CachyOS boots by itself and the menu is only there if you press a key. Check what the entries are first (kernels, snapshots, fallback) and keep a way to reach them | S |
 | ★ | **Lock screen at login**: `hyprlock` as soon as the session starts (autologin, then lock), or another customisable login screen instead. `install.sh` already offers greetd autologin with a lock; the "Login screen" and "Win95 lock screen" ideas are the styled versions | M |
 
+## Small fixes from the desktop-overhaul audit
+| # | Fix | Size |
+|---|---|---|
+| 1 | Esc closes Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried: it broke clicks in the Themes menu, reverted) | S-M |
+| 2 | Modal dialogs float and centre | S |
+| 3 | Super+P pins a floating window (always on top) | S |
+| 4 | Zen Picture-in-Picture: float, pin, a corner of DP-2 | S |
+| 5 | Tooltips: ETH (IP, speed), privacy icons, cut-off lyric line | S |
+| 6 | BevelButton tooltip + elide; one tooltip delay everywhere | M |
+| 7 | Services: terminal from settings | S |
+| 8 | Monaco 14 / 11 → 16 / 12 (launcher search, tucked labels): breaks the font rule | S |
+| 9 | Screenshot History: type to filter, Ctrl+C / Ctrl+O | S |
+| 10 | Loupe float rule on the class only | S |
+| 11 | Super+right-drag resizes | S |
+| 12 | Games chips clip "Hidden (nn)" | S |
+| 13 | Caffeine survives a Quickshell reload | S |
+
+Visual inconsistencies the audit found in code (check with a screenshot first): Theme menu cards and the screenshot toolbar are hand-rolled, raw TextFields in the Games form and the Phone tab, screenshot History sized by screen fraction, the bar's now-playing text has no hover.
+
 ## 1. Capture
 | | Idea | Size |
 |---|---|---|

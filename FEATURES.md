@@ -12,25 +12,6 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 - From the old audit: F12 → Shift+Print (gives Zen its devtools key back), lazy-loaded popups (tried: no way to measure the gain headless; if wanted, start with Spotify, launcher, screenshots, wallpapers, games).
 - spotifyd works but needs an upgrade.
 
-### Backlog from the desktop-overhaul audit (Claude Code's suggestions, not picked yet)
-| # | Fix | Size |
-|---|---|---|
-| 1 | Esc closes Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried: it broke clicks in the Themes menu, reverted) | S-M |
-| 2 | Modal dialogs float and centre | S |
-| 3 | Super+P pins a floating window (always on top) | S |
-| 4 | Zen Picture-in-Picture: float, pin, a corner of DP-2 | S |
-| 5 | Tooltips: ETH (IP, speed), privacy icons, cut-off lyric line | S |
-| 6 | BevelButton tooltip + elide; one tooltip delay everywhere | M |
-| 7 | Services: terminal from settings | S |
-| 8 | Monaco 14 / 11 → 16 / 12 (launcher search, tucked labels): breaks the font rule | S |
-| 9 | Screenshot History: type to filter, Ctrl+C / Ctrl+O | S |
-| 10 | Loupe float rule on the class only | S |
-| 11 | Super+right-drag resizes | S |
-| 12 | Games chips clip "Hidden (nn)" | S |
-| 13 | Caffeine survives a Quickshell reload | S |
-
-Visual inconsistencies the audit found in code (check with a screenshot first): Theme menu cards and the screenshot toolbar are hand-rolled, raw TextFields in the Games form and the Phone tab, screenshot History sized by screen fraction, the bar's now-playing text has no hover.
-
 ### Small open items
 - Spotify notification filter: `NotificationDaemon.qml` drops `appName` "spotify" (a guess). If Spotify track toasts still show, use the real app name.
 - Portal float rule (`windowrules.lua`, `windowrule-4`, `^(xdg-desktop-portal.*)$`): check that a Zen file picker floats.
