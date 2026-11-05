@@ -1,0 +1,73 @@
+# Behaviour contract for scripts/check.py: file<TAB>regex<TAB>what must keep working.
+# Remove or change a line ONLY when the task removes or changes that behaviour, in the same commit, and say so.
+# Add a line whenever you build a new click, key or menu behaviour.
+quickshell/popups/NotificationList.qml	mouse\.button === Qt\.RightButton	Notification history: right-click removes an entry
+quickshell/popups/NotificationList.qml	NotificationStore\.open\(	Notification history: left-click opens it in its app
+quickshell/popups/NotificationList.qml	Clear all	Notification history: Clear all button
+quickshell/popups/NotificationDaemon.qml	Qt\.LeftButton \| Qt\.RightButton	Toast: left-click opens, right-click hides
+quickshell/popups/NotificationDaemon.qml	!hover\.hovered	Toast: hovering pauses the timeout
+quickshell/NotificationStore.qml	function remove\(	NotificationStore: remove one entry
+quickshell/taskbar/Bar.qml	if \(menu\.visible\)	Bar: clicking a bar button again closes its menu
+quickshell/taskbar/Bar.qml	MenuState\.closeAll\(\)	Bar: a click outside closes menus on every monitor
+quickshell/taskbar/Bar.qml	function closeAny	Super+Q closes an open menu before the window
+quickshell/taskbar/Bar.qml	Qt\.MiddleButton	Bar now-playing: middle-click play / pause
+quickshell/shell.qml	target: "taskmanager"	Task Manager IPC (one window)
+quickshell/LaptopControls.qml	TaskWindow\.open\("performance"\)	CPU button: left-click opens Task Manager on Performance
+quickshell/LaptopControls.qml	onRightClicked: root\.toggleMenu\(root\.sysMonMenuRef	CPU button: right-click opens the temperatures popup
+quickshell/LaptopControls.qml	Idle\.caffeine = !Idle\.caffeine	Caffeine button toggles
+quickshell/taskbar/ClockWidget.qml	onRightClicked:.*dnd	Clock: right-click toggles Do Not Disturb
+quickshell/BarButton.qml	signal rightClicked	BarButton: right-click signal
+quickshell/popups/SearchBox.qml	Qt\.Key_Escape	Search boxes: Escape clears, then closes
+quickshell/popups/SpotifyList.qml	function justMoved\(\)	Spotify: flick guard is a function (not a Date.now() binding)
+quickshell/popups/SpotifyList.qml	Qt\.MiddleButton	Spotify: middle-click adds a song to the queue
+quickshell/popups/SpotifyPanel.qml	function clickItem\(	Spotify: one click path for rows, tiles and Recent
+quickshell/popups/SpotifyPanel.qml	ctrl && event\.key === Qt\.Key_L	Spotify: Ctrl+L lyrics
+quickshell/popups/SpotifyPanel.qml	ctrl && event\.key === Qt\.Key_S	Spotify: Ctrl+S like
+quickshell/popups/TaskManager.qml	anyway	Task Manager: core processes need 'End anyway'
+quickshell/popups/AppLauncher.qml	Qt\.Key_Delete	Launcher: Delete removes a clipboard entry
+quickshell/popups/AppLauncher.qml	Qt\.Key_Tab	Launcher: Ctrl+Tab cycles the tabs
+quickshell/taskbar/Bar.qml	target: "appLauncher_"	IPC handler appLauncher_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "taskmanager_"	IPC handler taskmanager_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "menus_"	IPC handler menus_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "screenshot_"	IPC handler screenshot_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "games_"	IPC handler games_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "cheatsheet_"	IPC handler cheatsheet_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "spotify_"	IPC handler spotify_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "services_"	IPC handler services_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "session_"	IPC handler session_<monitor> (used by keybinds)
+quickshell/taskbar/Bar.qml	target: "notifications_"	IPC handler notifications_<monitor> (used by keybinds)
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Launcher	Key: Apps | Launcher
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Close\ menu,\ else\ close\ window	Key: Windows | Close menu, else close window
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Maximise	Key: Windows | Maximise
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Fullscreen	Key: Windows | Fullscreen
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Terminal	Key: Apps | Terminal
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ File\ manager	Key: Apps | File manager
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Browser	Key: Apps | Browser
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Toggle\ floating	Key: Windows | Toggle floating
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Emoji\ picker	Key: Apps | Emoji picker
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Screenshot\ overlay	Key: Screen | Screenshot overlay
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Screenshot\ history	Key: Screen | Screenshot history
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Games\ menu	Key: Apps | Games menu
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Pick\ a\ colour	Key: Screen | Pick a colour
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Task\ Manager	Key: Apps | Task Manager
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Spotify\ panel	Key: Apps | Spotify panel
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ This\ cheat\ sheet	Key: Desktop | This cheat sheet
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Clipboard\ history	Key: Apps | Clipboard history
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Window\ switcher	Key: Windows | Window switcher
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Lock\ screen	Key: Desktop | Lock screen
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Side\ panel\ \(notifications\)	Key: Desktop | Side panel (notifications)
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ left	Key: Windows | Focus left
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ right	Key: Windows | Focus right
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ up	Key: Windows | Focus up
+hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ down	Key: Windows | Focus down
+hypr/binds.lua	\-\-\ help:\ Workspaces\ \|\ Go\ to\ workspace	Key: Workspaces | Go to workspace
+hypr/binds.lua	\-\-\ help:\ Workspaces\ \|\ Move\ window\ to\ workspace	Key: Workspaces | Move window to workspace
+hypr/binds.lua	\-\-\ help:\ Workspaces\ \|\ Next\ workspace	Key: Workspaces | Next workspace
+hypr/binds.lua	\-\-\ help:\ Workspaces\ \|\ Previous\ workspace	Key: Workspaces | Previous workspace
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Vesktop\ scratchpad	Key: Desktop | Vesktop scratchpad
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Instant\ full\ screenshot	Key: Screen | Instant full screenshot
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Autoclicker\ \(toggle\)	Key: Desktop | Autoclicker (toggle)
+hypr/binds.lua	\-\-\ help:\ Media\ \|\ Play\ /\ pause\ Spotify	Key: Media | Play / pause Spotify
+hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Drag\ a\ window	Key: Mouse | Drag a window
+hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Maximise\ window	Key: Mouse | Maximise window
+hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode\ \(side\ buttons\)	Key: Desktop | Game mode (side buttons)

@@ -15,6 +15,9 @@
 - Ask me before big decisions, but come with a recommendation.
 
 ## Prime rules
+- Never remove or change an existing behaviour (a click, key, button, menu item, tooltip, IPC handler) unless the task names it. Before committing, list every behaviour the diff removes or changes, with file:line; if none, say "removes nothing".
+- `scripts/check.py` runs after every edit and when you finish (hooks in `.claude/settings.json`). Fix every FAIL. For each WARN, fix it or say in the report why it is on purpose. Run it yourself with `python3 scripts/check.py` before each commit.
+- `tests/behaviours.tsv` is the behaviour contract. When you build a new click, key or menu behaviour, add its line. Change or delete a line only when the task changes or removes that behaviour, in the same commit, and say so.
 - Read and edit only inside this repo (qs-test). Never browse outside it (home folders, Steam dirs, mounts, other disks), not even read-only, without asking. Never record my game list, files or disks anywhere. Tests use fake fixtures in the scratch dir.
 - Tests never call the real easyeffects, hyprctl, gsettings, dinitctl, flatpak, `pactl` / `wpctl set` or the real Spotify API; use an isolated PATH with fakes (and `SPOTIFY_FIXTURE`).
 - Plan first for anything bigger than a small fix: list the changes, wait for my OK.
