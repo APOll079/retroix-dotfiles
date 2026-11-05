@@ -14,28 +14,10 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Limine: boot CachyOS without choosing**: Limine waits at its menu and you pick an entry by hand. Set the default entry and a short timeout in `limine.conf` (`default_entry`, `timeout`), so CachyOS boots by itself and the menu is only there if you press a key. Check what the entries are first (kernels, snapshots, fallback) and keep a way to reach them | S |
 | ★ | **Lock screen at login**: `hyprlock` as soon as the session starts (autologin, then lock), or another customisable login screen instead. `install.sh` already offers greetd autologin with a lock; the "Login screen" and "Win95 lock screen" ideas are the styled versions | M |
 
-## Small fixes from the desktop-overhaul audit
-| # | Fix | Size |
-|---|---|---|
-| 1 | Esc closes Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried: it broke clicks in the Themes menu, reverted) | S-M |
-| 2 | Modal dialogs float and centre | S |
-| 3 | Super+P pins a floating window (always on top) | S |
-| 4 | Zen Picture-in-Picture: float, pin, a corner of DP-2 | S |
-| 5 | Tooltips: ETH (IP, speed), privacy icons, cut-off lyric line | S |
-| 6 | BevelButton tooltip + elide; one tooltip delay everywhere | M |
-| 7 | Services: terminal from settings | S |
-| 8 | Monaco 14 / 11 → 16 / 12 (launcher search, tucked labels): breaks the font rule | S |
-| 9 | Screenshot History: type to filter, Ctrl+C / Ctrl+O | S |
-| 10 | Loupe float rule on the class only | S |
-| 11 | Super+right-drag resizes | S |
-| 12 | Games chips clip "Hidden (nn)" | S |
-| 13 | Caffeine survives a Quickshell reload | S |
-
-Visual inconsistencies the audit found in code (check with a screenshot first): Theme menu cards and the screenshot toolbar are hand-rolled, raw TextFields in the Games form and the Phone tab, screenshot History sized by screen fraction, the bar's now-playing text has no hover.
-
 ## 1. Capture
 | | Idea | Size |
 |---|---|---|
+| ★ | **Screenshot History: type to filter**, Ctrl+C copies / Ctrl+O opens the selected shot | S |
 | ★ | **Text from a region (OCR)**: drag a box, the text lands on the clipboard (`tesseract`, Swedish + English) | S |
 | ★ | **Colour picker in the shell**: the existing `hyprpicker` bind, plus a small history of picked colours (hex / rgb, click to copy) | S |
 | ★ | **GIF from a recording**: "Save as GIF" on a short clip (ffmpeg), for Discord | S |
@@ -47,6 +29,8 @@ Visual inconsistencies the audit found in code (check with a screenshot first): 
 ## 2. System health
 | | Idea | Size |
 |---|---|---|
+| ★ | **Services: terminal from settings** | S |
+| ★ | **Caffeine survives a Quickshell reload** | S |
 | ★ | **Low-memory toast**: RAM above 90 % names the biggest program, and warns when `/tmp` (RAM-backed) is over a few GB, which is what ate 7 GB last time | S |
 | ★ | **"Fix my desktop" action**: Start menu > Troubleshoot: restart Quickshell, the portals, PipeWire / WirePlumber, hyprpaper, EasyEffects, one click each | S |
 | ★ | **NAS status**: an icon while `/mnt/disk1` / `disk2` are mounted, a warning when they're stale, Remount in one click | S |
@@ -96,6 +80,10 @@ Visual inconsistencies the audit found in code (check with a screenshot first): 
 ## 6. Windows, workspaces and monitors
 | | Idea | Size |
 |---|---|---|
+| ★ | **Esc closes every menu**: Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried and broke clicks in the Themes menu) | S |
+| ★ | **Modal dialogs float and centre** (window rule) | S |
+| ★ | **Zen Picture-in-Picture**: floats, pinned, in a corner of DP-2 | S |
+| ★ | **Loupe float rule on the class only** | S |
 | ★ | **Drop-down terminal**: a Quake-style kitty that slides from the top on one key and hides again (special workspace, like the Vesktop scratchpad) | S |
 | ★ | **Zoom**: a key that magnifies around the cursor (Hyprland cursor zoom), for small text | S |
 | ★ | **Stay awake while video plays**: idle doesn't dim during a fullscreen video, without turning caffeine on by hand (seen in inhibit-idle-while-watching) | S |
@@ -162,6 +150,7 @@ Visual inconsistencies the audit found in code (check with a screenshot first): 
 ## 13. Theming and retro look
 | | Idea | Size |
 |---|---|---|
+| ★ | **Monaco 14 / 11 → 16 / 12** in the launcher search and tucked labels (they break the font rule today) | S |
 | ★ | **Classic theme presets**: "Windows 95" (teal desktop, grey chrome) and "Platinum" (Mac OS 8 grey) palettes in the Themes menu | S |
 | ★ | **Character Map**: browse and copy the Material Symbols icons by name, shows the `\uXXXX` code (handy for building the shell itself) | S |
 | ★ | **Theme editor**: build a new palette in the Themes menu by picking each role's colour (or picking it off the screen), with the contrast check (seen in palette-creator, palettes) | M |

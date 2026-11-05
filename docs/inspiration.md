@@ -111,3 +111,7 @@ Render each one with the retro-design skill, compare against the fall25 and hkri
 **jef**: every window has a title bar, focused navy #000080 with white text, unfocused #c0c0c0 with black text. Bar #c0c0c0 where every module is its own raised button (the busy look to avoid). wofi launcher as a raised window with a sunken search field and list, greyscale icons, "Run..." prompt, top left. Plain #008080 wallpaper. PipeWire EQ files per headphone.
 
 **hkrist**: bar at the top, 24 px, #c0c0c0, classic CSS bevel (`#fff #808080 #808080 #fff`). Start raised, active workspace sunken, tray in a sunken box. Right side: short text labels separated by etched lines, the clock bold in its own sunken box. Teal wallpaper with a white Tux and grain. Whole screen in two hues. The terminal looks like a raised window from a 2 px grey border plus a hard shadow. The config says rounding 10, but the screenshot corners look square. Uses blur, which isn't worth copying.
+
+## Notes from the desktop-overhaul audit
+
+Visual inconsistencies the audit found in code (check with a screenshot first): Theme menu cards and the screenshot toolbar are hand-rolled, raw TextFields in the Games form and the Phone tab, screenshot History sized by screen fraction, the bar's now-playing text has no hover.
