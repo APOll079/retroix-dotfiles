@@ -62,3 +62,5 @@ StatusBar 1.0 StatusBar.qml
 MenuStrip 1.0 MenuStrip.qml
 StartBanner 1.0 StartBanner.qml
 LyricsWindow 1.0 LyricsWindow.qml
+UpdatesPanel 1.0 UpdatesPanel.qml
+CleanupPanel 1.0 CleanupPanel.qml

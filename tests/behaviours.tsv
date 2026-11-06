@@ -140,3 +140,12 @@ quickshell/LyricsWindowState.qml	function toggle	The Lyrics window toggles by IP
 quickshell/popups/SpotifyMoreMenu.qml	key: "lyrics"	Spotify "..." menu: Lyrics window
 quickshell/shell.qml	target: "lyrics"	IPC handler lyrics (used by the keybind)
 hypr/binds.lua	\-\-\ help:\ Media\ \|\ Lyrics\ window	Key: Media | Lyrics window
+quickshell/popups/CleanupPanel.qml	function accept\(\)	Clean up: the ConfirmBar's verb is the only thing that runs a clean-up
+quickshell/popups/CleanupPanel.qml	Qt\.Key_Escape	Clean up: Esc cancels the confirm first, then closes
+quickshell/popups/CleanupPanel.qml	function openTrash\(\)	Start > Empty Trash opens the panel with the Trash confirm showing
+quickshell/popups/UpdatesPanel.qml	Qt\.Key_Return	Updates: Enter = Update (opens the terminal on yay -Syu, closes the panel)
+quickshell/scripts/cleanup.sh	gio trash --empty	Empty Trash runs gio trash --empty
+quickshell/scripts/cleanup.sh	xargs -0 -r gio trash	Old screenshots go to the Trash, never deleted outright
+quickshell/popups/StartMenu.qml	text: "Clean up"	Start menu: Clean up row
+quickshell/popups/StartMenu.qml	text: CleanupState\.trashLabel	Start menu: Empty Trash row with its size
+quickshell/popups/StartMenu.qml	text: "Updates \("	Start menu: Updates (N) row while updates are waiting

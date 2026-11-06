@@ -14,6 +14,9 @@ PopupWindow {
     property var openPowerMenuCallback: function () {}
     property var openServicesCallback: function () {}
     property var openKeysCallback: function () {}
+    property var openUpdatesCallback: function () {}
+    property var openCleanupCallback: function () {}
+    property var openTrashCallback: function () {}
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -162,6 +165,40 @@ PopupWindow {
                     }
                 }
 
+                // Maintenance: pending updates (only when there are any), Clean up, Empty Trash with its size
+                MenuSeparator { Layout.fillWidth: true }
+                MenuRow {
+                    Layout.fillWidth: true
+                    visible: UpdateState.total > 0
+                    reserveIcon: true
+                    glyph: "\ue923"
+                    text: "Updates (" + UpdateState.total + ")"
+                    onClicked: {
+                        root.closeCallback();
+                        root.openUpdatesCallback();
+                    }
+                }
+                MenuRow {
+                    Layout.fillWidth: true
+                    reserveIcon: true
+                    glyph: "\ue872"
+                    text: "Clean up"
+                    onClicked: {
+                        root.closeCallback();
+                        root.openCleanupCallback();
+                    }
+                }
+                MenuRow {
+                    Layout.fillWidth: true
+                    reserveIcon: true
+                    glyph: "\ue872"
+                    text: CleanupState.trashLabel
+                    onClicked: {
+                        root.closeCallback();
+                        root.openTrashCallback();
+                    }
+                }
+
                 // Mounted USB drives, one row each; a click unmounts and powers the drive off (UsbState)
                 MenuSeparator {
                     Layout.fillWidth: true
@@ -187,6 +224,9 @@ PopupWindow {
     function openMenu() { openStartMenu() }
 
     function openStartMenu() {
+        // the Empty Trash row's size: measured once (read-only `sizes`), refreshed whenever the Clean up panel opens
+        if (CleanupState.rows.length === 0)
+            CleanupState.load();
         root.visible = true;
     }
 

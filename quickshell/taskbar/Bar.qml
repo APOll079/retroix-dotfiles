@@ -107,6 +107,9 @@ closeCallback: taskbar.closeAllPopups
 openPowerMenuCallback: function() { taskbar.toggleMenu(sessionPanel, Config.SystemPopup.SessionPanel, startmenuButton, "left") }
 openServicesCallback: function() { taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep") }
 openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
+openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
+openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
+openTrashCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep"); if (cleanupMenu.visible) cleanupMenu.openTrash() }
 }
 Popups.ThemeMenu {
 id: themeMenu
@@ -143,12 +146,14 @@ historyCallback: function() { taskbar.toggleMenu(screenshotPanel, Config.SystemP
 Popups.GamesMenu { screen: root.modelData; bar: taskbar; id: gamesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CheatSheet { screen: root.modelData; bar: taskbar; id: cheatSheet; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ServicesPanel { screen: root.modelData; bar: taskbar; id: servicesPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.SpotifyPanel { id: spotifyPanel; screen: root.modelData; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCallback: taskbar.closeAllPopups }
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -213,6 +218,17 @@ anchors.left: leftDivider.right
 anchors.verticalCenter: parent.verticalCenter
 anchors.leftMargin: MenuStyle.gap
 onClicked: taskbar.toggleMenu(startMenu, Config.SystemPopup.Startmenu, startmenuButton, "left")
+// Updates waiting (UpdateState): a dot on the button, like the bell's unread dot
+Rectangle {
+visible: UpdateState.total > 0
+x: MenuStyle.unreadDotX
+y: MenuStyle.unreadDotY
+width: MenuStyle.unreadDotSize
+height: MenuStyle.unreadDotSize
+color: Config.colors.urgent
+border.width: 1
+border.color: Config.colors.outline
+}
 }
 BarButton {
 id: themeMenuButton

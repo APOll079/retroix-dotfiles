@@ -112,6 +112,8 @@ CheatSheet,
 Services,
 Spotify,
 Wallpapers,
+Updates,
+Cleanup,
 None
 }
 property alias settings: settingsJsonAdapter.settings

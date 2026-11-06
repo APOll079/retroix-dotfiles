@@ -21,6 +21,8 @@ Scope {
     property bool serviceWatch: ServiceWatch.active
     property bool diskWatch: DiskWatch.active
     property bool usbWatch: UsbState.active
+    property var updateState: UpdateState
+    property var cleanupState: CleanupState
     // keeps the recorder state alive (picks up a recording that survived a reload)
     property bool recorder: RecordState.recording
     Taskbar.Bar {}
