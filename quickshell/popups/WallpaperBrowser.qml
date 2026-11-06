@@ -74,12 +74,14 @@ PanelWindow {
                 Row {
                     Layout.fillWidth: true
                     MenuTitle {
-                        text: "File"
+                        id: fileTitle
+        text: "File"
                         menu: fileMenu
                         build: root.fileModel
                     }
                     MenuTitle {
-                        text: "View"
+                        id: viewTitle
+        text: "View"
                         menu: viewMenu
                         build: root.viewModel
                     }
@@ -91,6 +93,8 @@ PanelWindow {
                     placeholder: "Search wallpapers"
                     onEscaped: root.closeCallback()
                     onKeyPressed: event => {
+                        if (root.menuKey(event))
+                            return;
                         const steps = { [Qt.Key_Left]: -1, [Qt.Key_Right]: 1, [Qt.Key_Up]: -MenuStyle.wallGridColumns, [Qt.Key_Down]: MenuStyle.wallGridColumns };
                         if (event.key in steps) {
                             view.move(steps[event.key]);
@@ -134,6 +138,23 @@ PanelWindow {
         return out;
     }
 
+    // Alt+F / Alt+V open the File / View menu (the same toggle as clicking the title)
+    function menuKey(event) {
+        if (!(event.modifiers & Qt.AltModifier))
+            return false;
+        if (event.key === Qt.Key_F) {
+            fileTitle.toggle();
+            event.accepted = true;
+            return true;
+        }
+        if (event.key === Qt.Key_V) {
+            viewTitle.toggle();
+            event.accepted = true;
+            return true;
+        }
+        return false;
+    }
+
     // --- open / close ---
 
     function openMenu() {
@@ -171,17 +192,18 @@ PanelWindow {
             id: area
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: {
-                if (mt.menu.visible) {
-                    mt.menu.close();
-                    return;
-                }
-                // the click that dismissed the menu (its grab) must not open it again
-                if (Date.now() - mt.closedAt < 250)
-                    return;
-                mt.menu.model = mt.build();
-                mt.menu.openAt(mt, 0, mt.height);
+            onClicked: mt.toggle()
+        }
+        function toggle() {
+            if (mt.menu.visible) {
+                mt.menu.close();
+                return;
             }
+            // the click that dismissed the menu (its grab) must not open it again
+            if (Date.now() - mt.closedAt < 250)
+                return;
+            mt.menu.model = mt.build();
+            mt.menu.openAt(mt, 0, mt.height);
         }
         Connections {
             target: mt.menu
