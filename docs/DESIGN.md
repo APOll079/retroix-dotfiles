@@ -10,12 +10,12 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 
 | theme | base | shadow | highlight | accent | text | outline | urgent | edge | text / base |
 |---|---|---|---|---|---|---|---|---|---|
-| default | `#d8d8d8` | `#9b9b9b` | `#fdfdfd` | `#207874` | `#000000` | `#000000` | `#ff723e` | 1.40 | 14.7 |
-| yorha | `#d9caba` | `#baafa1` | `#f4efea` | `#626335` | `#3e3d38` | `#3d3d39` | `#ff854c` | 1.40 | 6.8 |
-| cherry | `#f4c9ef` | `#c7a4cc` | `#fefafd` | `#c950bb` | `#321d32` | `#20091d` | `#ff936c` | 1.41 | 10.6 |
-| dusty | `#e3b9d6` | `#a47aa0` | `#fbe3f6` | `#d4609a` | `#2a1228` | `#20091d` | `#ff936c` | 1.43 | 10.0 |
-| indigo | `#bac4e6` | `#7e8bad` | `#e3e7f5` | `#3e7c99` | `#0d0d19` | `#1a2135` | `#e83939` | 1.40 | 11.1 |
-| gleep | `#bae6c5` | `#93c48c` | `#ffffff` | `#3e9949` | `#0d1913` | `#21351a` | `#ff7559` | 1.38 | 13.1 |
+| default | `#d8d8d8` | `#9b9b9b` | `#fdfdfd` | `#207874` | `#000000` | `#000000` | `#be552e` | 1.40 | 14.7 |
+| yorha | `#d9caba` | `#baafa1` | `#f4efea` | `#626335` | `#3e3d38` | `#3d3d39` | `#a65631` | 1.40 | 6.8 |
+| cherry | `#f4c9ef` | `#c7a4cc` | `#fefafd` | `#c950bb` | `#321d32` | `#20091d` | `#a86147` | 1.41 | 10.6 |
+| dusty | `#e3b9d6` | `#a47aa0` | `#fbe3f6` | `#d4609a` | `#2a1228` | `#20091d` | `#985740` | 1.43 | 10.0 |
+| indigo | `#bac4e6` | `#7e8bad` | `#e3e7f5` | `#3e7c99` | `#0d0d19` | `#1a2135` | `#c12f2f` | 1.40 | 11.1 |
+| gleep | `#bae6c5` | `#93c48c` | `#ffffff` | `#3e9949` | `#0d1913` | `#21351a` | `#be5742` | 1.38 | 13.1 |
 
 ## Spacing
 
@@ -215,9 +215,12 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `bevelDark` | color | `Qt.darker(Config.colors.shadow, 1.7)` |  |
 | `selectBar` | color | `selectPair.bar` |  |
 | `selectText` | color | `selectPair.text` |  |
+| `urgentBar` | color | `urgentPair.bar` |  |
+| `urgentText` | color | `urgentPair.text` |  |
 
 ## Other
 
 | name | type | value | note |
 |---|---|---|---|
 | `selectPair` | var | `(computed)` |  |
+| `urgentPair` | var | `(computed)` |  |

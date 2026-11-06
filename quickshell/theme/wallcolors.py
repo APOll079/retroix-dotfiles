@@ -19,7 +19,7 @@ import tempfile
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # -I leaves the script's folder off sys.path
-from apply import lift_highlight  # the palette rule lives in apply.py: a palette made here must pass it
+from apply import darken_to, lift_highlight  # the palette rule lives in apply.py: a palette made here must pass it
 
 Image.MAX_IMAGE_PIXELS = 200_000_000
 USAGE = "usage: wallcolors.py IMAGE [--out FILE]"
@@ -117,7 +117,7 @@ def palette(hue, colour):
         "base": hexs(base),
         "shadow": hexs(shadow),
         "highlight": lift_highlight(hexs(base), hexs(highlight)),
-        "urgent": urgent,
+        "urgent": darken_to(urgent, hexs(base), 3.2),
         "accent": hexs(accent),
         "text": hexs(text),
         "outline": hexs(outline),

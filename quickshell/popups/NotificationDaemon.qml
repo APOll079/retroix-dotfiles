@@ -154,7 +154,8 @@ Scope {
                         windowTitle: (notifItem.modelData.appName || notifItem.modelData.summary) + (notifItem.count > 1 ? " \u00b7 " + notifItem.count : "")
                         active: false
                         windowTitleIcon: "\ue7f4"
-                        titleColor: notifItem.critical ? Config.colors.urgent : "transparent"
+                        titleColor: notifItem.critical ? MenuStyle.urgentBar : "transparent"
+                        titleTextColor: notifItem.critical ? MenuStyle.urgentText : Config.colors.text
                         
                         // Left-click opens it (the app's default action, e.g. the Discord chat);
                         // right-click just hides the toast. Below the content so action buttons win.

@@ -267,6 +267,25 @@ Singleton {
     }
     readonly property color selectBar: selectPair.bar
     readonly property color selectText: selectPair.text
+    // The same for a bar filled with the urgent colour (a critical toast's title bar): urgent with whichever
+    // palette text reads best on it, else urgent darkened until base text reaches 4.5:1. Urgent itself is
+    // only checked at 3:1 on the face (apply.py MIN_URGENT), so text on it needs this.
+    readonly property var urgentPair: {
+        const u = Config.colors.urgent;
+        let best = null, bestC = 0;
+        for (const c of [Config.colors.base, Config.colors.text, Config.colors.outline]) {
+            const k = root.contrast(c, u);
+            if (k > bestC) { bestC = k; best = c; }
+        }
+        if (bestC >= 4.5)
+            return { bar: u, text: best };
+        let f = 1.0;
+        while (f < 3.0 && root.contrast(Config.colors.base, Qt.darker(u, f)) < 4.5)
+            f += 0.05;
+        return { bar: Qt.darker(u, f), text: Config.colors.base };
+    }
+    readonly property color urgentBar: urgentPair.bar
+    readonly property color urgentText: urgentPair.text
     function luminance(c) {
         // Config.colors holds strings ("#e3b9d6"); Qt.darker(x, 1) turns either form into a color
         const col = Qt.darker(c, 1.0);

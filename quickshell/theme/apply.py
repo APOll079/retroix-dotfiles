@@ -33,6 +33,8 @@ REQUIRED = ("base", "shadow", "highlight", "accent", "text", "outline")
 # text must be readable on every surface it sits on. fall25 is about 1.4:1 here, Win95 1.8:1.
 MIN_EDGE = 1.35
 MIN_TEXT = 4.5
+# urgent (warnings, errors, the privacy icons) must stand out from the face as a colour, not as body text
+MIN_URGENT = 3.0
 RELOAD_TIMEOUT = 10  # seconds per reload command
 USAGE = "usage: apply.py <theme> [--no-reload] [--palette FILE]"
 
@@ -105,6 +107,16 @@ def lift_highlight(base, highlight, target=1.40):
     return "#ffffff"
 
 
+def darken_to(colour, bg, target):
+    """colour, or colour darkened (HSV value, keeps the hue) until it reaches target:1 on bg."""
+    f = 1.0
+    c = colour
+    while contrast(c, bg) < target and f < 4.0:
+        f += 0.02
+        c = darker(colour, f)
+    return c
+
+
 def check_palette(roles, name):
     """Refuse a palette whose bevel or text can't be read, before any file is written."""
     problems = []
@@ -112,6 +124,9 @@ def check_palette(roles, name):
     if edge < MIN_EDGE:
         problems.append(f"highlight is only {edge:.2f}:1 lighter than base; the bevel's light edge needs {MIN_EDGE}:1 "
                         f"(try {lift_highlight(roles['base'], roles['highlight'])})")
+    if "urgent" in roles and contrast(roles["urgent"], roles["base"]) < MIN_URGENT:
+        u = contrast(roles["urgent"], roles["base"])
+        problems.append(f"urgent is only {u:.2f}:1 on base, it needs {MIN_URGENT}:1 (try {darken_to(roles['urgent'], roles['base'], MIN_URGENT + 0.2)})")
     for surface in ("base", "highlight", "shadow"):
         c = contrast(roles["text"], roles[surface])
         if c < MIN_TEXT:

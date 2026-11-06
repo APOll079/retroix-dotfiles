@@ -128,6 +128,8 @@ ShellRoot {
                 Cap { text: "base -> highlight " + MenuStyle.contrast(Config.colors.base, Config.colors.highlight).toFixed(2) }
                 Cap { text: "base -> bevelLight " + MenuStyle.contrast(Config.colors.base, MenuStyle.bevelLight).toFixed(2) }
                 Cap { text: "selectText / bar  " + MenuStyle.contrast(MenuStyle.selectText, MenuStyle.selectBar).toFixed(2) }
+                Cap { text: "urgent / base     " + MenuStyle.contrast(Config.colors.urgent, Config.colors.base).toFixed(2) + " (want >= 3)" }
+                Cap { text: "urgentText / bar  " + MenuStyle.contrast(MenuStyle.urgentText, MenuStyle.urgentBar).toFixed(2) }
                 Item { Layout.fillHeight: true }
             }
 
@@ -174,6 +176,19 @@ ShellRoot {
                             Popups.MenuSeparator { Layout.fillWidth: true }
                             Popups.MenuRow { Layout.fillWidth: true; text: "No icon, long text that has to be cut off" }
                         }
+                    }
+                }
+                Head { text: "PopupWindowFrame (inactive, critical)" }
+                Item {
+                    Layout.preferredWidth: MenuStyle.widthSmall
+                    Layout.preferredHeight: MenuStyle.chromeHeight + MenuStyle.rowHeight
+                    Popups.PopupWindowFrame {
+                        active: false
+                        windowTitle: "Battery low"
+                        windowTitleIcon: "\ue7f4"
+                        titleColor: MenuStyle.urgentBar
+                        titleTextColor: MenuStyle.urgentText
+                        Popups.MenuRow { width: parent.width; text: "Critical toast title"; reserveIcon: false }
                     }
                 }
                 Head { text: "PopupWindowFrame (inactive)" }
