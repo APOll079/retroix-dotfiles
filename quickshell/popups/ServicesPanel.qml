@@ -67,8 +67,8 @@ PanelWindow {
 
     Item {
         id: frame
-        width: MenuStyle.launcherWidth
-        height: MenuStyle.launcherHeight
+        width: MenuStyle.windowWidth
+        height: MenuStyle.windowHeight
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.screenHeight / 2 - height / 2)
 
@@ -157,18 +157,11 @@ PanelWindow {
                     padding: 2
                     clip: true
 
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
-                        width: parent.width - 2 * MenuStyle.pad
-                        horizontalAlignment: Text.AlignHCenter
-                        textFormat: Text.PlainText
-                        wrapMode: Text.Wrap
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.shown.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: root.error !== "" ? "\ue000" : (root.services.length === 0 ? "\ue8b8" : "\ue8b6")
                         text: root.error !== "" ? root.error : (root.services.length === 0 ? "No services listed" : "No matches")
                     }
 
@@ -180,10 +173,13 @@ PanelWindow {
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
                         boundsBehavior: Flickable.StopAtBounds
                         clip: true
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: MenuRow {
                             required property int index
                             required property var modelData
-                            width: list.width
+                            width: list.width - list.gutter
+                            reserveIcon: true
                             selected: index === root.cursor
                             text: modelData.name
                             subtext: modelData.info
@@ -193,9 +189,6 @@ PanelWindow {
                                 root.cursor = index;
                                 searchInput.focusInput();
                             }
-                        }
-                        ScrollIndicator.vertical: ScrollIndicator {
-                            active: list.moving
                         }
                     }
                 }
@@ -234,16 +227,8 @@ PanelWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: MenuStyle.gap
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
-                        text: root.busy ? "Working..." : (root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "")
                     }
                     BevelButton {
                         text: "Start"
@@ -266,6 +251,12 @@ PanelWindow {
                         focusPolicy: Qt.NoFocus
                         onClicked: root.act("restart")
                     }
+                }
+
+                StatusBar {
+                    kind: root.busy || root.current ? "message" : "state"
+                    text: root.busy ? "Working..." : (root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "No service selected")
+                    trailing: root.shown.length + " of " + root.services.length
                 }
             }
         }

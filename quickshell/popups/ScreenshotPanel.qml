@@ -80,8 +80,8 @@ PanelWindow {
 
     Item {
         id: frame
-        width: Math.round(root.width * MenuStyle.shotHistoryWidthFraction)
-        height: Math.round(root.screenHeight * MenuStyle.shotHistoryHeightFraction)
+        width: Math.min(MenuStyle.windowLargeWidth, root.width - 2 * MenuStyle.space12)
+        height: Math.min(MenuStyle.windowLargeHeight, root.screenHeight - 2 * MenuStyle.barHeight - 2 * MenuStyle.space12)
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.screenHeight / 2 - height / 2) - MenuStyle.barHeight
 
@@ -92,7 +92,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: root.page === 1 ? "Screenshots - " + (root.viewIndex + 1) + " of " + folderModel.count : "Screenshots"
-            windowTitleIcon: ""
+            windowTitleIcon: "\ue3b0"
 
             ColumnLayout {
                 id: keys
@@ -155,21 +155,20 @@ PanelWindow {
                         padding: 2
                         clip: true
 
-                        Text {
-                            renderType: Text.NativeRendering
-                            font.hintingPreference: Font.PreferFullHinting
+                        EmptyState {
                             anchors.centerIn: parent
+                            width: parent.width - 4 * MenuStyle.pad
                             visible: folderModel.count === 0
-                            font.family: MenuStyle.bodyFont
-                            font.pixelSize: MenuStyle.fontSize
-                            color: MenuStyle.bevelDark
+                            glyph: "\ue3f4"
                             text: "No screenshots"
                         }
 
                         GridView {
                             id: grid
                             anchors.fill: parent
-                            cellWidth: width / MenuStyle.shotGridColumns
+                            readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                            cellWidth: (width - gutter) / MenuStyle.shotGridColumns
+                            ScrollBar.vertical: RetroScrollBar {}
                             cellHeight: cellWidth * 9 / 16 + MenuStyle.gap
                             clip: true
                             currentIndex: 0
@@ -211,9 +210,6 @@ PanelWindow {
                                     onDoubleClicked: root.openViewer(cell.index)
                                 }
                             }
-                            ScrollIndicator.vertical: ScrollIndicator {
-                                active: grid.moving
-                            }
                         }
                     }
 
@@ -246,86 +242,67 @@ PanelWindow {
 
                     BevelButton {
                         visible: root.page === 1
-                        glyph: ""
+                        glyph: "\ue9b0"
                         text: "Grid"
                         focusPolicy: Qt.NoFocus
                         onClicked: root.closeViewer()
                     }
                     BevelButton {
                         visible: root.page === 1
-                        glyph: ""
+                        glyph: "\ue5cb"
                         enabled: root.viewIndex > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.step(-1)
                     }
                     BevelButton {
                         visible: root.page === 1
-                        glyph: ""
+                        glyph: "\ue5cc"
                         enabled: root.viewIndex < folderModel.count - 1
                         focusPolicy: Qt.NoFocus
                         onClicked: root.step(1)
                     }
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: root.targets.length === 0 ? MenuStyle.bevelDark : Config.colors.text
-                        text: root.statusText()
                     }
                     BevelButton {
-                        glyph: ""
+                        glyph: "\ue14d"
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.copy(root.targets)
                     }
                     BevelButton {
-                        glyph: ""
+                        glyph: "\ue89e"
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.openFiles(root.targets)
                     }
                     BevelButton {
-                        glyph: ""
+                        glyph: "\ue872"
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.confirmDelete = true
                     }
                     BevelButton {
                         visible: root.page === 0
-                        glyph: ""
+                        glyph: "\ue2c8"
                         focusPolicy: Qt.NoFocus
                         onClicked: Quickshell.execDetached(["xdg-open", root.dir])
                     }
                 }
-                RowLayout {
+                ConfirmBar {
+                    id: confirmBar
                     Layout.fillWidth: true
-                    spacing: MenuStyle.gap
                     visible: root.confirmDelete
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
-                        Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: Config.colors.text
-                        text: root.targets.length === 1 ? "Move " + root.baseName(root.targets[0]) + " to the trash?" : "Move " + root.targets.length + " shots to the trash?"
-                    }
-                    BevelButton {
-                        text: "Move to Trash"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.trash(root.targets)
-                    }
-                    BevelButton {
-                        text: "Cancel"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.confirmDelete = false
-                    }
+                    message: root.targets.length === 1 ? "Move " + root.baseName(root.targets[0]) + " to the trash?" : "Move " + root.targets.length + " shots to the trash?"
+                    verb: "Move to Trash"
+                    glyph: "\ue872"
+                    onAccepted: root.trash(root.targets)
+                    onCanceled: root.confirmDelete = false
+                }
+                StatusBar {
+                    kind: root.targets.length === 0 ? "state" : "message"
+                    text: root.statusText()
+                    trailing: root.targets.length > 0 ? folderModel.count + " shots" : ""
                 }
             }
         }
@@ -491,9 +468,9 @@ PanelWindow {
         event.accepted = true;
         if (root.confirmDelete) {
             if (k === Qt.Key_Return || k === Qt.Key_Enter)
-                root.trash(root.targets);
+                confirmBar.accept();
             else if (k === Qt.Key_Escape)
-                root.confirmDelete = false;
+                confirmBar.cancel();
             return;
         }
         if (k === Qt.Key_Delete) {

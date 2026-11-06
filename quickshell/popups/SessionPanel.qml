@@ -26,7 +26,7 @@ PopupWindow {
 
     PopupWindowFrame {
         windowTitle: "Session"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue8ac"
 
         ColumnLayout {
             id: column
@@ -68,34 +68,15 @@ PopupWindow {
             }
 
             // Confirm
-            ColumnLayout {
+            ConfirmBar {
+                id: confirmBar
                 Layout.fillWidth: true
                 visible: !!root.pending
-                spacing: MenuStyle.pad
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    horizontalAlignment: Text.AlignHCenter
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.pending ? root.pending.prompt : ""
-                }
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: MenuStyle.pad
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: root.pending ? root.pending.verb : ""
-                        onClicked: root.run(root.pending)
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Cancel"
-                        onClicked: root.pending = null
-                    }
-                }
+                message: root.pending ? root.pending.prompt : ""
+                verb: root.pending ? root.pending.verb : ""
+                glyph: "\ue002"
+                onAccepted: root.run(root.pending)
+                onCanceled: root.pending = null
             }
 
             // Countdown

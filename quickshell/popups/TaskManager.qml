@@ -5,6 +5,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
+// Qt Controls has its own ContextMenu; ours is reached through Local
+import "." as Local
 
 // Task Manager (Ctrl+Shift+Esc, left click on the bar's CPU button, `qs ipc call taskmanager open`),
 // Win95 style. A normal window Hyprland manages (an xdg toplevel: move, resize, tile, Super+Q), one for
@@ -58,17 +60,28 @@ FloatingWindow {
 
     Item {
         id: frame
+
+        // Dropdowns of the menu bar (popup windows, closed until a title opens them)
+        Local.ContextMenu {
+            id: fileMenu
+            onVisibleChanged: if (!visible) root.refocus()
+        }
+        Local.ContextMenu {
+            id: viewMenu
+            onVisibleChanged: if (!visible) root.refocus()
+        }
         anchors.fill: parent
 
         // Keys for the tabs without a text field (Apps, Performance)
         Item {
             id: keys
             focus: true
+            Keys.onPressed: event => root.menuKey(event)
             Keys.onEscapePressed: root.cancelOrClose()
             Keys.onUpPressed: root.appIndex = Math.max(0, root.appIndex - 1)
             Keys.onDownPressed: root.appIndex = Math.min(root.apps.length - 1, root.appIndex + 1)
-            Keys.onReturnPressed: root.confirm ? root.doConfirm() : root.switchToApp()
-            Keys.onEnterPressed: root.confirm ? root.doConfirm() : root.switchToApp()
+            Keys.onReturnPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
+            Keys.onEnterPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
             Keys.onTabPressed: event => {
                 if (event.modifiers & Qt.ControlModifier)
                     root.cycleTab(1);
@@ -85,6 +98,23 @@ FloatingWindow {
             ColumnLayout {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
+
+                // Menu bar: File / View open a dropdown (ContextMenu) with actions this window already has
+                Row {
+                    Layout.fillWidth: true
+                    MenuTitle {
+                        id: fileTitle
+        text: "File"
+                        menu: fileMenu
+                        build: root.fileModel
+                    }
+                    MenuTitle {
+                        id: viewTitle
+        text: "View"
+                        menu: viewMenu
+                        build: root.viewModel
+                    }
+                }
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -113,14 +143,11 @@ FloatingWindow {
                     visible: root.tab === "apps"
                     padding: 2
                     clip: true
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.apps.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: "\ue8b0"
                         text: "No open windows"
                     }
                     ListView {
@@ -130,11 +157,14 @@ FloatingWindow {
                         currentIndex: root.appIndex
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: MenuRow {
                             required property int index
                             required property var modelData
-                            width: appList.width
+                            width: appList.width - appList.gutter
+                            reserveIcon: true
                             selected: index === root.appIndex
                             iconSource: Quickshell.iconPath(String(modelData.lastIpcObject.class || "").toLowerCase(), true)
                             glyph: "\ue8b0"
@@ -161,6 +191,8 @@ FloatingWindow {
                         placeholder: "Filter programs"
                         onEscaped: root.cancelOrClose()
                         onKeyPressed: event => {
+                            if (root.menuKey(event))
+                                return;
                             const i = root.groups.findIndex(g => g.name === root.selectedName);
                             if (event.key === Qt.Key_Down) {
                                 root.selectAt(Math.min(root.groups.length - 1, i + 1));
@@ -172,11 +204,11 @@ FloatingWindow {
                                 root.askEnd(false);
                                 event.accepted = true;
                             } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
-                                root.doConfirm();
+                                confirmBar.accept();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Escape && root.confirm) {
                                 // An open confirm row backs out first, before the filter is cleared
-                                root.confirm = null;
+                                confirmBar.cancel();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
                                 root.cycleTab(1);
@@ -210,14 +242,7 @@ FloatingWindow {
                             text: modelData.text + (root.sortKey === modelData.key ? (root.sortDesc ? " ▾" : " ▴") : "")
                             checked: root.sortKey === modelData.key
                             focusPolicy: Qt.NoFocus
-                            onClicked: {
-                                if (root.sortKey === modelData.key)
-                                    root.sortDesc = !root.sortDesc;
-                                else {
-                                    root.sortKey = modelData.key;
-                                    root.sortDesc = modelData.key !== "name";
-                                }
-                            }
+                            onClicked: root.sortBy(modelData.key)
                         }
                     }
                 }
@@ -228,14 +253,11 @@ FloatingWindow {
                     visible: root.tab === "processes"
                     padding: 2
                     clip: true
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.groups.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: root.sample ? "\ue8b6" : "\ue88b"
                         text: root.sample ? "No matches" : "Reading processes..."
                     }
                     ListView {
@@ -244,12 +266,14 @@ FloatingWindow {
                         model: root.groups
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: Rectangle {
                             id: procRow
                             required property int index
                             required property var modelData
                             readonly property bool sel: modelData.name === root.selectedName
-                            width: procList.width
+                            width: procList.width - procList.gutter
                             height: MenuStyle.rowHeight
                             color: sel ? MenuStyle.selectBar : (rowMouse.containsMouse ? Config.colors.highlight : "transparent")
                             readonly property color ink: sel ? MenuStyle.selectText : (modelData.mine ? Config.colors.text : Config.colors.shadow)
@@ -290,9 +314,6 @@ FloatingWindow {
                                 onClicked: root.selectedName = procRow.modelData.name
                             }
                         }
-                        ScrollIndicator.vertical: ScrollIndicator {
-                            active: procList.moving
-                        }
                     }
                 }
 
@@ -326,55 +347,101 @@ FloatingWindow {
                     }
                 }
 
-                // --- Actions / confirm ---
+                // --- Confirm: replaces the action row while a question is open ---
+                ConfirmBar {
+                    id: confirmBar
+                    Layout.fillWidth: true
+                    visible: root.confirm !== null
+                    message: root.confirm ? root.confirm.text : ""
+                    verb: root.confirm ? root.confirm.verb : ""
+                    glyph: "\ue002"
+                    onAccepted: root.doConfirm()
+                    onCanceled: root.confirm = null
+                }
+
+                // --- Actions ---
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: root.confirm === null
                     spacing: MenuStyle.gap
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: root.confirm ? Config.colors.text : MenuStyle.bevelDark
-                        text: root.confirm ? root.confirm.text : root.notice !== "" ? root.notice : root.statusText()
                     }
                     BevelButton {
-                        visible: root.confirm !== null
-                        text: root.confirm ? root.confirm.verb : ""
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.doConfirm()
-                    }
-                    BevelButton {
-                        visible: root.confirm !== null
-                        text: "Cancel"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.confirm = null
-                    }
-                    BevelButton {
-                        visible: !root.confirm && root.tab === "apps"
+                        visible: root.tab === "apps"
                         text: "Switch to"
                         enabled: root.selectedApp !== null
                         focusPolicy: Qt.NoFocus
                         onClicked: root.switchToApp()
                     }
                     BevelButton {
-                        visible: !root.confirm && root.tab !== "performance"
+                        visible: root.tab !== "performance"
                         text: "End task"
                         enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
                         focusPolicy: Qt.NoFocus
                         onClicked: root.askEnd(false)
                     }
                     BevelButton {
-                        visible: !root.confirm && root.tab !== "performance"
+                        visible: root.tab !== "performance"
                         text: "Kill"
                         enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
                         focusPolicy: Qt.NoFocus
                         onClicked: root.askEnd(true)
                     }
                 }
+
+                StatusBar {
+                    text: root.notice !== "" ? root.notice : root.statusText()
+                    kind: root.notice !== "" ? "message" : "state"
+                    trailing: root.tab === "apps" ? root.apps.length + (root.apps.length === 1 ? " window" : " windows")
+                        : root.tab === "processes" ? root.groups.length + (root.groups.length === 1 ? " program" : " programs") : ""
+                }
+            }
+        }
+    }
+
+    // A menu title in the window's menu bar: flat until hovered or open, then the accent bar. Click opens
+    // the dropdown under it, a second click closes it. `build` returns the ContextMenu model when it opens.
+    component MenuTitle: Rectangle {
+        id: mt
+        property string text: ""
+        property var menu: null
+        property var build: null
+        property real closedAt: 0
+        readonly property bool lit: area.containsMouse || (mt.menu !== null && mt.menu.visible)
+        implicitWidth: label.implicitWidth + 2 * MenuStyle.pad
+        implicitHeight: MenuStyle.rowHeight
+        color: mt.lit ? MenuStyle.selectBar : "transparent"
+        RetroText {
+            id: label
+            anchors.centerIn: parent
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: mt.lit ? MenuStyle.selectText : Config.colors.text
+            text: mt.text
+        }
+        MouseArea {
+            id: area
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: mt.toggle()
+        }
+        function toggle() {
+            if (mt.menu.visible) {
+                mt.menu.close();
+                return;
+            }
+            // the click that dismissed the menu (its grab) must not open it again
+            if (Date.now() - mt.closedAt < 250)
+                return;
+            mt.menu.model = mt.build();
+            mt.menu.openAt(mt, 0, mt.height);
+        }
+        Connections {
+            target: mt.menu
+            function onVisibleChanged() {
+                if (!mt.menu.visible)
+                    mt.closedAt = Date.now();
             }
         }
     }
@@ -439,6 +506,70 @@ FloatingWindow {
                 }
             }
         }
+    }
+
+    // --- menu bar models (only actions the window already has: its buttons, tabs, sort and filter) ---
+
+    readonly property bool canEnd: root.confirm === null && (root.tab === "apps" ? root.selectedApp !== null : (root.tab === "processes" && root.selectedGroup !== null && root.selectedGroup.mine))
+
+    function fileModel() {
+        return [
+            { text: "Switch to", enabled: root.confirm === null && root.tab === "apps" && root.selectedApp !== null, action: () => root.switchToApp() },
+            { text: "End task", enabled: root.canEnd, action: () => root.askEnd(false) },
+            { text: "Kill", enabled: root.canEnd, action: () => root.askEnd(true) },
+            { separator: true },
+            { text: "Close", action: () => root.cancelOrClose() }
+        ];
+    }
+
+    function viewModel() {
+        const inProcs = root.tab === "processes";
+        const out = [
+            { text: "Apps", checked: root.tab === "apps", action: () => root.showTab("apps") },
+            { text: "Processes", checked: root.tab === "processes", action: () => root.showTab("processes") },
+            { text: "Performance", checked: root.tab === "performance", action: () => root.showTab("performance") },
+            { separator: true },
+            { text: "Only my processes", checked: root.mineOnly, enabled: inProcs, action: () => root.mineOnly = !root.mineOnly },
+            { separator: true }
+        ];
+        for (const c of [["name", "Sort by Program"], ["cpu", "Sort by CPU"], ["mem", "Sort by Memory"], ["count", "Sort by Procs"]])
+            out.push({ text: c[1], checked: root.sortKey === c[0], enabled: inProcs, action: () => root.sortBy(c[0]) });
+        return out;
+    }
+
+    // Click a column header, or pick Sort by: a new column starts in its natural order, the same one flips it
+    function sortBy(key) {
+        if (root.sortKey === key)
+            root.sortDesc = !root.sortDesc;
+        else {
+            root.sortKey = key;
+            root.sortDesc = key !== "name";
+        }
+    }
+
+    // Alt+F / Alt+V open the File / View menu (the same toggle as clicking the title)
+    function menuKey(event) {
+        if (!(event.modifiers & Qt.AltModifier))
+            return false;
+        if (event.key === Qt.Key_F) {
+            fileTitle.toggle();
+            event.accepted = true;
+            return true;
+        }
+        if (event.key === Qt.Key_V) {
+            viewTitle.toggle();
+            event.accepted = true;
+            return true;
+        }
+        return false;
+    }
+
+    // Keyboard focus back to where the tab keeps it, after a menu closed
+    function refocus() {
+        if (root.tab === "processes")
+            filter.focusInput();
+        else
+            keys.forceActiveFocus();
     }
 
     // --- data ---

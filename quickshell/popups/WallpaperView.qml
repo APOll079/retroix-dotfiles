@@ -115,28 +115,24 @@ Item {
             padding: 2
             clip: true
 
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
+            EmptyState {
                 anchors.centerIn: parent
                 width: parent.width - 4 * MenuStyle.pad
                 visible: root.results.length === 0
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: MenuStyle.bevelDark
+                glyph: !WallpaperState.loaded ? "\ue88b" : (WallpaperState.folderSlow || WallpaperState.folderMissing) ? "\ue000" : root.query !== "" ? "\ue8b6" : "\ue1bc"
                 text: !WallpaperState.loaded ? "Looking for wallpapers..."
                     : WallpaperState.folderSlow ? "Wallpaper folder is not answering\n" + WallpaperState.folder
                     : WallpaperState.folderMissing ? "No folder " + WallpaperState.folder + "\nMake it and put images in it (png, jpg, webp)"
-                    : root.query !== "" ? "No match"
+                    : root.query !== "" ? "No matches"
                     : "No images in " + WallpaperState.folder
             }
 
             GridView {
                 id: grid
                 anchors.fill: parent
-                cellWidth: width / MenuStyle.wallGridColumns
+                readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                cellWidth: (width - gutter) / MenuStyle.wallGridColumns
+                ScrollBar.vertical: RetroScrollBar {}
                 cellHeight: (cellWidth - 2 * MenuStyle.gap) * 9 / 16 + MenuStyle.rowHeight + 2 * MenuStyle.gap
                 clip: true
                 currentIndex: root.cursor
@@ -180,7 +176,7 @@ Item {
                                 font.family: MenuStyle.iconFont
                                 font.pixelSize: MenuStyle.spotifyTileIcon
                                 color: MenuStyle.bevelDark
-                                text: img.status === Image.Error ? "" : ""
+                                text: img.status === Image.Error ? "\ue3ad" : "\ue3f4"
                             }
                         }
                         // Name, and the monitors showing it on the right
@@ -234,9 +230,6 @@ Item {
                         onDoubleClicked: root.apply(cell.modelData, false)
                     }
                 }
-                ScrollIndicator.vertical: ScrollIndicator {
-                    active: grid.moving
-                }
             }
         }
 
@@ -275,41 +268,21 @@ Item {
             }
             BevelButton {
                 text: "Set"
-                glyph: ""
+                glyph: "\ue876"
                 enabled: root.current !== ""
                 focusPolicy: Qt.NoFocus
                 onClicked: root.apply(root.current, false)
             }
         }
 
-        // Status: an error from hyprpaper (urgent icon, normal text: urgent text on base is
-        // unreadable), else the selected file, else the folder
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: MenuStyle.gap
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                visible: WallpaperState.status !== ""
-                font.family: MenuStyle.iconFont
-                font.pixelSize: MenuStyle.iconSize
-                color: Config.colors.urgent
-                text: "error"
-            }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                textFormat: Text.PlainText
-                Layout.fillWidth: true
-                elide: Text.ElideMiddle
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: WallpaperState.status !== "" ? Config.colors.text : MenuStyle.bevelDark
-                text: WallpaperState.status !== "" ? WallpaperState.status
-                    : WallpaperState.info !== "" ? WallpaperState.info
-                    : root.current !== "" ? (root.cursor + 1) + " / " + root.results.length + "   " + root.current + "   in " + root.tilde(WallpaperState.folder)
-                    : root.tilde(WallpaperState.folder)
-            }
+        // Status: an error from hyprpaper, else what the last Set did, else the selected file, else the folder
+        StatusBar {
+            kind: WallpaperState.status !== "" ? "error" : WallpaperState.info !== "" ? "message" : "state"
+            text: WallpaperState.status !== "" ? WallpaperState.status
+                : WallpaperState.info !== "" ? WallpaperState.info
+                : root.current !== "" ? root.current + "   in " + root.tilde(WallpaperState.folder)
+                : root.tilde(WallpaperState.folder)
+            trailing: root.current !== "" ? (root.cursor + 1) + " / " + root.results.length : ""
         }
     }
 }
