@@ -16,6 +16,8 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | dusty | `#e3b9d6` | `#a47aa0` | `#fbe3f6` | `#d4609a` | `#2a1228` | `#20091d` | `#985740` | 1.43 | 10.0 |
 | indigo | `#bac4e6` | `#7e8bad` | `#e3e7f5` | `#3e7c99` | `#0d0d19` | `#1a2135` | `#c12f2f` | 1.40 | 11.1 |
 | gleep | `#bae6c5` | `#93c48c` | `#ffffff` | `#3e9949` | `#0d1913` | `#21351a` | `#be5742` | 1.38 | 13.1 |
+| win95 | `#c0c0c0` | `#808080` | `#ffffff` | `#000080` | `#000000` | `#000000` | `#b00000` | 1.82 | 11.5 |
+| platinum | `#dddddd` | `#999999` | `#ffffff` | `#5c5ca8` | `#000000` | `#000000` | `#b83030` | 1.36 | 15.5 |
 
 ## Spacing
 

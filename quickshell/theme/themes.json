@@ -64,5 +64,27 @@
         "outline": "#21351a",
         "outlineGradientFade": "#284223",
         "defaultWallpaperPath": ""
+    },
+    "win95": {
+        "base": "#c0c0c0",
+        "shadow": "#808080",
+        "highlight": "#ffffff",
+        "urgent": "#b00000",
+        "accent": "#000080",
+        "text": "#000000",
+        "outline": "#000000",
+        "outlineGradientFade": "#404040",
+        "defaultWallpaperPath": ""
+    },
+    "platinum": {
+        "base": "#dddddd",
+        "shadow": "#999999",
+        "highlight": "#ffffff",
+        "urgent": "#b83030",
+        "accent": "#5c5ca8",
+        "text": "#000000",
+        "outline": "#000000",
+        "outlineGradientFade": "#333333",
+        "defaultWallpaperPath": ""
     }
 }

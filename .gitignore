@@ -41,3 +41,5 @@ tmp/
 # --- GTK 4 theme links into ~/.local/share/themes (absolute, made by install.sh's GTK step) ---
 gtk-4.0/gtk.css
 gtk-4.0/assets
+# --- machine-local Hyprland monitors (copy hypr/monitors_local.lua.example) ---
+hypr/monitors_local.lua

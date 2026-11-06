@@ -1,0 +1,10 @@
+---@module 'hl'
+
+-- Copy this file to monitors_local.lua (gitignored) on a machine whose screens differ from monitors.lua, e.g. a laptop.
+-- It is loaded after monitors.lua, so a monitor named here wins; unknown outputs in monitors.lua are ignored by Hyprland.
+hl.monitor({
+    output   = "eDP-1",
+    mode     = "preferred",
+    position = "auto",
+    scale    = 1
+})

@@ -76,6 +76,11 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, my share (never looked at)
+- [ ] Super+V opens the clipboard with no tabs; Super+D still has Apps / Games / Clipboard and the Clipboard tab works there
+- [ ] Themes menu: "win95" and "platinum" appear; applying each re-colours the bar, kitty and GTK; do the borders and the select colour read well? (apply.py accepts both)
+- [ ] Laptop profile: copy `hypr/monitors_local.lua.example` to `monitors_local.lua` on the laptop; its screen comes up without editing `monitors.lua`
+
 ### Round 3, my share (never looked at)
 - [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Ctrl+T drops the terminal down and hides it again; Super+Ctrl+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
 - [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed
