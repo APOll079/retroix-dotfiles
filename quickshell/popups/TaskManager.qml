@@ -67,8 +67,8 @@ FloatingWindow {
             Keys.onEscapePressed: root.cancelOrClose()
             Keys.onUpPressed: root.appIndex = Math.max(0, root.appIndex - 1)
             Keys.onDownPressed: root.appIndex = Math.min(root.apps.length - 1, root.appIndex + 1)
-            Keys.onReturnPressed: root.confirm ? root.doConfirm() : root.switchToApp()
-            Keys.onEnterPressed: root.confirm ? root.doConfirm() : root.switchToApp()
+            Keys.onReturnPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
+            Keys.onEnterPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
             Keys.onTabPressed: event => {
                 if (event.modifiers & Qt.ControlModifier)
                     root.cycleTab(1);
@@ -172,11 +172,11 @@ FloatingWindow {
                                 root.askEnd(false);
                                 event.accepted = true;
                             } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
-                                root.doConfirm();
+                                confirmBar.accept();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Escape && root.confirm) {
                                 // An open confirm row backs out first, before the filter is cleared
-                                root.confirm = null;
+                                confirmBar.cancel();
                                 event.accepted = true;
                             } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
                                 root.cycleTab(1);
@@ -322,9 +322,22 @@ FloatingWindow {
                     }
                 }
 
-                // --- Actions / confirm ---
+                // --- Confirm: replaces the action row while a question is open ---
+                ConfirmBar {
+                    id: confirmBar
+                    Layout.fillWidth: true
+                    visible: root.confirm !== null
+                    message: root.confirm ? root.confirm.text : ""
+                    verb: root.confirm ? root.confirm.verb : ""
+                    glyph: "\ue002"
+                    onAccepted: root.doConfirm()
+                    onCanceled: root.confirm = null
+                }
+
+                // --- Actions ---
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: root.confirm === null
                     spacing: MenuStyle.gap
                     Text {
                         renderType: Text.NativeRendering
@@ -334,37 +347,25 @@ FloatingWindow {
                         elide: Text.ElideRight
                         font.family: MenuStyle.bodyFont
                         font.pixelSize: MenuStyle.fontSize
-                        color: root.confirm ? Config.colors.text : MenuStyle.bevelDark
-                        text: root.confirm ? root.confirm.text : root.notice !== "" ? root.notice : root.statusText()
+                        color: MenuStyle.bevelDark
+                        text: root.notice !== "" ? root.notice : root.statusText()
                     }
                     BevelButton {
-                        visible: root.confirm !== null
-                        text: root.confirm ? root.confirm.verb : ""
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.doConfirm()
-                    }
-                    BevelButton {
-                        visible: root.confirm !== null
-                        text: "Cancel"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.confirm = null
-                    }
-                    BevelButton {
-                        visible: !root.confirm && root.tab === "apps"
+                        visible: root.tab === "apps"
                         text: "Switch to"
                         enabled: root.selectedApp !== null
                         focusPolicy: Qt.NoFocus
                         onClicked: root.switchToApp()
                     }
                     BevelButton {
-                        visible: !root.confirm && root.tab !== "performance"
+                        visible: root.tab !== "performance"
                         text: "End task"
                         enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
                         focusPolicy: Qt.NoFocus
                         onClicked: root.askEnd(false)
                     }
                     BevelButton {
-                        visible: !root.confirm && root.tab !== "performance"
+                        visible: root.tab !== "performance"
                         text: "Kill"
                         enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
                         focusPolicy: Qt.NoFocus

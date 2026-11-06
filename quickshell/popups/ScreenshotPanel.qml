@@ -297,31 +297,15 @@ PanelWindow {
                         onClicked: Quickshell.execDetached(["xdg-open", root.dir])
                     }
                 }
-                RowLayout {
+                ConfirmBar {
+                    id: confirmBar
                     Layout.fillWidth: true
-                    spacing: MenuStyle.gap
                     visible: root.confirmDelete
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
-                        Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: Config.colors.text
-                        text: root.targets.length === 1 ? "Move " + root.baseName(root.targets[0]) + " to the trash?" : "Move " + root.targets.length + " shots to the trash?"
-                    }
-                    BevelButton {
-                        text: "Move to Trash"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.trash(root.targets)
-                    }
-                    BevelButton {
-                        text: "Cancel"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.confirmDelete = false
-                    }
+                    message: root.targets.length === 1 ? "Move " + root.baseName(root.targets[0]) + " to the trash?" : "Move " + root.targets.length + " shots to the trash?"
+                    verb: "Move to Trash"
+                    glyph: "\ue872"
+                    onAccepted: root.trash(root.targets)
+                    onCanceled: root.confirmDelete = false
                 }
             }
         }
@@ -487,9 +471,9 @@ PanelWindow {
         event.accepted = true;
         if (root.confirmDelete) {
             if (k === Qt.Key_Return || k === Qt.Key_Enter)
-                root.trash(root.targets);
+                confirmBar.accept();
             else if (k === Qt.Key_Escape)
-                root.confirmDelete = false;
+                confirmBar.cancel();
             return;
         }
         if (k === Qt.Key_Delete) {
