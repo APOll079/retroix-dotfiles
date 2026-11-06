@@ -226,16 +226,18 @@ PanelWindow {
                                     }
 
                                     Flickable {
+                                        id: previewFlick
                                         anchors.fill: parent
                                         visible: root.previewImage === ""
                                         contentHeight: previewLabel.implicitHeight
                                         boundsBehavior: Flickable.StopAtBounds
                                         clip: true
+                                        ScrollBar.vertical: RetroScrollBar {}
                                         Text {
                                             id: previewLabel
                                             renderType: Text.NativeRendering
                                             font.hintingPreference: Font.PreferFullHinting
-                                            width: parent.width
+                                            width: parent.width - (previewFlick.ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0)
                                             wrapMode: Text.WrapAnywhere
                                             font.family: MenuStyle.bodyFont
                                             font.pixelSize: MenuStyle.fontSize
@@ -282,7 +284,7 @@ PanelWindow {
                                         clip: true
 
                                         delegate: MenuRow {
-                                            width: appsView.width
+                                            width: appsView.width - (appsView.ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0)
                                             selected: index === appsView.currentIndex
                                             text: modelData.title
                                             subtext: modelData.sub || ""
@@ -307,9 +309,7 @@ PanelWindow {
                                             }
                                         }
 
-                                        ScrollIndicator.vertical: ScrollIndicator {
-                                            active: appsView.moving
-                                        }
+                                        ScrollBar.vertical: RetroScrollBar {}
                                     }
                                 }
                             }
