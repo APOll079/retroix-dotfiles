@@ -52,8 +52,8 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `iconSize` | int | `16` |  |
 | `iconSizeLarge` | int | `20` |  |
 | `barStatusFontSize` | int | `11` |  |
-| `barStrongFont` | string | `liberationSans.name` |  |
-| `barStrongFontSize` | int | `14` |  |
+| `barStrongFont` | string | `bodyFont` |  |
+| `barStrongFontSize` | int | `fontSize` |  |
 | `shareIconSize` | int | `32` |  |
 | `spotifyButtonGlyph` | int | `iconSizeLarge` | the icon on those buttons |
 | `lyricsFontSize` | int | `16` | Monaco hints cleanly at 12 and 16 |

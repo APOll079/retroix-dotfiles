@@ -59,11 +59,11 @@ Singleton {
     // Status bar at the bottom of a window (StatusBar): one 12px line
     readonly property int statusHeight: 18
     readonly property int barStatusFontSize: 11
-    // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
-    // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and
-    // Charcoal too heavy.
-    readonly property string barStrongFont: liberationSans.name
-    readonly property int barStrongFontSize: 14
+    // Lyrics / now-playing line in the bar centre: Monaco 12 like the rest of the bar (B4; it was
+    // Liberation Sans 14, the only sans on the bar; Monaco looked wavy at 14, it hints cleanly at 12).
+    // Liberation Sans stays bundled in fonts/ (OFL) but nothing uses it now.
+    readonly property string barStrongFont: bodyFont
+    readonly property int barStrongFontSize: fontSize
 
     // Component sizes
     // Window sizes: M for every big window (launcher and its tabs, Games, Wallpapers, Services, cheat sheet,

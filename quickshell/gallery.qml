@@ -292,7 +292,7 @@ ShellRoot {
                 Cap { text: "Monaco 12: The quick brown fox" }
                 Cap { text: "Monaco 16: The quick brown"; font.pixelSize: MenuStyle.lyricsFontSize }
                 Cap { text: "Charcoal title"; font.family: MenuStyle.titleFont; font.bold: true }
-                Cap { text: "Liberation Sans 14 centre"; font.family: MenuStyle.barStrongFont; font.pixelSize: MenuStyle.barStrongFontSize }
+                Cap { text: "Bar centre font (barStrongFont)"; font.family: MenuStyle.barStrongFont; font.pixelSize: MenuStyle.barStrongFontSize }
                 Row {
                     spacing: MenuStyle.pad
                     Cap { text: "icons 16 / 20"; anchors.verticalCenter: parent.verticalCenter }
@@ -310,6 +310,17 @@ ShellRoot {
                 y: page.outer * 2 + page.columnsHeight
                 width: page.width - 2 * page.outer
                 spacing: MenuStyle.gap
+                Head { text: "Bar centre title (strong)" }
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: MenuStyle.barHeight
+                    color: Config.colors.base
+                    BarButton {
+                        anchors.centerIn: parent
+                        iconFontValue: ""; interactive: false; tucked: true; strong: true; dim: false
+                        label: "The Books - Smells Like Content"
+                    }
+                }
                 Head { text: "Bar right side: a box per item (today) / one tray well (B1)" }
                 component BarStrip: Rectangle {
                     default property alias items: stripRow.data
