@@ -77,37 +77,24 @@ border.color: Config.colors.outline
 }
 }
 
-// Left section: gripper, workspaces box, etched divider before Start/Theme
+// Left section: gripper, workspaces (plain raised buttons, the active one sunken), etched divider before Start/Theme
 Gripper {
 id: leftGripper
 anchors.verticalCenter: parent.verticalCenter
 anchors.left: parent.left
 anchors.leftMargin: 8
 }
-Item {
-id: workspacesBox
+Workspaces {
+id: workspaces
 anchors.verticalCenter: parent.verticalCenter
 anchors.left: leftGripper.right
 anchors.leftMargin: MenuStyle.gap
-height: MenuStyle.barButtonHeight + 4
-width: workspaces.width + 6
-Rectangle {
-anchors.fill: parent
-color: Config.colors.base
-border.width: 1
-border.color: Config.colors.outline
-}
-Workspaces {
-id: workspaces
-anchors.leftMargin: 3
-anchors.rightMargin: 0
-}
 }
 Popups.MenuSeparator {
 id: leftDivider
 vertical: true
 anchors.verticalCenter: parent.verticalCenter
-anchors.left: workspacesBox.right
+anchors.left: workspaces.right
 anchors.leftMargin: MenuStyle.gap
 }
 
@@ -275,7 +262,7 @@ tucked: true
 strong: true
 dim: Media.paused
 label: Lyrics.line !== "" && !Media.paused ? Lyrics.line : Media.text
-maxLabelWidth: Math.max(0, Math.min(MenuStyle.barMediaMaxWidth, taskbar.centreRoom(rightGripper.x)))
+maxLabelWidth: Math.max(0, Math.min(MenuStyle.barMediaMaxWidth, taskbar.centreRoom(trayWell.x)))
 // Left click: the Spotify drawer; middle click: play / pause
 MouseArea {
 anchors.fill: parent
@@ -401,7 +388,7 @@ return 2 * Math.min(taskbar.width / 2 - leftEnd, rightStart - taskbar.width / 2)
 // (up to barMediaMinWidth; a short title never costs the GPU part).
 // Worked out as if the GPU part were shown (so hiding it can't flip it back): where the right
 // section's gripper would start then.
-readonly property real rightStartWithGpu: sysTray.x - laptopControls.anchors.rightMargin - laptopControls.widthWithGpu - MenuStyle.gap - MenuStyle.gripperWidth
+readonly property real rightStartWithGpu: taskbar.width - trayWell.anchors.rightMargin - laptopControls.widthWithGpu - trayRest.width - sysTray.width - 2 * MenuStyle.barWellPad - 2
 TextMetrics {
 id: nowPlayingMetrics
 font.family: MenuStyle.barStrongFont
@@ -409,33 +396,30 @@ font.pixelSize: MenuStyle.barStrongFontSize
 text: nowPlaying.label
 }
 
-// Right section: gripper, then raised buttons (sysmon, ETH, Bluetooth), tray, bell/clock
-Gripper {
-id: rightGripper
+// Right section: one sunken well (BarWell) with flat items split by etched separators between groups:
+// [privacy, caffeine] | sysmon | [ETH, Bluetooth] | tray icons | bell + weather + clock
+BarWell {
+id: trayWell
 anchors.verticalCenter: parent.verticalCenter
-anchors.right: laptopControls.left
+anchors.right: parent.right
 anchors.rightMargin: MenuStyle.gap
-}
 LaptopControls {
 id: laptopControls
-anchors.verticalCenter: parent.verticalCenter
-anchors.right: sysTray.left
-anchors.rightMargin: 8
 currentPopup: root.currentPopup
 toggleMenu: taskbar.toggleMenu
 bluetoothMenuRef: bluetoothMenu
 sysMonMenuRef: sysMonMenu
 showGpu: Media.text === "" || taskbar.centreRoom(taskbar.rightStartWithGpu) >= Math.min(MenuStyle.barMediaMinWidth, nowPlayingMetrics.advanceWidth)
 }
-
-/*=== System tray + clock ===*/
+Popups.MenuSeparator {
+id: trayRest
+vertical: true
+}
 SysTray {
 id: sysTray
-anchors.right: parent.right
-anchors.verticalCenter: parent.verticalCenter
-anchors.rightMargin: 8
 clockToggled: root.currentPopup == Config.SystemPopup.SidePanel
 onClockClicked: item => taskbar.openSidePanel(0, item)
+}
 }
 }
 

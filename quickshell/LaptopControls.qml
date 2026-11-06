@@ -3,9 +3,14 @@ import QtQuick.Controls.Basic
 import Quickshell
 import Quickshell.Io
 import Quickshell.Bluetooth
+import "popups" as Popups
 
-Item {
+// The status half of the bar's tray well (Bar.qml puts it inside the BarWell): a Row of flat
+// BarButtons, etched separators only between real groups: [mic, screen share, caffeine] | sysmon |
+// [ETH, Bluetooth].
+Row {
     id: root
+    spacing: 0
 
     property int currentPopup: Config.SystemPopup.None
     property var toggleMenu: function(menu, popup, item) {}
@@ -25,7 +30,8 @@ Item {
 
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
-    readonly property real otherWidth: (privacyRow.width > 0 ? privacyRow.width + MenuStyle.gap : 0) + caffeineBtn.width + MenuStyle.gap + MenuStyle.gap + ethLabel.width + MenuStyle.gap + btBtn.width
+    readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
+        + caffeineBtn.width + sep1.width + sep2.width + ethLabel.width + btBtn.width
     readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth
 
     // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
@@ -46,39 +52,29 @@ Item {
         iconFontValue: ""
         label: root.sysLabel(100, 99, 99, 99, true)
     }
-    implicitWidth: otherWidth + sysBtn.width
-    implicitHeight: MenuStyle.barButtonHeight
 
     // Privacy: mic / screen-share icons in the urgent colour, only while something records
-    Row {
-        id: privacyRow
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: MenuStyle.gap
-        BarButton {
-            visible: Privacy.mic
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: false
-            tucked: true
-            urgent: true
-            iconFontValue: "\ue029"
-        }
-        BarButton {
-            visible: Privacy.screen
-            anchors.verticalCenter: parent.verticalCenter
-            interactive: false
-            tucked: true
-            urgent: true
-            iconFontValue: "\ue0e2"
-        }
+    BarButton {
+        id: micIcon
+        visible: Privacy.mic
+        flat: true
+        interactive: false
+        urgent: true
+        iconFontValue: "\ue029"
+    }
+    BarButton {
+        id: screenIcon
+        visible: Privacy.screen
+        flat: true
+        interactive: false
+        urgent: true
+        iconFontValue: "\ue0e2"
     }
 
     // Caffeine: sunken while on (idle dim/lock/screens-off paused)
     BarButton {
         id: caffeineBtn
-        anchors.left: privacyRow.width > 0 ? privacyRow.right : parent.left
-        anchors.leftMargin: privacyRow.width > 0 ? MenuStyle.gap : 0
-        anchors.verticalCenter: parent.verticalCenter
+        flat: true
         iconFontValue: "\uefef"
         isToggled: Idle.caffeine
         glyphOn: Idle.caffeine
@@ -86,13 +82,13 @@ Item {
         onClicked: Idle.caffeine = !Idle.caffeine
     }
 
+    Popups.MenuSeparator { id: sep1; vertical: true }
+
     // CPU load + temperature, GPU temperature, RAM use. Left click: the Task Manager on Performance;
     // right click: the sysmon popup (GPU hotspot / memory). Fixed width so it never jitters.
     BarButton {
         id: sysBtn
-        anchors.left: caffeineBtn.right
-        anchors.leftMargin: MenuStyle.gap
-        anchors.verticalCenter: parent.verticalCenter
+        flat: true
         // No icon: the CPU/RAM labels say what it is (BarButton defaults to the Start grid icon)
         iconFontValue: ""
         label: root.sysLabel(Math.round(SysMon.cpuLoad * 100), SysMon.cpuTemp, SysMon.gpuEdge, SysMon.memPercent, root.showGpu)
@@ -102,16 +98,15 @@ Item {
         onRightClicked: root.toggleMenu(root.sysMonMenuRef, Config.SystemPopup.SysMonMenu, sysBtn)
     }
 
+    Popups.MenuSeparator { id: sep2; vertical: true }
+
     // Network: a status indicator (the desktop is wired), not a button
     BarButton {
         id: ethLabel
-        anchors.left: sysBtn.right
-        anchors.leftMargin: MenuStyle.gap
-        anchors.verticalCenter: parent.verticalCenter
+        flat: true
         iconFontValue: root.netIconVal
         toggledIconFontValue: ""
         label: root.netText
-        // Its own quiet box (no hover, dim text) so it sits in rhythm with its boxed neighbours
         interactive: false
         dim: true
     }
@@ -119,8 +114,7 @@ Item {
     // Bluetooth: a normal bar button next to the ETH label
     BarButton {
         id: btBtn
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
+        flat: true
         iconFontValue: root.btIconVal
         toggledIconFontValue: ""
         label: root.btText
