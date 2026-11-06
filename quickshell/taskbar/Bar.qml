@@ -344,6 +344,27 @@ taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep");
 }
 
 IpcHandler {
+target: "record_" + root.modelData.name
+function toggle() {
+if (RecordState.recording) {
+RecordState.stop();
+return;
+}
+screenshotOverlay.open();
+screenshotOverlay.record = true;
+}
+function stopRecord() {
+RecordState.stop();
+}
+function replayToggle() {
+RecordState.replayToggle(root.modelData.name);
+}
+function replaySave() {
+RecordState.replaySave();
+}
+}
+
+IpcHandler {
 target: "cheatsheet_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep");

@@ -51,6 +51,7 @@ Row {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
+        + (recBtn.visible ? recBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
         + caffeineBtn.width + sep1.width + sep2.width + ethLabel.width + btBtn.width
     readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth
 
@@ -89,6 +90,28 @@ Row {
         interactive: false
         urgent: true
         iconFontValue: "\ue0e2"
+    }
+
+    // Recording: "REC 0:42" in the urgent colour while the overlay's Record is running; a click stops it
+    BarButton {
+        id: recBtn
+        visible: RecordState.recording
+        flat: true
+        urgent: true
+        iconFontValue: ""
+        label: "REC " + RecordState.label
+        tooltip: "Click to stop recording"
+        onClicked: RecordState.stop()
+    }
+    // Replay buffer armed (Super+Alt+R toggles, Super+Alt+S saves the last seconds)
+    BarButton {
+        id: replayInd
+        visible: RecordState.replaying
+        flat: true
+        interactive: false
+        dim: true
+        iconFontValue: ""
+        label: "REPLAY"
     }
 
     // Caffeine: sunken while on (idle dim/lock/screens-off paused)

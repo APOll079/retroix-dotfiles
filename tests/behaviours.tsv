@@ -111,3 +111,13 @@ quickshell/popups/ScreenshotPanel.qml	event\.key === Qt\.Key_O && !root\.confirm
 quickshell/popups/ScreenshotPanel.qml	event\.key === Qt\.Key_C && !root\.confirmDelete	History: Ctrl+C in the filter box copies the shot (the field copies selected text)
 quickshell/popups/ScreenshotPanel.qml	filterInput\.text \+= event\.text	History: typing in the grid starts a filter
 quickshell/popups/ScreenshotPanel.qml	text: "Folder"	History: labelled action buttons (Copy, Open, Delete, Folder)
+quickshell/popups/ScreenshotOverlay.qml	text: RecordState\.recording \? "Stop" : "Record"	Record button arms recording, reads Stop while recording
+quickshell/popups/ScreenshotOverlay.qml	text: "Mic"	Mic toggle shown while Record is armed
+quickshell/popups/ScreenshotOverlay.qml	RecordState\.start\(a\.mode	Armed picks start a recording instead of a shot
+quickshell/RecordState.qml	-A default=Open	Saved-recording toast offers Open
+quickshell/scripts/record.sh	already recording	Start refuses a second recording
+quickshell/scripts/record.sh	kill -USR1	Replay save signals gpu-screen-recorder
+quickshell/LaptopControls.qml	onClicked: RecordState\.stop\(\)	The bar's REC button stops the recording
+quickshell/taskbar/Bar.qml	target: "record_"	IPC handler record_<monitor> (used by keybinds)
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Record\ the\ screen	Key: Screen | Record the screen
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Save\ the\ replay\ clip	Key: Screen | Save the replay clip

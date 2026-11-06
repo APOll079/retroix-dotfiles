@@ -77,6 +77,8 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+V | Clipboard history |
 | Super+Tab | Window switcher |
 | Super+Shift+S, Print | Snipping tool (Shift+Print: instant full screenshot) |
+| Super+Shift+R | Record the screen (the snipping overlay with Record on); again stops |
+| Super+Alt+R, Super+Alt+S | Replay buffer on / off, save the last seconds as a clip |
 | (History panel) type, Ctrl+C, Ctrl+O | Filter shots, copy, open the selected shot |
 | Super+Shift+H | Screenshot history |
 | Ctrl+Shift+Esc | Task Manager |

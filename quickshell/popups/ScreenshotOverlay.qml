@@ -28,6 +28,14 @@ PanelWindow {
     property point anchorPos: Qt.point(0, 0)
     property rect sel: Qt.rect(0, 0, 0, 0)
     property var hoverWin: null           // { x, y, w, h } in local coords, window mode
+    // Record switch: with it on, region / window / screen / all start a screen recording instead of taking a shot
+    // (All records this monitor, the script has no all-outputs mode). While RecordState.recording the button reads
+    // Stop and the picks shoot as usual.
+    property bool record: false
+    property bool recordMic: false
+    readonly property bool recordArmed: root.record && !RecordState.recording
+    property var recordArgs: null
+    readonly property var scr: root.screen
 
     visible: false
     color: "transparent"
@@ -185,6 +193,32 @@ PanelWindow {
                 Layout.preferredHeight: MenuStyle.rowHeight
             }
             BevelButton {
+                text: RecordState.recording ? "Stop" : "Record"
+                glyph: RecordState.recording ? "\ue047" : "\ue061"
+                checked: root.recordArmed
+                focusPolicy: Qt.NoFocus
+                onClicked: {
+                    if (RecordState.recording) {
+                        RecordState.stop();
+                        root.close();
+                    } else {
+                        root.record = !root.record;
+                    }
+                }
+            }
+            BevelButton {
+                visible: root.recordArmed
+                text: "Mic"
+                glyph: "\ue029"
+                checked: root.recordMic
+                focusPolicy: Qt.NoFocus
+                onClicked: root.recordMic = !root.recordMic
+            }
+            MenuSeparator {
+                vertical: true
+                Layout.preferredHeight: MenuStyle.rowHeight
+            }
+            BevelButton {
                 text: "History"
                 glyph: ""
                 focusPolicy: Qt.NoFocus
@@ -266,6 +300,10 @@ PanelWindow {
     }
 
     function shoot() {
+        if (root.recordArmed) {
+            root.runRecord();
+            return;
+        }
         // Drop the overlay chrome first; only the frozen frame stays on screen for grim
         root.capturing = true;
         shotDelay.restart();
@@ -307,6 +345,34 @@ PanelWindow {
         closeTimer.restart();
     }
 
+    // Record: work out what to record, close the overlay (so its frozen frame and toolbar are not in the video),
+    // then start after a short settle. Window mode records the window's rectangle as a region.
+    function runRecord() {
+        const r = root.focusRect;
+        let mode = root.mode, target = root.scr.name, cls = "";
+        if (mode === "all")
+            mode = "screen";
+        if (mode !== "screen") {
+            target = RecordState.geometry(r.x + root.scr.x, r.y + root.scr.y, r.width, r.height);
+            if (mode === "window" && root.hoverWin)
+                cls = root.hoverWin.cls;
+        }
+        root.recordArgs = { mode: mode, mic: root.recordMic, target: target, cls: cls };
+        root.close();
+        recordGo.restart();
+    }
+
+    Timer {
+        id: recordGo
+        interval: MenuStyle.shotSettle * 2
+        onTriggered: {
+            const a = root.recordArgs;
+            if (a)
+                RecordState.start(a.mode, a.mic, a.target, a.cls);
+            root.recordArgs = null;
+        }
+    }
+
     // Give grim a moment to read the frozen frame before the overlay goes away
     Timer {
         id: closeTimer
@@ -320,6 +386,7 @@ PanelWindow {
         root.capturing = false;
         root.dragging = false;
         root.setMode("region");
+        root.record = false;   // every open starts as a plain shot; the record IPC sets it after open()
         root.visible = true;
         keys.forceActiveFocus();
     }

@@ -22,6 +22,10 @@ hl.bind(mainMod .. " + SHIFT" .. " + " .. "S", hl.dsp.exec_cmd(screenshotOverlay
 local screenshotHistory = [[bash -c 'qs ipc call screenshot_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") history']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "H", hl.dsp.exec_cmd(screenshotHistory))  -- help: Screen | Screenshot history
 -- Games menu (quickshell GamesMenu.qml) on the focused monitor
+local function recordCmd(fn) return "bash -c 'qs ipc call record_$(hyprctl monitors -j | jq -r \".[] | select(.focused) | .name\") " .. fn .. "'" end
+hl.bind(mainMod .. " + SHIFT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("toggle")))  -- help: Screen | Record the screen (stops a running recording)
+hl.bind(mainMod .. " + ALT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("replayToggle")))  -- help: Screen | Replay buffer on / off
+hl.bind(mainMod .. " + ALT" .. " + " .. "S", hl.dsp.exec_cmd(recordCmd("replaySave")))  -- help: Screen | Save the replay clip
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd("hyprpicker -a"))  -- help: Screen | Pick a colour

@@ -18,6 +18,8 @@ Scope {
     id: root
     // singletons are lazy: reading this keeps the low-memory watcher alive
     property bool memoryWatch: MemoryWatch.active
+    // keeps the recorder state alive (picks up a recording that survived a reload)
+    property bool recorder: RecordState.recording
     Taskbar.Bar {}
     Popups.OsdPopup {}
     Popups.NotificationDaemon {}
