@@ -34,6 +34,24 @@
             "ramPercent": 90,
             "tmpGb": 4
         },
+        "record": {
+            "dir": "~/Videos",
+            "replaySeconds": 30
+        },
+        "diskWatch": {
+            "cooldownMinutes": 60,
+            "enabled": true,
+            "mounts": [
+                "/",
+                "~",
+                "/mnt/disk1",
+                "/mnt/disk2"
+            ],
+            "percent": 90
+        },
+        "cleanup": {
+            "shotDays": 30
+        },
         "osd": {
             "bluetooth": true,
             "volume": true

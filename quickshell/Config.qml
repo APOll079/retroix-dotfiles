@@ -164,6 +164,22 @@ property int ramPercent: 90
 property int tmpGb: 4
 property int cooldownMinutes: 30
 }
+// Screen recording (overlay Record mode) and the replay buffer: dir = where clips go (~ allowed), replaySeconds = how much the buffer keeps
+property JsonObject record: JsonObject {
+property string dir: "~/Videos"
+property int replaySeconds: 30
+}
+// Disk warnings: a toast once a mount passes percent used (re-arms after a drop and cooldownMinutes); NFS mounts are read with a timeout
+property JsonObject diskWatch: JsonObject {
+property bool enabled: true
+property int percent: 90
+property int cooldownMinutes: 60
+property var mounts: ["/", "~", "/mnt/disk1", "/mnt/disk2"]
+}
+// Start > Clean up: screenshots older than shotDays are offered for the Trash
+property JsonObject cleanup: JsonObject {
+property int shotDays: 30
+}
 // Which OSDs show
 property JsonObject osd: JsonObject {
 property bool volume: true

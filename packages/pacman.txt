@@ -29,6 +29,10 @@ cliphist                    # clipboard history (Super+V)
 jq                          # binds.lua (focused monitor lookups)
 playerctl                   # XF86AudioPlay bind
 libnotify                   # notify-send (game-mode toggle)
+gpu-screen-recorder         # screen recording and the replay buffer (overlay Record mode)
+smartmontools               # smartctl, disk health warnings (needs root: see docs/desktop.md)
+pacman-contrib              # checkupdates, paccache (Updates, Clean up)
+udisks2                     # udisksctl, USB drives (toast, Eject)
 ydotool                     # autoclicker (F8); needs scripts/autoclick-setup.sh once (uinput permissions)
 xdg-utils                   # xdg-open
 curl                        # lyrics (LRCLIB)
