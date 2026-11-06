@@ -326,6 +326,7 @@ def main():
             print(f"  reload     {msg}")
     theme_changed = gtk_theme(roles, no_reload)
     icons_changed = icon_theme(roles)
+    border_image(roles)
     if (theme_changed or icons_changed) and not no_reload:
         reload_gtk(theme_changed, icons_changed)
 
@@ -365,6 +366,50 @@ def gtk_theme(roles, no_reload):
         os.symlink(want, link)
         print(f"  linked     {link}")
     return changed
+
+
+def border_image(roles):
+    """hypr/win95-border.png: the 3 px Win95 window bevel as a 9-slice image for the imgborders plugin (outer
+    ring light / outline, inner ring light / dark, face). Needs Pillow; skipped without it or when the hypr
+    folder isn't there. Returns True when the file changed."""
+    try:
+        from PIL import Image
+    except ImportError:
+        print("  skipped    hypr/win95-border.png (Pillow not installed)")
+        return False
+    dest = out_path("hypr/win95-border.png")
+    if not os.path.isdir(os.path.dirname(dest)):
+        return False
+    inner = hexs(c * 0.5 + d * 0.5 for c, d in zip(rgb(roles["base"]), rgb(roles["highlight"])))
+    # ring 0 (outside), 1, 2 (next to the window): top-left colours, bottom-right colours
+    tl = [roles["highlight"], inner, roles["base"]]
+    br = [roles["outline"], roles["dark"], roles["base"]]
+    size = 7
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    for ring in range(3):
+        lo, hi = ring, size - 1 - ring
+        for i in range(lo, hi + 1):
+            img.putpixel((i, lo), rgb(tl[ring]) + (255,))   # top
+            img.putpixel((lo, i), rgb(tl[ring]) + (255,))   # left
+        for i in range(lo, hi + 1):
+            img.putpixel((i, hi), rgb(br[ring]) + (255,))   # bottom
+            img.putpixel((hi, i), rgb(br[ring]) + (255,))   # right
+    import io
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    data = buf.getvalue()
+    try:
+        with open(dest, "rb") as f:
+            if f.read() == data:
+                print(f"  unchanged  {dest}")
+                return False
+    except FileNotFoundError:
+        pass
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "wb") as f:
+        f.write(data)
+    print(f"  wrote      {dest}")
+    return True
 
 
 def icon_theme(roles):

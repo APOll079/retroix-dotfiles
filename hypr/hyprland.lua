@@ -14,3 +14,5 @@ require("look_and_feel")
 require("inputs")
 require("binds")
 require("windowrules")
+-- Win95 window frames (hyprbars + imgborders plugins); never allowed to break the rest of the config
+pcall(require, "plugins")
