@@ -9,6 +9,7 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 ## Planned
 
 ### Next up
+- Design pass (`design-pass-prompt.md`, branch `design-pass-w1`): wave 1 is done and waits for your picks (A3 where the accent stays, A12 icon set, Charcoal vs Monaco titles). Still to do: wave 2 (B bar, C windows, D menus + side panel, E1, F2), A10 window sizes. A11 font fallback is blocked: Qt 6.12 has no QML fallback list (`font.families` doesn't exist, a comma list in `font.family` drops Latin to a default sans); the only repo-side way is a fontconfig alias you deploy yourself. Also open: the Themes menu has no Reduce motion button, the slider knob and the bar's workspaces box still have the old black-box look, MenuRow highlights a disabled row on hover (its text is dark grey on the accent), and 115 of the 1,945 symlinks in `icons/RetroismIcons` are broken (e.g. `system-shutdown`).
 - From the old audit: F12 → Shift+Print (gives Zen its devtools key back), lazy-loaded popups (tried: no way to measure the gain headless; if wanted, start with Spotify, launcher, screenshots, wallpapers, games).
 - spotifyd works but needs an upgrade.
 
@@ -30,6 +31,14 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Services: a failing Start / Stop / Restart shows the dinitctl error above the buttons; a `session.customActions` entry shows by name in the side panel power row
 - [ ] Wallpapers / Services buttons: a click opens, the same click closes, any bar click closes
 - [ ] EQ preset row: fill `audio.eqPresets`, a click loads the preset, the sunken one survives a restart
+
+### Design pass, wave 1 (branch design-pass-w1, rendered offscreen only)
+- [ ] Buttons at real DPI: two bevel rings on bar and menu buttons (white / light top-left, black / grey bottom-right), pressed and toggled sunken, text fields white; nothing shifted or clipped in the bar
+- [ ] The CPU box keeps one width while it ticks (try 100% load); the centre text gets the 27 px it saved; a temperature of 100 or more makes it one character wider
+- [ ] `settings.ui.reduceMotion: true` (edit settings.json): menus open without fade / slide, hover is instant, a toast disappears at once, the idle dim appears at once
+- [ ] Centred panels (launcher, games, wallpapers, services, screenshots, cheat sheet) still centred on both monitors; Spotify drawer and the notification history show no clipping after the padding change (page pad 3 -> 4, card inset 3 -> 4); menu content is 2 px wider
+- [ ] Theme switch with a bright wallpaper (green / yellow / cyan "Set + colours"): applies, not refused; kitty and fastfetch now use the accent hue (dark background, light accent labels), `pkill -USR1 kitty` picks it up
+- [ ] CJK text (Korean / Japanese lyrics, notification, song name): which fallback font fontconfig really picks (`noto-fonts-cjk` is in `packages/pacman.txt`; nothing in the repo controls it)
 
 ### Bar, menus and desktop
 - [ ] Menus over a fullscreen video (clicks stay in the menu); Super+Q / click-outside closes every menu
@@ -81,6 +90,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Lock screen wallpaper: after Set, `hyprlock` (from a second TTY) shows the same picture per monitor; the `$var` in `path` and the `##` escape are unverified
 
 ## Done
+- **Design pass, wave 1** (needs a live test, see above): component gallery (`quickshell/gallery.qml`, `scripts/render-gallery.sh`), palette rule in `apply.py` (bevel edge 1.35:1, text 4.5:1) with lighter highlights, two-ring Win95 buttons, spacing scale, two icon sizes, whole-pixel layout, fixed-width CPU label, two motion durations + Reduce motion, one embossed disabled look, generated `docs/DESIGN.md`, one-hue terminal and fastfetch, `noto-fonts-cjk` in the package list
 - **Bar**: gripper, workspaces, Start / Themes, Wallpapers and Services buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + temperature + clock (right click: DND)
 - **Side panel** (Super+N): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (each entry a small raised window on a recessed well: title strip with app + time, 16 px title, 3-line body with a chevron), weather and calendar, DND button in the history header (also a right click on the clock); power row includes your custom session actions
 - **Launcher** (Super+D): tabs Apps / Games / Clipboard (Ctrl+Tab), fuzzy apps with usage ranking and categories, calculator, session actions, "," window search (also Super+Tab), Super+V clipboard with delete and Clear all, options menu (pin, move, Hide / Unhide with a Hidden chip, Uninstall via pacman / flatpak)
