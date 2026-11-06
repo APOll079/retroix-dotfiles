@@ -31,6 +31,13 @@ PanelWindow {
     // The last Start / Stop / Restart failure; kept apart from `error`, which a list refresh clears
     property string actionError: ""
     property int cursor: 0
+    // Log view (user scope): the last lines of the selected service's buffered log, in place of the list
+    property bool logOpen: false
+    property string logName: ""
+    property string logText: ""
+    property string logError: ""
+    property bool logDone: false
+    property string pendingSelect: ""      // showDetails() waits for the list, then selects this and opens its log
 
     readonly property var shown: {
         const q = searchInput.text.trim().toLowerCase();
@@ -89,7 +96,12 @@ PanelWindow {
                     id: searchInput
                     Layout.fillWidth: true
                     placeholder: "Filter services"
-                    onEscaped: root.closeCallback()
+                    onEscaped: {
+                        if (root.logOpen)
+                            root.logOpen = false;
+                        else
+                            root.closeCallback();
+                    }
                     onKeyPressed: event => {
                         if (event.key === Qt.Key_Down) {
                             root.move(1);
@@ -159,7 +171,7 @@ PanelWindow {
 
                     EmptyState {
                         anchors.fill: parent
-                        visible: root.shown.length === 0
+                        visible: !root.logOpen && root.shown.length === 0
                         glyph: root.error !== "" ? "\ue000" : (root.services.length === 0 ? "\ue8b8" : "\ue8b6")
                         text: root.error !== "" ? root.error : (root.services.length === 0 ? "No services listed" : "No matches")
                     }
@@ -167,6 +179,7 @@ PanelWindow {
                     ListView {
                         id: list
                         anchors.fill: parent
+                        visible: !root.logOpen
                         model: root.shown
                         currentIndex: root.cursor
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
@@ -188,6 +201,29 @@ PanelWindow {
                                 root.cursor = index;
                                 searchInput.focusInput();
                             }
+                        }
+                    }
+
+                    Flickable {
+                        id: logFlick
+                        anchors.fill: parent
+                        visible: root.logOpen
+                        contentWidth: width
+                        contentHeight: logBody.implicitHeight
+                        boundsBehavior: Flickable.StopAtBounds
+                        clip: true
+                        ScrollBar.vertical: RetroScrollBar {}
+                        Text {
+                            id: logBody
+                            width: logFlick.width - MenuStyle.scrollBarWidth
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            textFormat: Text.PlainText
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.fontSize
+                            color: root.logText === "" ? MenuStyle.bevelDark : Config.colors.text
+                            text: root.logText !== "" ? root.logText : (!root.logDone ? "Loading..." : (root.logError !== "" ? root.logError : "No log. The service needs log-type = buffer in its dinit file."))
                         }
                     }
                 }
@@ -230,6 +266,27 @@ PanelWindow {
                         Layout.fillWidth: true
                     }
                     BevelButton {
+                        text: "Log"
+                        glyph: "\ue873"
+                        visible: root.scope === "user" && !root.logOpen
+                        enabled: root.current !== null
+                        focusPolicy: Qt.NoFocus
+                        onClicked: {
+                            root.openLog();
+                            searchInput.focusInput();
+                        }
+                    }
+                    BevelButton {
+                        text: "Back"
+                        glyph: "\ue5c4"
+                        visible: root.logOpen
+                        focusPolicy: Qt.NoFocus
+                        onClicked: {
+                            root.logOpen = false;
+                            searchInput.focusInput();
+                        }
+                    }
+                    BevelButton {
                         text: "Start"
                         glyph: "\ue037"
                         enabled: root.current !== null && !root.busy
@@ -254,7 +311,7 @@ PanelWindow {
 
                 StatusBar {
                     kind: root.busy || root.current ? "message" : "state"
-                    text: root.busy ? "Working..." : (root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "No service selected")
+                    text: root.busy ? "Working..." : (root.logOpen ? "Log: " + root.logName : root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "No service selected")
                     trailing: root.shown.length + " of " + root.services.length
                 }
             }
@@ -264,31 +321,9 @@ PanelWindow {
     // --- data ---
 
     function move(d) {
-        if (root.shown.length === 0)
+        if (root.logOpen || root.shown.length === 0)
             return;
         root.cursor = Math.max(0, Math.min(root.shown.length - 1, root.cursor + d));
-    }
-
-    function parse(text) {
-        const out = [];
-        for (const line of text.split("\n")) {
-            if (line.length < 11 || line[0] !== "[")
-                continue;
-            const flags = line.slice(1, 9);
-            const rest = line.slice(10).trim();
-            const sp = rest.search(/\s/);
-            const name = sp < 0 ? rest : rest.slice(0, sp);
-            const info = sp < 0 ? "" : rest.slice(sp).trim().replace(/^\(|\)$/g, "");
-            if (name === "")
-                continue;
-            out.push({
-                name: name,
-                state: flags.includes("+") ? "running" : flags.includes("-") ? "stopped" : "other",
-                failed: /fail|exit status/i.test(info),
-                info: info
-            });
-        }
-        return out.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     // One `dinitctl list` at a time. Asked again while one runs (the scope was switched, an action
@@ -324,6 +359,8 @@ PanelWindow {
             root.closeCallback();
         } else {
             root.actionError = "";
+            // an intended stop must not raise ServiceWatch's "stopped" toast
+            ServiceWatch.expect(s.name);
             actProc.verb = verb;
             actProc.command = ["dinitctl", "--user", verb, s.name];
             actProc.running = true;
@@ -342,9 +379,17 @@ PanelWindow {
             onStreamFinished: {
                 if (root.listScope !== root.scope)
                     return;
-                root.services = root.parse(text);
+                root.services = ServiceWatch.parseList(text, root.listScope);
                 if (root.services.length > 0)
                     root.error = "";
+                if (root.pendingSelect !== "") {
+                    const i = root.shown.findIndex(x => x.name === root.pendingSelect);
+                    root.pendingSelect = "";
+                    if (i >= 0) {
+                        root.cursor = i;
+                        root.openLog();
+                    }
+                }
             }
         }
         stderr: StdioCollector {
@@ -365,6 +410,42 @@ PanelWindow {
         }
     }
 
+    // Opens the log of the selected user service (scripts/service-log.sh: last 40 lines of `dinitctl --user catlog`)
+    function openLog() {
+        const s = root.current;
+        if (!s || root.scope !== "user")
+            return;
+        root.logName = s.name;
+        root.logText = "";
+        root.logError = "";
+        root.logDone = false;
+        root.logOpen = true;
+        logProc.running = false;
+        logProc.command = ["sh", Quickshell.shellDir + "/scripts/service-log.sh", s.name];
+        logProc.running = true;
+    }
+
+    // The toast's Details action (Bar.qml opens the panel, then calls this): user scope, that service
+    // selected in the list, its log open.
+    function showDetails(name) {
+        root.scope = "user";
+        root.services = [];
+        root.error = "";
+        root.openMenu();
+        root.pendingSelect = name;
+    }
+
+    Process {
+        id: logProc
+        stdout: StdioCollector {
+            onStreamFinished: root.logText = text.replace(/\n+$/, "")
+        }
+        stderr: StdioCollector {
+            onStreamFinished: root.logError = text.trim()
+        }
+        onExited: root.logDone = true
+    }
+
     Process {
         id: actProc
         property string verb: ""
@@ -379,6 +460,7 @@ PanelWindow {
     }
 
     function openMenu() {
+        root.logOpen = false;
         root.actionError = "";
         searchInput.text = "";
         root.filter = "all";

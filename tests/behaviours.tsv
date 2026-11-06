@@ -121,3 +121,7 @@ quickshell/LaptopControls.qml	onClicked: RecordState\.stop\(\)	The bar's REC but
 quickshell/taskbar/Bar.qml	target: "record_"	IPC handler record_<monitor> (used by keybinds)
 hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Record\ the\ screen	Key: Screen | Record the screen
 hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Save\ the\ replay\ clip	Key: Screen | Save the replay clip
+quickshell/ServiceWatch.qml	"-A", "restart=Restart", "-A", "details=Details"	Failed user service raises a toast with Restart and Details actions
+quickshell/ServiceWatch.qml	function expect\(name\)	A stop made through the Services panel does not raise a toast
+quickshell/popups/ServicesPanel.qml	function showDetails\(name\)	The service toast's Details opens the Services panel on that service's log
+quickshell/popups/ServicesPanel.qml	text: "Log"	Services panel: Log shows the last 40 log lines of the selected user service; Back or Escape returns to the list

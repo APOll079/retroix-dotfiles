@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Hyprland
 import QtQuick
 import "../popups" as Popups
 import ".."
@@ -375,6 +376,18 @@ IpcHandler {
 target: "spotify_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(spotifyPanel, Config.SystemPopup.Spotify, null, "keep");
+}
+}
+
+// A failed-service toast's Details: the Services panel on the focused monitor, on that service's log
+Connections {
+target: ServiceWatch
+function onDetailsRequested(name) {
+if (!Hyprland.focusedMonitor || Hyprland.focusedMonitor.name !== root.modelData.name)
+return;
+if (!servicesPanel.visible)
+taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep");
+servicesPanel.showDetails(name);
 }
 }
 
