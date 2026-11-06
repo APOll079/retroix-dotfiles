@@ -14,7 +14,7 @@ Item {
     required property var panel
     readonly property var view: lyricsView
     anchors.fill: parent
-    EmptyState {
+    Local.EmptyState {
         anchors.centerIn: parent
         width: parent.width - 2 * MenuStyle.pad
         visible: panel.lyricsMode && (Lyrics.lines.length === 0 || panel.remote)

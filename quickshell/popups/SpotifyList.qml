@@ -71,7 +71,7 @@ SunkenField {
         }
     }
 
-    EmptyState {
+    Local.EmptyState {
         anchors.centerIn: parent
         width: parent.width - 2 * MenuStyle.pad
         visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
