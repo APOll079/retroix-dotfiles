@@ -22,12 +22,15 @@
             "dimMinutes": 5,
             "enabled": true,
             "lockMinutes": 10,
-            "screenOffMinutes": 15
+            "screenOffMinutes": 15,
+            "stayAwakeInFullscreen": true
         },
         "militaryTimeClockFormat": true,
         "notifications": {
             "dnd": false,
             "dndWhileSharing": true,
+            "mutedApps": [],
+            "priorityApps": [],
             "maxVisible": 4,
             "monitor": "",
             "position": "top-right"
@@ -70,6 +73,22 @@
             "enabled": true,
             "hosts": [],
             "vpn": true
+        },
+        "spotifyExtras": {
+            "trackToast": false
+        },
+        "games": {
+            "flatpakApps": [
+                "com.vinegarhq.Sober"
+            ],
+            "mangohud": false
+        },
+        "mouse": {
+            "enabled": true
+        },
+        "securityAudit": {
+            "enabled": true,
+            "intervalHours": 12
         },
         "osd": {
             "bluetooth": true,

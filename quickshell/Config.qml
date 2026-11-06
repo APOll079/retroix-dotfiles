@@ -158,6 +158,9 @@ property JsonObject notifications: JsonObject {
 property bool dnd: false
 // hold toasts back (the history still keeps them) while a screen share is running; critical ones still show
 property bool dndWhileSharing: true
+// apps whose toasts are never shown (the history keeps them); priorityApps get through Do Not Disturb and screen-share holds
+property var mutedApps: []
+property var priorityApps: []
 property string position: "top-right"
 property int maxVisible: 4
 property string monitor: ""
@@ -216,6 +219,26 @@ property bool enabled: true
 property int dimMinutes: 5
 property int lockMinutes: 10
 property int screenOffMinutes: 15
+// no dim / lock / screen-off while a fullscreen window (a video) is on the focused workspace
+property bool stayAwakeInFullscreen: true
+}
+// Spotify extras: a themed "now playing" toast on every song change (off by default)
+property JsonObject spotifyExtras: JsonObject {
+property bool trackToast: false
+}
+// Games: Flatpak games shown next to Steam (Flatpak app ids), and MangoHud for games launched from here
+property JsonObject games: JsonObject {
+property var flatpakApps: ["com.vinegarhq.Sober"]
+property bool mangohud: false
+}
+// Logitech mouse battery through Solaar, shown in the bar while it reports one
+property JsonObject mouse: JsonObject {
+property bool enabled: true
+}
+// Security audit (arch-audit): a toast when a new vulnerability affects an installed package
+property JsonObject securityAudit: JsonObject {
+property bool enabled: true
+property int intervalHours: 12
 }
 // Weather from wttr.in; location "" = guessed from your IP
 property JsonObject weather: JsonObject {
