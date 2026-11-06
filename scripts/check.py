@@ -89,6 +89,18 @@ def check_contract():
             fails.append(f"BEHAVIOUR GONE: {desc}  ({f} no longer matches /{rx}/; contract line {n})")
 
 
+_SINGLETONS = None
+
+
+def singletons():
+    """Names of the `pragma Singleton` QML files under quickshell/ (Config, MenuStyle, ...)."""
+    global _SINGLETONS
+    if _SINGLETONS is None:
+        _SINGLETONS = sorted(q.stem for q in ROOT.glob("quickshell/**/*.qml")
+                             if re.search(r"^\s*pragma\s+Singleton", q.read_text(encoding="utf-8", errors="replace"), re.M))
+    return _SINGLETONS or ["NoSingletons"]
+
+
 def check_qmldir():
     for qmldir in ROOT.glob("quickshell/**/qmldir"):
         listed = set(re.findall(r"^(?:singleton\s+)?\w+\s+[\d.]+\s+(\S+\.qml)", qmldir.read_text(), re.M))
@@ -121,8 +133,11 @@ def check_syntax(files):
                 fails.append(f"{f}: invalid JSON: {e}")
         elif p.suffix == ".qml" and os.path.exists(QMLLINT):
             r = subprocess.run([QMLLINT, "-I", "/usr/lib/qt6/qml", str(p)], capture_output=True, text=True)
+            # qmllint can't see a singleton's members (no root qmldir), so "Member x not found on type
+            # Config" is noise for every `pragma Singleton` file; the offscreen renders cover those.
             bad = [l for l in (r.stdout + r.stderr).splitlines()
-                   if re.search(r"error|is not a type|Expected token|Syntax|not found", l, re.I)]
+                   if re.search(r"error|is not a type|Expected token|Syntax|not found", l, re.I)
+                   and not re.search(r'Member ".*" not found on type "(%s)"' % "|".join(singletons()), l)]
             if bad:
                 fails.append(f"{f}: qmllint:\n      " + "\n      ".join(bad[:5]))
 

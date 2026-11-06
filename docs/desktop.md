@@ -18,6 +18,7 @@ Details for `CLAUDE.md` (rules live there). Spotify drawer: `docs/spotify.md`. A
 - Win95 details: grippers + etched divider on the bar, title bars (inactive on toasts/OSD), dithered meter tracks, dotted focus rect on keyboard rows, bevel slider knobs (`RetroSlider`). Tried and reverted/removed: sunken wells, title-bar close boxes.
 - `dusty` (themes.json) is a softer alternative to cherry (rose accent `#d4609a`; the old `#a8286a` was too dark). Since the theme manager, every app follows whichever theme is picked.
 - btop squares its corners and uses the generated `current` theme (it can't group by program: its tree is parent/child only; the Task Manager does that). Window borders: focused = theme shadow, unfocused = theme outline.
+- Component gallery: `quickshell/gallery.qml` shows every shared component in every state that can be forced (hover on BarButton / BevelButton can't be, MenuRow's selected state is the same look), plus the palette and its contrast numbers. `scripts/render-gallery.sh -o OUTDIR [theme ...]` renders one PNG per theme (default: cherry dusty default) offscreen from a scratch copy: no display, a private XDG tree, `QS_NO_APPLY=1`, so it never touches the running shell. Render before and after any UI change and look at the PNGs. It is not loaded by `shell.qml`.
 - All menus on the shared components. Hover highlight works everywhere (`hoverEnabled: true` on Controls buttons). Bar menus open on click only (hover-open was built, then removed).
 
 ## Bar
