@@ -43,7 +43,7 @@ ColumnLayout {
             font.family: MenuStyle.titleFont
             font.pixelSize: MenuStyle.fontSize
             color: Config.colors.text
-            text: NotificationStore.items.length === 0 ? "No notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
+            text: NotificationStore.items.length === 0 ? "Notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
         }
         // Do Not Disturb (same switch as a right click on the bar clock): notifications still land
         // here, they just don't pop up. Sunken while on.
@@ -77,6 +77,18 @@ ColumnLayout {
         if (e.image)
             return e.image;
         return e.appIcon ? Quickshell.iconPath(e.appIcon, true) : "";
+    }
+
+    Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        visible: NotificationStore.items.length === 0
+        EmptyState {
+            anchors.centerIn: parent
+            width: parent.width - 2 * MenuStyle.pad
+            glyph: "\ue7f4"
+            text: "No notifications"
+        }
     }
 
     // The list sits in a deep well (darker field, 2 px sunken bevel). Each notification is a small
