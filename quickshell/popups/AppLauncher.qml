@@ -8,6 +8,8 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import ".."
 import "../utils" as Utils
+// Qt.Controls ships an attached-only ContextMenu that would shadow ours, so ours is reached as Popups.ContextMenu
+import "." as Popups
 
 // Launcher (Super+D). One result list fed by providers:
 // - apps: fuzzy search, usage-ranked, pinned first when empty, category filter row
@@ -17,7 +19,7 @@ import "../utils" as Utils
 // - clipboard: Super+V opens the cliphist history; Enter copies the entry back
 // Tabs along the top switch between Apps, Games (cover grid, GamesView.qml, shared with the
 // standalone Games menu) and Clipboard; Ctrl+Tab cycles them.
-// Right-click an app (or Shift+Enter) for its options: launch, pin/unpin, move pinned up/down, hide
+// Right-click an app (or Shift+Enter) for its options in the shared ContextMenu: launch, pin/unpin, move pinned up/down, hide
 // (the "Hidden (n)" chip lists hidden apps) and uninstall (owner found by scripts/app-owner.sh, then
 // `yay -Rns` / `flatpak uninstall` in a terminal after a confirm).
 PanelWindow {
@@ -42,7 +44,7 @@ PanelWindow {
     property string mode: "apps"          // apps | windows | games | clipboard
     property string category: "all"
     property var results: []
-    property var optionsFor: null         // DesktopEntry whose options are showing
+    property var optionsFor: null         // DesktopEntry whose options menu is open
     property string confirmKey: ""        // session action / "Clear all" waiting for a second Enter
     property bool keepArm: false          // true while the list is rebuilt around an armed row
     property var uninstallFor: null       // { name, kind, pkg }: uninstall waiting for its confirm
@@ -165,7 +167,7 @@ PanelWindow {
                             // Category filter (apps only)
                             RowLayout {
                                 Layout.fillWidth: true
-                                visible: root.mode === "apps" && !root.optionsFor && !searchInput.text.startsWith(",")
+                                visible: root.mode === "apps" && !searchInput.text.startsWith(",")
                                 spacing: MenuStyle.gap
                                 Repeater {
                                     model: root.categories
@@ -335,7 +337,10 @@ PanelWindow {
                                             // Right-click: the app's options
                                             TapHandler {
                                                 acceptedButtons: Qt.RightButton
-                                                onTapped: root.openOptionsAt(index)
+                                                onTapped: (point) => {
+                                                    appsView.currentIndex = index;
+                                                    root.openOptionsAt(index, parent, point.position.x, point.position.y);
+                                                }
                                             }
                                         }
 
@@ -363,7 +368,7 @@ PanelWindow {
         }
     }
 
-    // Keys from the search box. Escape: games step back / clear / close; options close; else close.
+    // Keys from the search box. Escape: games step back / clear / close; else close (the options menu takes its own Escape).
     // Escape in the other tabs clears the search text first, then closes. In Clipboard, Delete (empty
     // search) or Shift+Delete removes the highlighted entry.
     // Up / Down (and Left / Right in the games grid) move, Ctrl+Tab cycles the tabs, plain Tab
@@ -383,8 +388,6 @@ PanelWindow {
                     searchInput.text = "";
                 else
                     root.closeCallback();
-            } else if (root.optionsFor) {
-                root.closeOptions();
             } else if (searchInput.text !== "") {
                 searchInput.text = "";
             } else {
@@ -486,8 +489,6 @@ PanelWindow {
     function rebuild(keep) {
         if (root.mode === "games")
             return;
-        if (root.optionsFor)
-            return root.setResults(root.optionsItems(root.optionsFor), 0);
         const q = searchInput.text.trim();
         if (root.mode === "windows" || q.startsWith(","))
             return root.setResults(root.windowItems(root.mode === "windows" ? q : q.slice(1).trim()), root.mode === "windows" && q === "" ? 1 : 0);
@@ -645,49 +646,59 @@ PanelWindow {
         clipEdit.running = true;
     }
 
-    function optionsItems(entry) {
-        if (root.uninstallFor)
-            return root.uninstallItems();
+    // The options menu (shared ContextMenu): entries for the app whose row was right-clicked / Shift+Entered
+    function optionsModel(entry) {
         const pinned = LauncherState.isPinned(entry.id);
-        const items = [
-            { title: "Launch " + entry.name, glyph: "\ue89e", run: () => root.appItem(entry).run() },
-            { title: pinned ? "Unpin" : "Pin to the top", glyph: "\uf10d", run: () => { LauncherState.togglePin(entry.id); root.closeOptions(); } }
+        const hidden = LauncherState.isHidden(entry.id);
+        const m = [
+            { text: "Launch " + entry.name, glyph: "\ue89e", action: () => root.appItem(entry).run() },
+            { text: pinned ? "Unpin" : "Pin to the top", glyph: "\uf10d", action: () => LauncherState.togglePin(entry.id) }
         ];
         if (pinned) {
-            items.push({ title: "Move up", glyph: "\ue5d8", run: () => { LauncherState.move(entry.id, -1); root.rebuild(); } });
-            items.push({ title: "Move down", glyph: "\ue5db", run: () => { LauncherState.move(entry.id, 1); root.rebuild(); } });
+            m.push({ text: "Move up", glyph: "\ue5d8", action: () => root.movePinned(entry, -1) });
+            m.push({ text: "Move down", glyph: "\ue5db", action: () => root.movePinned(entry, 1) });
         }
-        const hidden = LauncherState.isHidden(entry.id);
-        items.push({ title: hidden ? "Unhide" : "Hide from the launcher", glyph: hidden ? "\ue8f4" : "\ue8f5", run: () => {
+        m.push({ separator: true });
+        m.push({ text: hidden ? "Unhide" : "Hide from the launcher", glyph: hidden ? "\ue8f4" : "\ue8f5", action: () => {
             LauncherState.toggleHidden(entry.id);
             if (root.hiddenCount === 0)
                 root.category = "all";
-            root.closeOptions();
         } });
-        items.push({ title: "Uninstall...", glyph: "\ue872", run: () => {
+        m.push({ text: "Uninstall...", glyph: "\ue872", action: () => {
             ownerProc.entryName = entry.name;
             ownerProc.command = ["sh", Quickshell.shellDir + "/scripts/app-owner.sh", entry.id];
             ownerProc.running = true;
         } });
-        items.push({ title: "Back", glyph: "\ue5c4", run: () => root.closeOptions() });
-        return items;
+        return m;
+    }
+
+    // Move up / down keeps the menu (re-opened where it was) and the cursor on the moved app
+    function movePinned(entry, d) {
+        LauncherState.move(entry.id, d);
+        root.rebuild();
+        const i = root.results.findIndex(r => r.entry && r.entry.id === entry.id);
+        if (i >= 0)
+            appsView.currentIndex = i;
+        Qt.callLater(() => root.showOptions(entry));
     }
 
     // Confirm step: names the package, then runs the removal in a terminal so you see the prompts
-    function uninstallItems() {
+    function uninstallModel() {
         const u = root.uninstallFor;
         if (u.kind === "none")
             return [
-                { title: "No package owns " + u.name, sub: "Only Hide is possible", glyph: "\ue002", run: () => root.closeOptions() },
-                { title: "Back", glyph: "\ue5c4", run: () => root.closeOptions() }
+                { text: "No package owns " + u.name, glyph: "\ue002", enabled: false },
+                { text: "Only Hide is possible", enabled: false },
+                { separator: true },
+                { text: "Cancel" }
             ];
         return [
-            { title: "Remove " + u.pkg + "?", sub: u.kind === "flatpak" ? "flatpak uninstall" : "yay -Rns", glyph: "\ue872", run: () => {
+            { text: "Remove " + u.pkg + "?", glyph: "\ue872", trailing: u.kind === "flatpak" ? "flatpak uninstall" : "yay -Rns", action: () => {
                 const cmd = u.kind === "flatpak" ? "flatpak uninstall " + u.pkg : "yay -Rns " + u.pkg;
                 Quickshell.execDetached([Config.settings.execCommands.terminal, "fish", "-c", cmd + "; echo; read -P 'Press Enter to close'"]);
                 root.closeCallback();
             } },
-            { title: "Cancel", glyph: "\ue5c4", run: () => root.closeOptions() }
+            { text: "Cancel" }
         ];
     }
 
@@ -698,23 +709,45 @@ PanelWindow {
             onStreamFinished: {
                 const m = text.trim().match(/^(pacman|flatpak):([A-Za-z0-9@._+-]+)$/);
                 root.uninstallFor = { name: ownerProc.entryName, kind: m ? m[1] : "none", pkg: m ? m[2] : "" };
-                root.rebuild();
+                root.showOptions(root.optionsFor);
             }
         }
     }
 
-    function openOptionsAt(i) {
+    // Where the menu opens (in the list's coordinates): the pointer for a right-click, under the cursor row for Shift+Enter
+    property Item optionsAnchor: null
+    property point optionsPoint: Qt.point(0, 0)
+
+    Popups.ContextMenu {
+        id: optionsMenu
+    }
+
+    // Open (or re-open, for the uninstall confirm and Move up / down) the menu for one app
+    function showOptions(entry) {
+        if (!entry || !root.optionsAnchor)
+            return;
+        root.optionsFor = entry;
+        optionsMenu.model = root.uninstallFor ? root.uninstallModel() : root.optionsModel(entry);
+        optionsMenu.openAt(root.optionsAnchor, root.optionsPoint.x, root.optionsPoint.y);
+    }
+
+    // item / x / y: the point the menu opens at; without them it opens under the cursor row
+    function openOptionsAt(i, item, x, y) {
         const r = root.results[i];
         if (!r || !r.entry)
             return;
-        root.optionsFor = r.entry;
-        root.rebuild();
+        root.uninstallFor = null;
+        // Anchored to the list itself (its rows are rebuilt when the list changes), at a point inside it
+        const row = item || appsView.itemAtIndex(i);
+        root.optionsAnchor = appsView;
+        root.optionsPoint = row ? appsView.mapFromItem(row, item ? x : MenuStyle.pad * 4, item ? y : MenuStyle.rowHeight) : Qt.point(MenuStyle.pad * 4, MenuStyle.rowHeight);
+        root.showOptions(r.entry);
     }
 
     function closeOptions() {
+        optionsMenu.close();
         root.optionsFor = null;
         root.uninstallFor = null;
-        root.rebuild();
     }
 
     function activate(i) {
@@ -829,8 +862,7 @@ PanelWindow {
     function open(mode) {
         root.mode = mode;
         root.category = "all";
-        root.optionsFor = null;
-        root.uninstallFor = null;
+        root.closeOptions();
         root.confirmKey = "";
         root.visible = true;
         searchInput.text = "";
