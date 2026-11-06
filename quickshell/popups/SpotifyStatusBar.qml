@@ -29,6 +29,7 @@ StatusBar {
         visible: bar.confirming
         implicitHeight: MenuStyle.spotifyStatusHeight
         text: panel.confirmClient ? "Change" : "Log out"
+        isDefault: true     // the verb is the default button; the 18 px bar has no room for a ConfirmBar
         focusPolicy: Qt.NoFocus
         onClicked: {
             if (panel.confirmClient) {
