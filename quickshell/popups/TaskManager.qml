@@ -5,8 +5,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
-// Qt Controls has its own PopupMenu; ours is reached through Local
-import "." as Local
 
 // Task Manager (Ctrl+Shift+Esc, left click on the bar's CPU button, `qs ipc call taskmanager open`),
 // Win95 style. A normal window Hyprland manages (an xdg toplevel: move, resize, tile, Super+Q), one for
@@ -61,15 +59,6 @@ FloatingWindow {
     Item {
         id: frame
 
-        // Dropdowns of the menu bar (popup windows, closed until a title opens them)
-        Local.PopupMenu {
-            id: fileMenu
-            onVisibleChanged: if (!visible) root.refocus()
-        }
-        Local.PopupMenu {
-            id: viewMenu
-            onVisibleChanged: if (!visible) root.refocus()
-        }
         anchors.fill: parent
 
         // Keys for the tabs without a text field (Apps, Performance)
@@ -98,19 +87,11 @@ FloatingWindow {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                // Menu bar: File / View open a dropdown (PopupMenu) with actions this window already has
-                Row {
+                // Menu bar: File / View open a dropdown with actions this window already has
+                MenuStrip {
                     Layout.fillWidth: true
-                    MenuTitle {
-                        text: "File"
-                        menu: fileMenu
-                        build: root.fileModel
-                    }
-                    MenuTitle {
-                        text: "View"
-                        menu: viewMenu
-                        build: root.viewModel
-                    }
+                    menus: [{ text: "File", build: root.fileModel }, { text: "View", build: root.viewModel }]
+                    onClosed: root.refocus()
                 }
 
                 RowLayout {
@@ -394,52 +375,6 @@ FloatingWindow {
             }
         }
     }
-
-    // A menu title in the window's menu bar: flat until hovered or open, then the accent bar. Click opens
-    // the dropdown under it, a second click closes it. `build` returns the PopupMenu model when it opens.
-    component MenuTitle: Rectangle {
-        id: mt
-        property string text: ""
-        property var menu: null
-        property var build: null
-        property real closedAt: 0
-        readonly property bool lit: area.containsMouse || (mt.menu !== null && mt.menu.visible)
-        implicitWidth: label.implicitWidth + 2 * MenuStyle.pad
-        implicitHeight: MenuStyle.rowHeight
-        color: mt.lit ? MenuStyle.selectBar : "transparent"
-        RetroText {
-            id: label
-            anchors.centerIn: parent
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: mt.lit ? MenuStyle.selectText : Config.colors.text
-            text: mt.text
-        }
-        MouseArea {
-            id: area
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: {
-                if (mt.menu.visible) {
-                    mt.menu.close();
-                    return;
-                }
-                // the click that dismissed the menu (its grab) must not open it again
-                if (Date.now() - mt.closedAt < 250)
-                    return;
-                mt.menu.model = mt.build();
-                mt.menu.openAt(mt, 0, mt.height);
-            }
-        }
-        Connections {
-            target: mt.menu
-            function onVisibleChanged() {
-                if (!mt.menu.visible)
-                    mt.closedAt = Date.now();
-            }
-        }
-    }
-
     // A labelled history graph: one solid bar per sample on the dithered track, newest on the right
     component Graph: ColumnLayout {
         id: graph

@@ -75,3 +75,4 @@ quickshell/popups/PopupMenuBody.qml	event\.key === Qt\.Key_Escape	Context menus:
 quickshell/popups/PopupMenu.qml	grabFocus: true	Context menus: a click outside closes them
 quickshell/popups/RetroScrollBar.qml	root\.decrease\(\)	Scrollbars: arrow buttons scroll
 quickshell/popups/ConfirmBar.qml	function accept\(	Confirms: one template, the verb accepts and Cancel cancels
+quickshell/popups/MenuStrip.qml	closedAt	Menu bars: a click right after a dropdown was dismissed does not reopen it
