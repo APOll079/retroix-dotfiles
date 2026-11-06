@@ -5,6 +5,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
+// Qt Controls has its own ContextMenu; ours is reached through Local
+import "." as Local
 
 // Task Manager (Ctrl+Shift+Esc, left click on the bar's CPU button, `qs ipc call taskmanager open`),
 // Win95 style. A normal window Hyprland manages (an xdg toplevel: move, resize, tile, Super+Q), one for
@@ -58,6 +60,16 @@ FloatingWindow {
 
     Item {
         id: frame
+
+        // Dropdowns of the menu bar (popup windows, closed until a title opens them)
+        Local.ContextMenu {
+            id: fileMenu
+            onVisibleChanged: if (!visible) root.refocus()
+        }
+        Local.ContextMenu {
+            id: viewMenu
+            onVisibleChanged: if (!visible) root.refocus()
+        }
         anchors.fill: parent
 
         // Keys for the tabs without a text field (Apps, Performance)
@@ -85,6 +97,21 @@ FloatingWindow {
             ColumnLayout {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
+
+                // Menu bar: File / View open a dropdown (ContextMenu) with actions this window already has
+                Row {
+                    Layout.fillWidth: true
+                    MenuTitle {
+                        text: "File"
+                        menu: fileMenu
+                        build: root.fileModel
+                    }
+                    MenuTitle {
+                        text: "View"
+                        menu: viewMenu
+                        build: root.viewModel
+                    }
+                }
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -210,14 +237,7 @@ FloatingWindow {
                             text: modelData.text + (root.sortKey === modelData.key ? (root.sortDesc ? " ▾" : " ▴") : "")
                             checked: root.sortKey === modelData.key
                             focusPolicy: Qt.NoFocus
-                            onClicked: {
-                                if (root.sortKey === modelData.key)
-                                    root.sortDesc = !root.sortDesc;
-                                else {
-                                    root.sortKey = modelData.key;
-                                    root.sortDesc = modelData.key !== "name";
-                                }
-                            }
+                            onClicked: root.sortBy(modelData.key)
                         }
                     }
                 }
@@ -375,6 +395,51 @@ FloatingWindow {
         }
     }
 
+    // A menu title in the window's menu bar: flat until hovered or open, then the accent bar. Click opens
+    // the dropdown under it, a second click closes it. `build` returns the ContextMenu model when it opens.
+    component MenuTitle: Rectangle {
+        id: mt
+        property string text: ""
+        property var menu: null
+        property var build: null
+        property real closedAt: 0
+        readonly property bool lit: area.containsMouse || (mt.menu !== null && mt.menu.visible)
+        implicitWidth: label.implicitWidth + 2 * MenuStyle.pad
+        implicitHeight: MenuStyle.rowHeight
+        color: mt.lit ? MenuStyle.selectBar : "transparent"
+        RetroText {
+            id: label
+            anchors.centerIn: parent
+            font.family: MenuStyle.bodyFont
+            font.pixelSize: MenuStyle.fontSize
+            color: mt.lit ? MenuStyle.selectText : Config.colors.text
+            text: mt.text
+        }
+        MouseArea {
+            id: area
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: {
+                if (mt.menu.visible) {
+                    mt.menu.close();
+                    return;
+                }
+                // the click that dismissed the menu (its grab) must not open it again
+                if (Date.now() - mt.closedAt < 250)
+                    return;
+                mt.menu.model = mt.build();
+                mt.menu.openAt(mt, 0, mt.height);
+            }
+        }
+        Connections {
+            target: mt.menu
+            function onVisibleChanged() {
+                if (!mt.menu.visible)
+                    mt.closedAt = Date.now();
+            }
+        }
+    }
+
     // A labelled history graph: one solid bar per sample on the dithered track, newest on the right
     component Graph: ColumnLayout {
         id: graph
@@ -435,6 +500,53 @@ FloatingWindow {
                 }
             }
         }
+    }
+
+    // --- menu bar models (only actions the window already has: its buttons, tabs, sort and filter) ---
+
+    readonly property bool canEnd: root.confirm === null && (root.tab === "apps" ? root.selectedApp !== null : (root.tab === "processes" && root.selectedGroup !== null && root.selectedGroup.mine))
+
+    function fileModel() {
+        return [
+            { text: "Switch to", enabled: root.confirm === null && root.tab === "apps" && root.selectedApp !== null, action: () => root.switchToApp() },
+            { text: "End task", enabled: root.canEnd, action: () => root.askEnd(false) },
+            { text: "Kill", enabled: root.canEnd, action: () => root.askEnd(true) },
+            { separator: true },
+            { text: "Close", action: () => root.cancelOrClose() }
+        ];
+    }
+
+    function viewModel() {
+        const inProcs = root.tab === "processes";
+        const out = [
+            { text: "Apps", checked: root.tab === "apps", action: () => root.showTab("apps") },
+            { text: "Processes", checked: root.tab === "processes", action: () => root.showTab("processes") },
+            { text: "Performance", checked: root.tab === "performance", action: () => root.showTab("performance") },
+            { separator: true },
+            { text: "Only my processes", checked: root.mineOnly, enabled: inProcs, action: () => root.mineOnly = !root.mineOnly },
+            { separator: true }
+        ];
+        for (const c of [["name", "Sort by Program"], ["cpu", "Sort by CPU"], ["mem", "Sort by Memory"], ["count", "Sort by Procs"]])
+            out.push({ text: c[1], checked: root.sortKey === c[0], enabled: inProcs, action: () => root.sortBy(c[0]) });
+        return out;
+    }
+
+    // Click a column header, or pick Sort by: a new column starts in its natural order, the same one flips it
+    function sortBy(key) {
+        if (root.sortKey === key)
+            root.sortDesc = !root.sortDesc;
+        else {
+            root.sortKey = key;
+            root.sortDesc = key !== "name";
+        }
+    }
+
+    // Keyboard focus back to where the tab keeps it, after a menu closed
+    function refocus() {
+        if (root.tab === "processes")
+            filter.focusInput();
+        else
+            keys.forceActiveFocus();
     }
 
     // --- data ---
