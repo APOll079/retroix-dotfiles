@@ -339,16 +339,8 @@ FloatingWindow {
                     Layout.fillWidth: true
                     visible: root.confirm === null
                     spacing: MenuStyle.gap
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
-                        text: root.notice !== "" ? root.notice : root.statusText()
                     }
                     BevelButton {
                         visible: root.tab === "apps"
@@ -371,6 +363,13 @@ FloatingWindow {
                         focusPolicy: Qt.NoFocus
                         onClicked: root.askEnd(true)
                     }
+                }
+
+                StatusBar {
+                    text: root.notice !== "" ? root.notice : root.statusText()
+                    kind: root.notice !== "" ? "message" : "state"
+                    trailing: root.tab === "apps" ? root.apps.length + (root.apps.length === 1 ? " window" : " windows")
+                        : root.tab === "processes" ? root.groups.length + (root.groups.length === 1 ? " program" : " programs") : ""
                 }
             }
         }

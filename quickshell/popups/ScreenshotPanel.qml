@@ -261,16 +261,8 @@ PanelWindow {
                         focusPolicy: Qt.NoFocus
                         onClicked: root.step(1)
                     }
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideMiddle
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: root.targets.length === 0 ? MenuStyle.bevelDark : Config.colors.text
-                        text: root.statusText()
                     }
                     BevelButton {
                         glyph: "\ue14d"
@@ -306,6 +298,11 @@ PanelWindow {
                     glyph: "\ue872"
                     onAccepted: root.trash(root.targets)
                     onCanceled: root.confirmDelete = false
+                }
+                StatusBar {
+                    kind: root.targets.length === 0 ? "state" : "message"
+                    text: root.statusText()
+                    trailing: root.targets.length > 0 ? folderModel.count + " shots" : ""
                 }
             }
         }

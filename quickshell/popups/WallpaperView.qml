@@ -275,34 +275,14 @@ Item {
             }
         }
 
-        // Status: an error from hyprpaper (urgent icon, normal text: urgent text on base is
-        // unreadable), else the selected file, else the folder
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: MenuStyle.gap
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                visible: WallpaperState.status !== ""
-                font.family: MenuStyle.iconFont
-                font.pixelSize: MenuStyle.iconSize
-                color: Config.colors.urgent
-                text: "error"
-            }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                textFormat: Text.PlainText
-                Layout.fillWidth: true
-                elide: Text.ElideMiddle
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: WallpaperState.status !== "" ? Config.colors.text : MenuStyle.bevelDark
-                text: WallpaperState.status !== "" ? WallpaperState.status
-                    : WallpaperState.info !== "" ? WallpaperState.info
-                    : root.current !== "" ? (root.cursor + 1) + " / " + root.results.length + "   " + root.current + "   in " + root.tilde(WallpaperState.folder)
-                    : root.tilde(WallpaperState.folder)
-            }
+        // Status: an error from hyprpaper, else what the last Set did, else the selected file, else the folder
+        StatusBar {
+            kind: WallpaperState.status !== "" ? "error" : WallpaperState.info !== "" ? "message" : "state"
+            text: WallpaperState.status !== "" ? WallpaperState.status
+                : WallpaperState.info !== "" ? WallpaperState.info
+                : root.current !== "" ? root.current + "   in " + root.tilde(WallpaperState.folder)
+                : root.tilde(WallpaperState.folder)
+            trailing: root.current !== "" ? (root.cursor + 1) + " / " + root.results.length : ""
         }
     }
 }

@@ -227,16 +227,8 @@ PanelWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: MenuStyle.gap
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
+                    Item {
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
-                        text: root.busy ? "Working..." : (root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "")
                     }
                     BevelButton {
                         text: "Start"
@@ -259,6 +251,12 @@ PanelWindow {
                         focusPolicy: Qt.NoFocus
                         onClicked: root.act("restart")
                     }
+                }
+
+                StatusBar {
+                    kind: root.busy || root.current ? "message" : "state"
+                    text: root.busy ? "Working..." : (root.current ? root.current.name + (root.scope === "system" ? " (asks for doas in a terminal)" : "") : "No service selected")
+                    trailing: root.shown.length + " of " + root.services.length
                 }
             }
         }

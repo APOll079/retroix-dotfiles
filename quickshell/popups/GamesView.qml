@@ -268,24 +268,6 @@ Item {
             Item { Layout.fillHeight: true }
         }
 
-        // Bottom row: the highlighted game
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: MenuStyle.gap
-            visible: !root.addMode && root.optionsFor === null
-
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
-                Layout.fillWidth: true
-                elide: Text.ElideMiddle
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: root.current ? Config.colors.text : MenuStyle.bevelDark
-                textFormat: Text.PlainText
-                text: root.current ? root.current.title + " - " + root.sourceName(root.current) : root.results.length + " games"
-            }
-        }
         // The game's buttons
         RowLayout {
             Layout.fillWidth: true
@@ -349,6 +331,13 @@ Item {
                     root.focusSearch();
                 }
             }
+        }
+        // Status: the highlighted game, else how many there are
+        StatusBar {
+            visible: !root.addMode
+            kind: root.current ? "message" : "state"
+            text: root.current ? root.current.title + " - " + root.sourceName(root.current) : "No game selected"
+            trailing: root.results.length + (root.results.length === 1 ? " game" : " games")
         }
         // Form buttons
         RowLayout {
