@@ -2,7 +2,8 @@
 # Render quickshell/gallery.qml offscreen, one PNG per theme.
 #   scripts/render-gallery.sh -o OUTDIR [theme ...]     (default themes: cherry dusty default)
 # Works on a scratch copy of quickshell/ inside OUTDIR/.work (deleted afterwards). Never touches the
-# running shell: no Wayland / X display, a private XDG_* tree, QS_NO_APPLY so apply.py never runs.
+# running shell: no Wayland / X display, no session D-Bus, a private XDG_* tree, QS_NO_APPLY so apply.py
+# never runs.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT=""
@@ -31,7 +32,7 @@ json.dump(d, open(p, "w"), indent=4)
 PY
     png="$OUT/gallery-$theme.png"
     rm -f "$png"
-    env -u WAYLAND_DISPLAY -u DISPLAY \
+    env -u WAYLAND_DISPLAY -u DISPLAY -u DBUS_SESSION_BUS_ADDRESS \
         QT_QPA_PLATFORM=offscreen QS_NO_APPLY=1 \
         XDG_CONFIG_HOME="$WORK/xdg/config" XDG_STATE_HOME="$WORK/xdg/state" \
         XDG_CACHE_HOME="$WORK/xdg/cache" XDG_RUNTIME_DIR="$WORK/xdg/run" \
