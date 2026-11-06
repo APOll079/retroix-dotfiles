@@ -5,7 +5,8 @@ import QtQuick.Layouts
 import ".."
 
 // Raised push button; pressing it pushes the bevel in and nudges the content. checked = the same plus a
-// dithered lighter face (flat lighter face when dither is off).
+// dithered lighter face (flat lighter face when dither is off). No hover highlight: Win95 buttons don't
+// light up (the pointer cursor still changes).
 Button {
     id: root
 
@@ -42,17 +43,6 @@ Button {
             anchors.margins: 3
             visible: root.visualFocus
             color: Config.colors.text
-        }
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: 3
-            opacity: root.hovered && root.enabled && !root.visualFocus ? 1 : 0
-            color: "transparent"
-            border.width: 1
-            border.color: MenuStyle.selectBar
-            Behavior on opacity {
-                NumberAnimation { duration: MenuStyle.animFast }
-            }
         }
     }
 
