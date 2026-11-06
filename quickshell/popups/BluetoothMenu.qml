@@ -282,32 +282,18 @@ PopupWindow {
                 }
             }
 
-            // Forget confirm
-            RowLayout {
+            // Forget confirm: the verb is the default button
+            ConfirmBar {
                 Layout.fillWidth: true
                 visible: root.forgetting !== null
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.forgetting ? "Forget " + root.label(root.forgetting) + "?" : ""
+                glyph: "\ue002"
+                message: root.forgetting ? "Forget " + root.shortName(root.label(root.forgetting)) + "?" : ""
+                verb: "Forget"
+                onAccepted: {
+                    root.forgetting.forget();
+                    root.forgetting = null;
                 }
-                BevelButton {
-                    text: "Forget"
-                    onClicked: {
-                        root.forgetting.forget();
-                        root.forgetting = null;
-                    }
-                }
-                BevelButton {
-                    text: "Cancel"
-                    onClicked: root.forgetting = null
-                }
+                onCanceled: root.forgetting = null
             }
 
             Text {
