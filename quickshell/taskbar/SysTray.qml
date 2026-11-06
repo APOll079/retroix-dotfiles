@@ -8,12 +8,42 @@ import "../popups" as Popups
 import ".."
 
 // The tray half of the bar's well: tray icons as flat BarButtons, an etched separator, then bell +
-// weather + clock. Bar.qml puts it inside the BarWell. The right-click menu is Qt's native QsMenuAnchor.
+// weather + clock. Bar.qml puts it inside the BarWell. The right-click menu is the shared ContextMenu
+// built from the item's QsMenuOpener entries (menuModel); a menu with submenus falls back to Qt's native
+// QsMenuAnchor for that item, since ContextMenu has no submenus.
 Row {
     id: sysTrayRow
     spacing: 0
     property bool clockToggled: false
     signal clockClicked(var item)
+
+    // QsMenuOpener entries -> ContextMenu model: [{ text, enabled, checked, separator, action }].
+    // Entry icons are dropped (ContextMenu has a glyph column, not image icons). Leading, trailing and
+    // doubled separators are removed.
+    function menuModel(entries) {
+        const out = [];
+        // forEach, not for-of: each entry needs its own closure for its action
+        entries.forEach(function(e) {
+            if (e.isSeparator) {
+                if (out.length > 0 && !out[out.length - 1].separator)
+                    out.push({ separator: true });
+                return;
+            }
+            out.push({
+                text: e.text,
+                enabled: e.enabled,
+                checked: e.buttonType > 0 && e.checkState === Qt.Checked,
+                action: function() { e.triggered(); }
+            });
+        });
+        while (out.length > 0 && out[out.length - 1].separator)
+            out.pop();
+        return out;
+    }
+    // True when any entry opens a submenu
+    function hasSubmenu(entries) {
+        return entries.some(e => e.hasChildren);
+    }
 
     Repeater {
         id: sysTray
@@ -26,11 +56,20 @@ Row {
             iconFontValue: ""
             toggledIconFontValue: ""
             minWidth: Config.settings.bar.trayIconSize + MenuStyle.space2
-            isToggled: nativeMenu.visible
+            isToggled: ctx.visible || nativeMenu.visible
 
             function openMenu() {
-                if (item.hasMenu)
+                if (!item.hasMenu)
+                    return;
+                const entries = opener.children ? opener.children.values : [];
+                const model = sysTrayRow.menuModel(entries);
+                if (model.length === 0 || sysTrayRow.hasSubmenu(entries)) {
                     nativeMenu.open();
+                    return;
+                }
+                ctx.model = model;
+                const p = trayItem.mapToItem(taskbar.contentItem, 0, 0);
+                ctx.openAt(taskbar.contentItem, p.x, taskbar.height);
             }
 
             onClicked: {
@@ -41,7 +80,14 @@ Row {
             }
             onRightClicked: openMenu()
 
-            // Anchored directly under its own icon, in
+            QsMenuOpener {
+                id: opener
+                menu: trayItem.item.menu
+            }
+            Popups.ContextMenu {
+                id: ctx
+            }
+            // Fallback for menus with submenus. Anchored directly under its own icon, in
             // taskbar-window coordinates.
             QsMenuAnchor {
                 id: nativeMenu
@@ -87,7 +133,7 @@ Row {
             Timer {
                 id: tipTimer
                 interval: 500
-                running: trayItem.hovered && !nativeMenu.visible
+                running: trayItem.hovered && !ctx.visible && !nativeMenu.visible
                 onTriggered: tip.shown = true
             }
             PopupWindow {
@@ -95,7 +141,7 @@ Row {
                 property bool shown: false
                 property string title: trayItem.item.tooltipTitle !== "" ? trayItem.item.tooltipTitle : trayItem.item.title
                 property string description: trayItem.item.tooltipDescription
-                visible: shown && trayItem.hovered && !nativeMenu.visible && (title !== "" || description !== "")
+                visible: shown && trayItem.hovered && !ctx.visible && !nativeMenu.visible && (title !== "" || description !== "")
                 onVisibleChanged: if (!visible) shown = false
                 anchor.window: taskbar
                 anchor.rect.x: Math.max(4, Math.min(Math.round(trayItem.mapToItem(null, 0, 0).x + trayItem.width / 2 - width / 2), taskbar.width - width - 4))
