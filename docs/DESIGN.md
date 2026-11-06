@@ -93,6 +93,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `scrollRepeatRate` | int | `50` |  |
 | `contextMenuMinWidth` | int | `140` |  |
 | `tabHeight` | int | `28` |  |
+| `statusHeight` | int | `18` |  |
 | `launcherWidth` | int | `760` |  |
 | `launcherHeight` | int | `560` |  |
 | `clipPreviewFraction` | real | `0.45` |  |
@@ -125,7 +126,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `spotifyCompactRow` | int | `24` | the drawer's seek / transport / volume / search rows and its icon buttons |
 | `spotifyTabHeight` | int | `tabHeight` |  |
 | `spotifyChipHeight` | int | `20` | chips: smaller than tabs and buttons |
-| `spotifyStatusHeight` | int | `18` | the status bar at the bottom of the drawer |
+| `spotifyStatusHeight` | int | `statusHeight` |  |
 | `spotifyRecentCount` | int | `3` | the newest, one row, square tiles of about 120 px (collapsible) |
 | `spotifyLyricsCover` | int | `32` | the cover in the compact lyrics header |
 | `spotifyNoteMs` | int | `3000` | how long a short message stays on the status bar |

@@ -58,3 +58,4 @@ ConfirmBar 1.0 ConfirmBar.qml
 GroupBox 1.0 GroupBox.qml
 EmptyState 1.0 EmptyState.qml
 TabPage 1.0 TabPage.qml
+StatusBar 1.0 StatusBar.qml

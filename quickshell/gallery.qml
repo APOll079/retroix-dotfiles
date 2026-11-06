@@ -271,6 +271,10 @@ ShellRoot {
                     current: "cal"
                     Popups.MenuRow { width: parent.width; text: "Page content"; glyph: "\ue935" }
                 }
+                Head { text: "StatusBar" }
+                Popups.StatusBar { text: "Ready"; trailing: "42 games" }
+                Popups.StatusBar { text: "Steam library not found"; kind: "error" }
+                Popups.StatusBar { text: "Playing on Phone"; highlighted: true }
                 Head { text: "MenuSeparator / Gripper / FocusRect" }
                 Popups.MenuSeparator { Layout.fillWidth: true }
                 Row {

@@ -54,6 +54,8 @@ Singleton {
     // Win95 tabs (TabPage): tab strip height (the selected tab is 1px taller and joins the page), padding inside the page
     readonly property int tabHeight: 28
     readonly property int tabPagePad: space4
+    // Status bar at the bottom of a window (StatusBar): one 12px line
+    readonly property int statusHeight: 18
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and
@@ -110,7 +112,7 @@ Singleton {
     readonly property int spotifyCompactRow: 24     // the drawer's seek / transport / volume / search rows and its icon buttons
     readonly property int spotifyTabHeight: tabHeight
     readonly property int spotifyChipHeight: 20     // chips: smaller than tabs and buttons
-    readonly property int spotifyStatusHeight: 18   // the status bar at the bottom of the drawer
+    readonly property int spotifyStatusHeight: statusHeight
     readonly property int spotifyPagePad: space4         // inside the tab page's bevel
     readonly property int spotifyRecentCount: 3    // the newest, one row, square tiles of about 120 px (collapsible)
     readonly property int spotifyLyricsCover: 32    // the cover in the compact lyrics header
