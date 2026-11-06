@@ -52,6 +52,9 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] The urgent colour (darker, rust-coloured in cherry): the privacy icons, error text, a critical toast's title bar
 - [ ] Window frames (`hypr/plugins.lua`, never run): install hyprbars and imgborders with `hyprpm`, `hyprctl reload`; do the option names, buttons and window-rule keys in `docs/theming.md` hold; do floating windows get the bar and tiled ones not; does the bevel draw around windows
 
+### Work pass, wave 1 (branch work-pass-w1, offscreen only)
+- [ ] Low-memory toast: fill RAM above `ramPercent` (or put more than `tmpGb` in a tmpfs /tmp): one toast with the biggest program's name, no repeat while above, back only after the drop and the cooldown; `enabled: false` stays silent
+
 ### Bar, menus and desktop
 - [ ] Menus over a fullscreen video (clicks stay in the menu); Super+Q / click-outside closes every menu
 - [ ] Every search box (the shared SearchBox: arrows, Enter, Escape) in the launcher, games, cheat sheet, Services, screenshots, Spotify
@@ -102,7 +105,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Lock screen wallpaper: after Set, `hyprlock` (from a second TTY) shows the same picture per monitor; the `$var` in `path` and the `##` escape are unverified
 
 ## Done
-- **Work pass, wave 1**: R4 removed the unused `MenuStyle.shotHistory*Fraction`; R7 found the broken icon links harmless (`docs/theming.md`)
+- **Work pass, wave 1**: R4 removed the unused `MenuStyle.shotHistory*Fraction`; R7 found the broken icon links harmless (`docs/theming.md`); S6 low-memory and /tmp toast
 - **Design pass, wave 2** (needs a live test, see above): shared `PopupWindowFrame` left titles, `RetroScrollBar`, `PopupMenu`, `ConfirmBar`, `GroupFrame`, `EmptyState`, `TabPage`, `StatusBar`, `MenuStrip`, `StartBanner`, `BarWell`, Win95 trackbars, window sizes, the Monaco centre title, a darker urgent colour; the bar, side panel, launcher, big windows and Spotify drawer moved onto them; `tests/interaction/` with real simulated input; the Win95 window frames as a written-not-run Hyprland config
 - **Design pass, wave 1** (needs a live test, see above): component gallery (`quickshell/gallery.qml`, `scripts/render-gallery.sh`), palette rule in `apply.py` (bevel edge 1.35:1, text 4.5:1) with lighter highlights, two-ring Win95 buttons, spacing scale, two icon sizes, whole-pixel layout, fixed-width CPU label, two motion durations + Reduce motion, one embossed disabled look, generated `docs/DESIGN.md`, one-hue terminal and fastfetch, `noto-fonts-cjk` in the package list
 - **Bar**: gripper, workspaces, Start / Themes, Wallpapers and Services buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + temperature + clock (right click: DND)

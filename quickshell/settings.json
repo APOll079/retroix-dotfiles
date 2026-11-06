@@ -27,6 +27,12 @@
             "monitor": "",
             "position": "top-right"
         },
+        "memoryWatch": {
+            "cooldownMinutes": 30,
+            "enabled": true,
+            "ramPercent": 90,
+            "tmpGb": 4
+        },
         "osd": {
             "bluetooth": true,
             "volume": true

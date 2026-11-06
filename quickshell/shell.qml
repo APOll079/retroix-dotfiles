@@ -16,6 +16,8 @@ import "popups" as Popups
 
 Scope {
     id: root
+    // singletons are lazy: reading this keeps the low-memory watcher alive
+    property bool memoryWatch: MemoryWatch.active
     Taskbar.Bar {}
     Popups.OsdPopup {}
     Popups.NotificationDaemon {}

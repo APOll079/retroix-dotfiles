@@ -155,6 +155,13 @@ property string position: "top-right"
 property int maxVisible: 4
 property string monitor: ""
 }
+// Low-memory toast: RAM above ramPercent, or RAM-backed /tmp above tmpGb; one toast per crossing, at most one per cooldownMinutes
+property JsonObject memoryWatch: JsonObject {
+property bool enabled: true
+property int ramPercent: 90
+property int tmpGb: 4
+property int cooldownMinutes: 30
+}
 // Which OSDs show
 property JsonObject osd: JsonObject {
 property bool volume: true
