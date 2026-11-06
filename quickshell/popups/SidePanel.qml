@@ -90,28 +90,16 @@ PanelWindow {
                 }
             }
 
-            // Inline confirm
-            RowLayout {
+            // Inline confirm: the verb is the default button
+            ConfirmBar {
+                id: confirmBar
                 Layout.fillWidth: true
                 visible: !!root.pending
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.pending ? root.pending.prompt : ""
-                }
-                BevelButton {
-                    text: root.pending ? root.pending.verb : ""
-                    onClicked: root.run(root.pending)
-                }
-                BevelButton {
-                    text: "Cancel"
-                    onClicked: root.pending = null
-                }
+                glyph: "\ue002"
+                message: root.pending ? root.pending.prompt : ""
+                verb: root.pending ? root.pending.verb : ""
+                onAccepted: root.run(root.pending)
+                onCanceled: root.pending = null
             }
 
             MenuSeparator { Layout.fillWidth: true }
