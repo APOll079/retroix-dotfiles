@@ -203,7 +203,7 @@ ColumnLayout {
                             for (var n of modelData.nodes) if (n.audio) n.audio.muted = m;
                         }
                         Layout.fillWidth: true
-                        spacing: 2
+                        spacing: MenuStyle.space2
 
                         Text {
                             renderType: Text.NativeRendering

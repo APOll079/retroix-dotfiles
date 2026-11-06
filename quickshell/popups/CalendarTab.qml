@@ -68,6 +68,8 @@ ColumnLayout {
                 Text {
                     renderType: Text.NativeRendering
                     font.hintingPreference: Font.PreferFullHinting
+                    Layout.maximumWidth: weatherCol.width / 3
+                    elide: Text.ElideRight
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: Config.colors.text
@@ -95,9 +97,11 @@ ColumnLayout {
                             renderType: Text.NativeRendering
                             font.hintingPreference: Font.PreferFullHinting
                             Layout.fillWidth: true
+                            elide: Text.ElideRight
                             font.family: MenuStyle.bodyFont
                             font.pixelSize: MenuStyle.fontSize
                             color: Config.colors.text
+                            textFormat: Text.PlainText
                             text: modelData.name + " " + modelData.lo + "/" + modelData.hi + Weather.unit
                         }
                     }

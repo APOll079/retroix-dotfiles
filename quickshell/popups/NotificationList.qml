@@ -247,7 +247,7 @@ ColumnLayout {
                                 // Exactly the room the button column leaves, whatever it holds
                                 Layout.preferredWidth: cardColumn.width - 2 * MenuStyle.boxPadH - expandButton.implicitWidth - MenuStyle.pad
                                 Layout.alignment: Qt.AlignTop
-                                spacing: 2
+                                spacing: MenuStyle.space2
                                 Text {
                                     renderType: Text.NativeRendering
                                     font.hintingPreference: Font.PreferFullHinting
