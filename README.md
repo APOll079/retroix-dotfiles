@@ -76,7 +76,7 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+N | Side panel (notifications, audio, calendar, phone) |
 | Super+V | Clipboard history |
 | Super+Tab | Window switcher |
-| Super+Shift+S, Print | Snipping tool (F12: instant full screenshot) |
+| Super+Shift+S, Print | Snipping tool (Shift+Print: instant full screenshot) |
 | Super+Shift+H | Screenshot history |
 | Ctrl+Shift+Esc | Task Manager |
 | Super+Shift+G | Games |

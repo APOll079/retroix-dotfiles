@@ -99,9 +99,9 @@ end)
 
 local screenshotCmd = "bash -c 'file=$HOME/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png && mkdir -p $HOME/screenshots && grim $file && wl-copy < $file'"
 -- Print (and SUPER + SHIFT + S, above) open the quickshell snipping overlay on the focused
--- monitor: region drag, window, screen, all, history. F12 stays instant
+-- monitor: region drag, window, screen, all, history. Shift+Print stays instant
 hl.bind("Print", hl.dsp.exec_cmd(screenshotOverlay))  -- help: Screen | Screenshot overlay
-hl.bind("F12", hl.dsp.exec_cmd(screenshotCmd))  -- help: Screen | Instant full screenshot
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd(screenshotCmd))  -- help: Screen | Instant full screenshot
 -- Autoclicker toggle (hypr/scripts/autoclick: ydotool, left button about 20 clicks/s); setup once with scripts/autoclick-setup.sh
 hl.bind("F8", hl.dsp.exec_cmd("fish ~/.config/hypr/scripts/autoclick"))  -- help: Desktop | Autoclicker (toggle)
 
