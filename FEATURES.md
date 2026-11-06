@@ -11,7 +11,7 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 ### Next up
 - Design pass (`design-pass-prompt.md`): waves 1 and 2 are merged to main; wave 3 (`design-pass-w3`) put the Task Manager tabs on `TabPage` and dropped the grey / tint launcher icon code (colour stays). Left: the live tests below. Follow-ups noticed, none started: `Time.qml` still builds the clock with " | " (ClockWidget swaps it); `EmptyState` doesn't centre itself (every host wraps it); screenshot History's four action buttons are still unlabelled icons; the Spotify row menu lost its song-name title bar and now covers rows; MenuRow highlights a disabled row on hover; the Themes menu has no Reduce motion button (not wanted); the font fallback for CJK is blocked (Qt 6.12 has no QML fallback list, see git log A11). E1 grain, C7 Control Panel, D12 balloons, D13 accelerators (Alt+F was built and dropped), D14 tab order and E2 VGA colours were skipped on purpose.
 - From the old audit: F12 → Shift+Print (gives Zen its devtools key back), lazy-loaded popups (tried: no way to measure the gain headless; if wanted, start with Spotify, launcher, screenshots, wallpapers, games).
-- spotifyd works but needs an upgrade.
+- spotifyd upgrade: commands and checks are written in `docs/spotify.md`, yours to run.
 
 ### Small open items
 - Spotify notification filter: `NotificationDaemon.qml` drops `appName` "spotify" (a guess). If Spotify track toasts still show, use the real app name.
