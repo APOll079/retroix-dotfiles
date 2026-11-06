@@ -67,8 +67,8 @@ PanelWindow {
 
     Item {
         id: frame
-        width: MenuStyle.launcherWidth
-        height: MenuStyle.launcherHeight
+        width: MenuStyle.windowWidth
+        height: MenuStyle.windowHeight
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.screenHeight / 2 - height / 2)
 

@@ -80,8 +80,8 @@ PanelWindow {
 
     Item {
         id: frame
-        width: Math.round(root.width * MenuStyle.shotHistoryWidthFraction)
-        height: Math.round(root.screenHeight * MenuStyle.shotHistoryHeightFraction)
+        width: Math.min(MenuStyle.windowLargeWidth, root.width - 2 * MenuStyle.space12)
+        height: Math.min(MenuStyle.windowLargeHeight, root.screenHeight - 2 * MenuStyle.barHeight - 2 * MenuStyle.space12)
         x: Math.round((root.width - width) / 2)
         y: Math.round(root.screenHeight / 2 - height / 2) - MenuStyle.barHeight
 
