@@ -97,6 +97,8 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        // Only as tall as the entries and the end line need: a few entries don't sit in a tall empty well
+        Layout.maximumHeight: list.contentHeight + list.topMargin + list.bottomMargin + 2 * MenuStyle.frameInset
         visible: NotificationStore.items.length > 0
         color: MenuStyle.notificationWell
         border.width: 1
@@ -117,6 +119,18 @@ ColumnLayout {
             topMargin: MenuStyle.pad
             bottomMargin: MenuStyle.pad
             boundsBehavior: Flickable.StopAtBounds
+            // The quiet end of the history
+            footer: Item {
+                width: list.width
+                height: MenuStyle.rowHeight + MenuStyle.pad
+                RetroText {
+                    anchors.centerIn: parent
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.base
+                    text: "No older notifications"
+                }
+            }
             ScrollIndicator.vertical: ScrollIndicator {
                 active: list.moving
             }
