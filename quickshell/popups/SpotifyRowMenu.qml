@@ -1,8 +1,7 @@
 import QtQuick
-import QtQuick.Layouts
 import ".."
 
-// The song's options (right-click, or Menu / Shift+F10): a small frame over the drawer, right under the
+// The song's options (right-click, or Menu / Shift+F10): the shared ContextMenuBody over the drawer, right under the
 // row (above it when there is no room). Up / Down move, Enter runs, Escape or a click outside closes.
 // Like shows the real state (asked when it opens).
 Item {
@@ -100,31 +99,18 @@ Item {
         readonly property real below: menu.request ? menu.request.bottom : 0
         readonly property real above: menu.request ? menu.request.top - height : 0
         width: parent.width - 4 * MenuStyle.pad
-        height: MenuStyle.chromeTop + rows.implicitHeight + MenuStyle.chromeBottom
+        height: body.implicitHeight
         x: 2 * MenuStyle.pad
         y: below + height <= parent.height - MenuStyle.spotifyStatusHeight - MenuStyle.pad ? below : Math.max(MenuStyle.pad, above)
         MouseArea { anchors.fill: parent }
-        PopupWindowFrame {
-            windowTitle: menu.song ? menu.song.name : ""
-            ColumnLayout {
-                id: rows
-                anchors.left: parent.left
-                anchors.right: parent.right
-                spacing: 0
-                Repeater {
-                    model: menu.entries
-                    MenuRow {
-                        required property int index
-                        required property var modelData
-                        Layout.fillWidth: true
-                        focusPolicy: Qt.NoFocus
-                        selected: index === menu.cur
-                        text: modelData.text
-                        glyph: modelData.glyph
-                        onClicked: menu.run(modelData.key)
-                    }
-                }
-            }
+        ContextMenuBody {
+            id: body
+            width: parent.width
+            model: menu.entries
+            currentIndex: menu.cur
+            onCurrentIndexChanged: menu.cur = currentIndex
+            onPicked: (index, entry) => menu.run(entry.key)
+            onEscaped: menu.close()
         }
     }
 }
