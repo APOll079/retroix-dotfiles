@@ -43,20 +43,15 @@ ColumnLayout {
 
     SunkenField {
         Layout.fillWidth: true
-        implicitHeight: Math.max(MenuStyle.rowHeight * 3, deviceColumn.implicitHeight + 4)
+        implicitHeight: Math.max(MenuStyle.rowHeight * 3, root.devices.length === 0 ? noPhone.implicitHeight + 2 * MenuStyle.pad : deviceColumn.implicitHeight + 4)
         padding: 2
 
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
+        EmptyState {
+            id: noPhone
             anchors.centerIn: parent
             width: parent.width - 2 * MenuStyle.pad
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
             visible: root.devices.length === 0
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: MenuStyle.bevelDark
+            glyph: "\ue324"
             text: root.status !== "" ? root.status : "No phone found. Install KDE Connect on it and pair from there."
         }
 
@@ -104,35 +99,18 @@ ColumnLayout {
             onClicked: root.run(["--ping"], "Pinged")
         }
     }
-    // Inline confirm, same shape as the side panel's power row
-    RowLayout {
+    // Inline confirm: the verb is the default button
+    ConfirmBar {
         Layout.fillWidth: true
-        spacing: MenuStyle.gap
         visible: root.confirmUnpair
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: Config.colors.text
-            text: root.current ? "Unpair " + root.current.name + "?" : ""
+        glyph: "\ue002"
+        message: root.current ? "Unpair " + root.current.name + "?" : ""
+        verb: "Unpair"
+        onAccepted: {
+            root.confirmUnpair = false;
+            root.run(["--unpair"], "Unpaired");
         }
-        BevelButton {
-            text: "Unpair"
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                root.confirmUnpair = false;
-                root.run(["--unpair"], "Unpaired");
-            }
-        }
-        BevelButton {
-            text: "Cancel"
-            focusPolicy: Qt.NoFocus
-            onClicked: root.confirmUnpair = false
-        }
+        onCanceled: root.confirmUnpair = false
     }
     BevelButton {
         Layout.fillWidth: true

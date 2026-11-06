@@ -43,7 +43,7 @@ ColumnLayout {
             font.family: MenuStyle.titleFont
             font.pixelSize: MenuStyle.fontSize
             color: Config.colors.text
-            text: NotificationStore.items.length === 0 ? "No notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
+            text: NotificationStore.items.length === 0 ? "Notifications" : NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification" : " notifications")
         }
         // Do Not Disturb (same switch as a right click on the bar clock): notifications still land
         // here, they just don't pop up. Sunken while on.
@@ -79,12 +79,26 @@ ColumnLayout {
         return e.appIcon ? Quickshell.iconPath(e.appIcon, true) : "";
     }
 
+    Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        visible: NotificationStore.items.length === 0
+        EmptyState {
+            anchors.centerIn: parent
+            width: parent.width - 2 * MenuStyle.pad
+            glyph: "\ue7f4"
+            text: "No notifications"
+        }
+    }
+
     // The list sits in a deep well (darker field, 2 px sunken bevel). Each notification is a small
     // raised window on it: an inactive title bar (icon, app, time, like the toasts) that lights up in
     // the accent on hover, like a window getting focus, then the title and the body.
     Rectangle {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        // Only as tall as the entries and the end line need: a few entries don't sit in a tall empty well
+        Layout.maximumHeight: list.contentHeight + list.topMargin + list.bottomMargin + 2 * MenuStyle.frameInset
         visible: NotificationStore.items.length > 0
         color: MenuStyle.notificationWell
         border.width: 1
@@ -105,9 +119,21 @@ ColumnLayout {
             topMargin: MenuStyle.pad
             bottomMargin: MenuStyle.pad
             boundsBehavior: Flickable.StopAtBounds
-            ScrollIndicator.vertical: ScrollIndicator {
-                active: list.moving
+            // The quiet end of the history
+            footer: Item {
+                width: list.width - list.barRoom
+                height: MenuStyle.rowHeight + MenuStyle.pad
+                RetroText {
+                    anchors.centerIn: parent
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: Config.colors.base
+                    text: "No older notifications"
+                }
             }
+            // Floats over the right edge: the cards give it room while it shows (content overflows)
+            ScrollBar.vertical: RetroScrollBar { id: listBar }
+            readonly property int barRoom: listBar.visible ? MenuStyle.scrollBarWidth : 0
             delegate: Item {
                 id: row
                 required property var modelData
@@ -118,7 +144,7 @@ ColumnLayout {
                 readonly property bool lit: rowMouse.containsMouse || expandButton.hovered || replyButton.hovered
                 readonly property color barInk: lit ? MenuStyle.selectText : Config.colors.text
                 x: MenuStyle.pad
-                width: list.width - 2 * MenuStyle.pad
+                width: list.width - 2 * MenuStyle.pad - list.barRoom
                 height: card.height
 
                 Rectangle {

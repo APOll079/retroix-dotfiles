@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic
 import Quickshell.Bluetooth
 import ".."
 
@@ -154,7 +155,7 @@ PopupWindow {
 
     PopupWindowFrame {
         windowTitle: "Bluetooth"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue1a7"
 
         ColumnLayout {
             id: column
@@ -174,7 +175,7 @@ PopupWindow {
                 BevelButton {
                     implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
                     enabled: root.powered
-                    glyph: ""
+                    glyph: "\ue1aa"
                     checked: root.adapter !== null && root.adapter.discovering
                     onClicked: {
                         root.adapter.discovering = !root.adapter.discovering;
@@ -282,32 +283,18 @@ PopupWindow {
                 }
             }
 
-            // Forget confirm
-            RowLayout {
+            // Forget confirm: the verb is the default button
+            ConfirmBar {
                 Layout.fillWidth: true
                 visible: root.forgetting !== null
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.forgetting ? "Forget " + root.label(root.forgetting) + "?" : ""
+                glyph: "\ue002"
+                message: root.forgetting ? "Forget " + root.shortName(root.label(root.forgetting)) + "?" : ""
+                verb: "Forget"
+                onAccepted: {
+                    root.forgetting.forget();
+                    root.forgetting = null;
                 }
-                BevelButton {
-                    text: "Forget"
-                    onClicked: {
-                        root.forgetting.forget();
-                        root.forgetting = null;
-                    }
-                }
-                BevelButton {
-                    text: "Cancel"
-                    onClicked: root.forgetting = null
-                }
+                onCanceled: root.forgetting = null
             }
 
             Text {
@@ -323,18 +310,16 @@ PopupWindow {
             SunkenField {
                 Layout.fillWidth: true
                 visible: root.powered
-                Layout.preferredHeight: Math.max(1, Math.min(root.paired.length, MenuStyle.bluetoothListRows)) * MenuStyle.rowHeight + 2 * padding
+                Layout.preferredHeight: root.paired.length === 0 ? noPaired.implicitHeight + 2 * MenuStyle.pad : Math.min(root.paired.length, MenuStyle.bluetoothListRows) * MenuStyle.rowHeight + 2 * padding
                 padding: 2
                 clip: true
 
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
+                EmptyState {
+                    id: noPaired
                     anchors.centerIn: parent
+                    width: parent.width - 2 * MenuStyle.pad
                     visible: root.paired.length === 0
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
+                    glyph: "\ue1a7"
                     text: "No paired devices"
                 }
 
@@ -342,12 +327,14 @@ PopupWindow {
                     id: pairedList
                     anchors.fill: parent
                     model: root.paired
+                    // The scroll bar floats over the right edge: the rows give it room while it shows
+                    ScrollBar.vertical: RetroScrollBar { id: pairedBar }
                     delegate: RowLayout {
-                        width: pairedList.width
+                        width: pairedList.width - (pairedBar.visible ? MenuStyle.scrollBarWidth : 0)
                         spacing: MenuStyle.gap
                         MenuRow {
                             Layout.fillWidth: true
-                            glyph: modelData.connected ? "" : ""
+                            glyph: modelData.connected ? "\ue1a8" : "\ue1a7"
                             text: root.label(modelData)
                             marked: modelData.connected
                             trailing: root.status(modelData)
@@ -357,14 +344,14 @@ PopupWindow {
                         BevelButton {
                             implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: ""
+                            glyph: "\ue8e8"
                             checked: modelData.trusted
                             onClicked: modelData.trusted = !modelData.trusted
                         }
                         BevelButton {
                             implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: ""
+                            glyph: "\ue872"
                             onClicked: root.forgetting = modelData
                         }
                     }
@@ -403,9 +390,10 @@ PopupWindow {
                     id: availableList
                     anchors.fill: parent
                     model: root.available
+                    ScrollBar.vertical: RetroScrollBar { id: availableBar }
                     delegate: MenuRow {
-                        width: availableList.width
-                        glyph: ""
+                        width: availableList.width - (availableBar.visible ? MenuStyle.scrollBarWidth : 0)
+                        glyph: "\ue1aa"
                         text: root.label(modelData)
                         trailing: modelData.pairing ? "Cancel" : "Pair"
                         onClicked: modelData.pairing ? modelData.cancelPair() : root.pairDevice(modelData)
