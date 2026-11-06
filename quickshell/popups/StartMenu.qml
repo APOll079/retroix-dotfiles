@@ -9,6 +9,13 @@ PopupWindow {
     // The bar window this popup hangs off (set by Bar.qml)
     required property var bar
 
+    // The side banner's width. MenuStyle should name it (e.g. bannerWidth) so the launcher shares it.
+    readonly property int bannerWidth: 24
+    readonly property string themeName: {
+        const t = Config.settings.currentTheme || "";
+        return t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
     property int menuWidth: 0
     property var closeCallback: function () {}
     property var openPowerMenuCallback: function () {}
@@ -18,138 +25,166 @@ PopupWindow {
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
     implicitWidth: MenuStyle.widthLarge
-    implicitHeight: MenuStyle.chromeHeight + column.implicitHeight
+    implicitHeight: MenuStyle.chromeHeight + row.implicitHeight
     color: "transparent"
 
     PopupWindowFrame {
         windowTitle: "Your Computer"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue30c"
 
-        ColumnLayout {
-            id: column
+        RowLayout {
+            id: row
             anchors.left: parent.left
             anchors.right: parent.right
             spacing: MenuStyle.pad
 
-            RowLayout {
+            // Win95 side banner: the accent stripe with the current theme's name written up it
+            Rectangle {
+                Layout.preferredWidth: root.bannerWidth
+                Layout.fillHeight: true
+                color: MenuStyle.selectBar
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    rotation: -90
+                    transformOrigin: Item.TopLeft
+                    x: Math.round((parent.width - implicitHeight) / 2)
+                    y: parent.height - MenuStyle.pad
+                    font.family: MenuStyle.titleFont
+                    font.pixelSize: MenuStyle.iconSize
+                    font.bold: true
+                    color: MenuStyle.selectText
+                    textFormat: Text.PlainText
+                    text: root.themeName
+                }
+            }
+
+            ColumnLayout {
+                id: column
                 Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
                 spacing: MenuStyle.pad
 
-                SunkenField {
-                    Layout.preferredWidth: MenuStyle.avatarSize
-                    Layout.preferredHeight: MenuStyle.avatarSize
-                    padding: 2
-                    Image {
-                        anchors.fill: parent
-                        asynchronous: true
-                        // settings.json may use ~ (QML doesn't expand it)
-                        source: {
-                            const p = Config.settings.systemProfileImageSource || "";
-                            return p.startsWith("~/") ? Quickshell.env("HOME") + p.slice(1) : p;
-                        }
-                        fillMode: Image.PreserveAspectCrop
-                        clip: true
-                    }
-                }
-
-                SunkenField {
+                RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: MenuStyle.avatarSize
-                    padding: MenuStyle.pad
+                    spacing: MenuStyle.pad
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 0
+                    SunkenField {
+                        Layout.preferredWidth: MenuStyle.avatarSize
+                        Layout.preferredHeight: MenuStyle.avatarSize
+                        padding: 2
+                        Image {
+                            anchors.fill: parent
+                            asynchronous: true
+                            // settings.json may use ~ (QML doesn't expand it)
+                            source: {
+                                const p = Config.settings.systemProfileImageSource || "";
+                                return p.startsWith("~/") ? Quickshell.env("HOME") + p.slice(1) : p;
+                            }
+                            fillMode: Image.PreserveAspectCrop
+                            clip: true
+                        }
+                    }
 
-                        Repeater {
-                            model: [
-                                { icon: "", value: Config.settings.systemDetails.osName },
-                                { icon: "", value: Config.settings.systemDetails.osVersion },
-                                { icon: "", value: Config.settings.systemDetails.ram },
-                                { icon: "", value: Config.settings.systemDetails.cpu },
-                                { icon: "", value: Config.settings.systemDetails.gpu }
-                            ]
-                            RowLayout {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                spacing: MenuStyle.pad
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    font.hintingPreference: Font.PreferFullHinting
-                                    font.family: MenuStyle.iconFont
-                                    font.pixelSize: MenuStyle.iconSize
-                                    color: Config.colors.text
-                                    text: modelData.icon
-                                }
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    font.hintingPreference: Font.PreferFullHinting
+                    SunkenField {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: MenuStyle.avatarSize
+                        padding: MenuStyle.pad
+
+                        ColumnLayout {
+                            anchors.fill: parent
+                            spacing: 0
+
+                            Repeater {
+                                model: [
+                                    { icon: "\ue161", value: Config.settings.systemDetails.osName },
+                                    { icon: "\ue394", value: Config.settings.systemDetails.osVersion },
+                                    { icon: "\uf7a3", value: Config.settings.systemDetails.ram },
+                                    { icon: "\ue322", value: Config.settings.systemDetails.cpu },
+                                    { icon: "\ue2ac", value: Config.settings.systemDetails.gpu }
+                                ]
+                                RowLayout {
                                     Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                    font.family: MenuStyle.bodyFont
-                                    font.pixelSize: MenuStyle.fontSize
-                                    color: Config.colors.text
-                                    text: modelData.value
+                                    Layout.fillHeight: true
+                                    spacing: MenuStyle.pad
+                                    Text {
+                                        renderType: Text.NativeRendering
+                                        font.hintingPreference: Font.PreferFullHinting
+                                        font.family: MenuStyle.iconFont
+                                        font.pixelSize: MenuStyle.iconSize
+                                        color: Config.colors.text
+                                        text: modelData.icon
+                                    }
+                                    Text {
+                                        renderType: Text.NativeRendering
+                                        font.hintingPreference: Font.PreferFullHinting
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                        font.family: MenuStyle.bodyFont
+                                        font.pixelSize: MenuStyle.fontSize
+                                        color: Config.colors.text
+                                        text: modelData.value
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.pad
-
-                BevelButton {
+                RowLayout {
                     Layout.fillWidth: true
-                    text: "Files"
-                    glyph: ""
-                    onClicked: {
-                        Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files]);
-                        root.closeCallback();
+                    spacing: MenuStyle.pad
+
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Files"
+                        glyph: "\ue2c7"
+                        onClicked: {
+                            Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files]);
+                            root.closeCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Terminal"
+                        glyph: "\ueb8e"
+                        onClicked: {
+                            Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.terminal]);
+                            root.closeCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Power"
+                        glyph: "\uf418"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openPowerMenuCallback();
+                        }
                     }
                 }
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Terminal"
-                    glyph: ""
-                    onClicked: {
-                        Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.terminal]);
-                        root.closeCallback();
-                    }
-                }
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Power"
-                    glyph: ""
-                    onClicked: {
-                        root.closeCallback();
-                        root.openPowerMenuCallback();
-                    }
-                }
-            }
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.pad
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: MenuStyle.pad
 
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Services"
-                    glyph: "\ue8b8"
-                    onClicked: {
-                        root.closeCallback();
-                        root.openServicesCallback();
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Services"
+                        glyph: "\ue8b8"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openServicesCallback();
+                        }
                     }
-                }
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Keys"
-                    glyph: "\ue312"
-                    onClicked: {
-                        root.closeCallback();
-                        root.openKeysCallback();
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Keys"
+                        glyph: "\ue312"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openKeysCallback();
+                        }
                     }
                 }
             }
