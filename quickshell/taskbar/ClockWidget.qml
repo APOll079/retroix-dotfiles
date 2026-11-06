@@ -8,7 +8,7 @@ BarButton {
     // Bell, or bell-off while Do Not Disturb is on
     iconFontValue: Config.settings.notifications.dnd ? "\ue7f6" : "\ue7f4"
     toggledIconFontValue: ""
-    label: (Weather.ok ? Weather.temp + Weather.unit + "  " : "") + Time.time.replace(" | ", "  ")
+    label: (Weather.ok ? Weather.temp + Weather.unit + "  " : "") + Time.time
     onRightClicked: Config.settings.notifications.dnd = !Config.settings.notifications.dnd
 
     // Unread marker on the bell
