@@ -1,13 +1,14 @@
 import QtQuick
 import ".."
 
-// Bell + weather + clock: "12°C | Sat 31 Oct | 14:05". Left click: the side panel; right click: Do Not
+// Bell + weather + clock: "12°C  Sat 31 Oct  14:05". Left click: the side panel; right click: Do Not
 // Disturb on / off. The temperature (Weather.qml, wttr.in) is left out while there is no weather yet.
 BarButton {
+    flat: true
     // Bell, or bell-off while Do Not Disturb is on
     iconFontValue: Config.settings.notifications.dnd ? "\ue7f6" : "\ue7f4"
     toggledIconFontValue: ""
-    label: (Weather.ok ? Weather.temp + Weather.unit + " | " : "") + Time.time
+    label: (Weather.ok ? Weather.temp + Weather.unit + "  " : "") + Time.time.replace(" | ", "  ")
     onRightClicked: Config.settings.notifications.dnd = !Config.settings.notifications.dnd
 
     // Unread marker on the bell

@@ -1,15 +1,17 @@
 import Quickshell
 import Quickshell.Widgets
 import QtQuick
-import QtQuick.Layouts
 import Quickshell.Services.SystemTray
 import QtQuick.Effects
+import "../popups" as Popups
 
 import ".."
 
-RowLayout {
+// The tray half of the bar's well: tray icons as flat BarButtons, an etched separator, then bell +
+// weather + clock. Bar.qml puts it inside the BarWell. The right-click menu is Qt's native QsMenuAnchor.
+Row {
     id: sysTrayRow
-    spacing: MenuStyle.traySpacing
+    spacing: 0
     property bool clockToggled: false
     signal clockClicked(var item)
 
@@ -17,48 +19,37 @@ RowLayout {
         id: sysTray
         model: SystemTray.items
 
-        MouseArea {
+        BarButton {
             id: trayItem
             property SystemTrayItem item: modelData
-            implicitWidth: Config.settings.bar.trayIconSize
-            implicitHeight: Config.settings.bar.trayIconSize
-            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+            flat: true
+            iconFontValue: ""
+            toggledIconFontValue: ""
+            minWidth: Config.settings.bar.trayIconSize + MenuStyle.space2
+            isToggled: nativeMenu.visible
 
-            onClicked: event => {
-                switch (event.button) {
-                case Qt.LeftButton:
-                    if (item.onlyMenu && item.hasMenu) {
-                        menu.open();
-                    } else {
-                        item.activate();
-                    }
-                    break;
-                case Qt.RightButton:
-                    if (item.hasMenu) {
-                        menu.open();
-                    }
-                    break;
-                case Qt.MiddleButton:
-                    item.secondaryActivate();
-                    break;
-                }
-
-                event.accepted = true;
+            function openMenu() {
+                if (item.hasMenu)
+                    nativeMenu.open();
             }
 
-            // TODO: Create a bespoke menu design instead of using QsMenu.
-            // Anchor the menu directly under its own icon, in taskbar-window
-            // coordinates. trayItem.x is a dependency so this re-evaluates when
-            // the tray relayouts. (Old calc double-counted clockWidget.width,
-            // which is already inside sysTrayRow, so menus drifted left by the
-            // clock's width and further with each tray item.)
+            onClicked: {
+                if (item.onlyMenu && item.hasMenu)
+                    openMenu();
+                else
+                    item.activate();
+            }
+            onRightClicked: openMenu()
+
+            // Anchored directly under its own icon, in
+            // taskbar-window coordinates.
             QsMenuAnchor {
-                id: menu
+                id: nativeMenu
 
                 menu: trayItem.item.menu
                 anchor.window: taskbar
 
-                anchor.rect.x: sysTrayRow.mapToItem(null, trayItem.x, 0).x
+                anchor.rect.x: trayItem.mapToItem(null, 0, 0).x
                 anchor.rect.y: taskbar.height
 
                 anchor.rect.width: trayItem.width
@@ -66,12 +57,19 @@ RowLayout {
                 anchor.edges: Edges.Bottom
             }
 
+            // Middle click (BarButton itself handles left and right)
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.MiddleButton
+                onClicked: trayItem.item.secondaryActivate()
+            }
+
             IconImage {
                 id: trayIcon
                 source: trayItem.item.icon
                 anchors.centerIn: parent
-                width: parent.width
-                height: parent.height
+                width: Config.settings.bar.trayIconSize
+                height: Config.settings.bar.trayIconSize
                 visible: false
             }
             Loader {
@@ -80,21 +78,16 @@ RowLayout {
                     source: trayIcon
                     saturation: Config.settings.bar.monochromeTrayIcons ? -1.0 : 0
                     contrast: Config.settings.bar.monochromeTrayIcons ? 0.7 : 0.0
-                    opacity: mouse.hovered || menu.visible ? 1 : 0.7
+                    opacity: 1
                     blurEnabled: false
                 }
-            }
-            HoverHandler {
-                id: mouse
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                cursorShape: Qt.PointingHandCursor
             }
 
             // Tooltip after a short hover (not while the right-click menu is open)
             Timer {
                 id: tipTimer
                 interval: 500
-                running: mouse.hovered && !menu.visible
+                running: trayItem.hovered && !nativeMenu.visible
                 onTriggered: tip.shown = true
             }
             PopupWindow {
@@ -102,10 +95,10 @@ RowLayout {
                 property bool shown: false
                 property string title: trayItem.item.tooltipTitle !== "" ? trayItem.item.tooltipTitle : trayItem.item.title
                 property string description: trayItem.item.tooltipDescription
-                visible: shown && mouse.hovered && !menu.visible && (title !== "" || description !== "")
+                visible: shown && trayItem.hovered && !nativeMenu.visible && (title !== "" || description !== "")
                 onVisibleChanged: if (!visible) shown = false
                 anchor.window: taskbar
-                anchor.rect.x: Math.max(4, Math.min(Math.round(sysTrayRow.mapToItem(null, trayItem.x, 0).x + trayItem.width / 2 - width / 2), taskbar.width - width - 4))
+                anchor.rect.x: Math.max(4, Math.min(Math.round(trayItem.mapToItem(null, 0, 0).x + trayItem.width / 2 - width / 2), taskbar.width - width - 4))
                 anchor.rect.y: taskbar.height
                 implicitWidth: tipColumn.implicitWidth + 2 * MenuStyle.pad
                 implicitHeight: tipColumn.implicitHeight + 2 * MenuStyle.gap + 2
@@ -143,6 +136,12 @@ RowLayout {
                 }
             }
         }
+    }
+
+    // Between the tray icons and the clock, only when there are tray icons
+    Popups.MenuSeparator {
+        vertical: true
+        visible: sysTray.count > 0
     }
 
     ClockWidget {
