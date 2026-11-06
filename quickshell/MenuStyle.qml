@@ -45,6 +45,10 @@ Singleton {
     readonly property int sliderKnobWidth: 10
     // Slider groove (Win95 trackbar: a thin sunken channel, no fill)
     readonly property int sliderGroove: 4
+    // Win95 scrollbar: width of the bar, its arrow buttons and the smallest thumb; arrow auto-repeat (ms)
+    readonly property int scrollBarWidth: 16
+    readonly property int scrollRepeatDelay: 300
+    readonly property int scrollRepeatRate: 50
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and

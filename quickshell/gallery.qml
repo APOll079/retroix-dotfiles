@@ -4,6 +4,7 @@
 // BevelButton hover is not shown here; MenuRow's selected state is the same look and is.
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic
 import Quickshell
 import "popups" as Popups
 
@@ -210,6 +211,27 @@ ShellRoot {
                 Head { text: "RetroSlider" }
                 Popups.RetroSlider { Layout.fillWidth: true; value: 0.6 }
                 Popups.RetroSlider { Layout.fillWidth: true; value: 0.3; dim: true }
+                Head { text: "RetroScrollBar" }
+                Popups.SunkenField {
+                    Layout.fillWidth: true
+                    implicitHeight: MenuStyle.rowHeight * 5 + 2 * padding
+                    padding: MenuStyle.space2
+                    ListView {
+                        id: galleryList
+                        anchors.fill: parent
+                        clip: true
+                        model: 20
+                        contentY: MenuStyle.rowHeight * 6
+                        delegate: Popups.MenuRow {
+                            required property int index
+                            width: galleryList.width - MenuStyle.scrollBarWidth
+                            text: "Row " + (index + 1)
+                            glyph: "\ue873"
+                            selected: index === 7
+                        }
+                        ScrollBar.vertical: Popups.RetroScrollBar {}
+                    }
+                }
                 Head { text: "MenuSeparator / Gripper / FocusRect" }
                 Popups.MenuSeparator { Layout.fillWidth: true }
                 Row {
