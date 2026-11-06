@@ -178,10 +178,12 @@ ColumnLayout {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             interactive: contentHeight > height
+            ScrollBar.vertical: RetroScrollBar { id: appsBar }
 
             ColumnLayout {
                 id: appsColumn
-                width: appsView.width
+                // room for the scroll bar while it shows
+                width: appsView.width - (appsBar.visible ? MenuStyle.scrollBarWidth : 0)
                 spacing: MenuStyle.pad
 
                 Repeater {
