@@ -99,6 +99,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `windowHeight` | int | `560` |  |
 | `windowLargeWidth` | int | `1120` |  |
 | `windowLargeHeight` | int | `760` |  |
+| `bannerWidth` | int | `24` |  |
 | `launcherWidth` | int | `windowWidth` |  |
 | `launcherHeight` | int | `windowHeight` |  |
 | `clipPreviewFraction` | real | `0.45` |  |

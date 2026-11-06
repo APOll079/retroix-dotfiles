@@ -73,6 +73,8 @@ Singleton {
     readonly property int windowHeight: 560
     readonly property int windowLargeWidth: 1120
     readonly property int windowLargeHeight: 760
+    // Win95 side banner down the left of the Start menu and the launcher (StartBanner)
+    readonly property int bannerWidth: 24
     // Launcher window: one size for every tab (Apps, Games, Clipboard) and the standalone Games menu
     readonly property int launcherWidth: windowWidth
     readonly property int launcherHeight: windowHeight

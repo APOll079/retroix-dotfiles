@@ -9,13 +9,6 @@ PopupWindow {
     // The bar window this popup hangs off (set by Bar.qml)
     required property var bar
 
-    // The side banner's width. MenuStyle should name it (e.g. bannerWidth) so the launcher shares it.
-    readonly property int bannerWidth: 24
-    readonly property string themeName: {
-        const t = Config.settings.currentTheme || "";
-        return t.charAt(0).toUpperCase() + t.slice(1);
-    }
-
     property int menuWidth: 0
     property var closeCallback: function () {}
     property var openPowerMenuCallback: function () {}
@@ -38,26 +31,7 @@ PopupWindow {
             anchors.right: parent.right
             spacing: MenuStyle.pad
 
-            // Win95 side banner: the accent stripe with the current theme's name written up it
-            Rectangle {
-                Layout.preferredWidth: root.bannerWidth
-                Layout.fillHeight: true
-                color: MenuStyle.selectBar
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    rotation: -90
-                    transformOrigin: Item.TopLeft
-                    x: Math.round((parent.width - implicitHeight) / 2)
-                    y: parent.height - MenuStyle.pad
-                    font.family: MenuStyle.titleFont
-                    font.pixelSize: MenuStyle.iconSize
-                    font.bold: true
-                    color: MenuStyle.selectText
-                    textFormat: Text.PlainText
-                    text: root.themeName
-                }
-            }
+            StartBanner {}
 
             ColumnLayout {
                 id: column

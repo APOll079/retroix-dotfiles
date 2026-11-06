@@ -288,6 +288,14 @@ ShellRoot {
                     current: "cal"
                     Popups.MenuRow { width: parent.width; text: "Page content"; glyph: "\ue935" }
                 }
+                Head { text: "StartBanner" }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: MenuStyle.rowHeight * 5
+                    spacing: MenuStyle.pad
+                    Popups.StartBanner {}
+                    Popups.SunkenField { Layout.fillWidth: true; Layout.fillHeight: true }
+                }
                 Head { text: "MenuStrip" }
                 Popups.MenuStrip { menus: [{ text: "File", build: () => [] }, { text: "View", build: () => [] }] }
                 Head { text: "StatusBar" }

@@ -60,3 +60,4 @@ EmptyState 1.0 EmptyState.qml
 TabPage 1.0 TabPage.qml
 StatusBar 1.0 StatusBar.qml
 MenuStrip 1.0 MenuStrip.qml
+StartBanner 1.0 StartBanner.qml

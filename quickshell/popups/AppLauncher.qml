@@ -30,13 +30,6 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    // The side banner's width. MenuStyle should name it (e.g. bannerWidth) so the Start menu shares it.
-    readonly property int bannerWidth: 24
-    readonly property string themeName: {
-        const t = Config.settings.currentTheme || "";
-        return t.charAt(0).toUpperCase() + t.slice(1);
-    }
-
     // How app icons are drawn: "color" (as the theme ships them, today's look), "grey" (desaturated) or
     // "tint" (toward the accent). Owner's pick pending; a settings key can replace this constant later.
     readonly property string iconStyle: "color"
@@ -109,26 +102,7 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                // Win95 side banner: the accent stripe with the current theme's name written up it
-                Rectangle {
-                    Layout.preferredWidth: root.bannerWidth
-                    Layout.fillHeight: true
-                    color: MenuStyle.selectBar
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        rotation: -90
-                        transformOrigin: Item.TopLeft
-                        x: Math.round((parent.width - implicitHeight) / 2)
-                        y: parent.height - MenuStyle.pad
-                        font.family: MenuStyle.titleFont
-                        font.pixelSize: MenuStyle.iconSize
-                        font.bold: true
-                        color: MenuStyle.selectText
-                        textFormat: Text.PlainText
-                        text: root.themeName
-                    }
-                }
+                StartBanner {}
 
                 ColumnLayout {
                     Layout.fillWidth: true
