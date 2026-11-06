@@ -90,6 +90,7 @@ Item {
         PopupMenuBody {
             id: body
             width: parent.width
+            title: menu.song ? menu.song.name : ""
             model: menu.entries
             currentIndex: 0
             onPicked: (index, entry) => menu.run(entry.key)

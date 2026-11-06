@@ -8,12 +8,16 @@ import ".."
 // own popup window) or placed inline (the Spotify drawer).
 // model: [{ text, glyph, trailing, checked, enabled, separator, action }]; every key optional except text
 // (or separator: true). action() runs after picked() is emitted.
+// title: optional; set = an accent strip (PopupWindowFrame's title-bar look) above the rows, inside the same
+// frame; clicking it emits escaped() (a title bar closes). Empty = no strip, nothing else changes.
 // Keys (when it has focus): Up / Down move, Enter picks, Escape emits escaped().
 Rectangle {
     id: root
 
     property var model: []
     property int currentIndex: -1
+    property string title: ""
+    readonly property int titleBarHeight: root.title !== "" ? MenuStyle.titleHeight : 0
     // the icon column only when at least one entry has an icon
     readonly property bool anyIcon: root.model.some(e => !e.separator && !!e.glyph)
     signal picked(int index, var entry)
@@ -63,7 +67,7 @@ Rectangle {
     }
 
     implicitWidth: root.menuWidth
-    implicitHeight: column.implicitHeight + 2 * MenuStyle.frameInset
+    implicitHeight: column.implicitHeight + 2 * MenuStyle.frameInset + root.titleBarHeight
     color: Config.colors.base
     border.width: 1
     border.color: Config.colors.outline
@@ -94,10 +98,47 @@ Rectangle {
         event.accepted = true;
     }
 
+    Rectangle {
+        id: titleStrip
+        visible: root.title !== ""
+        x: MenuStyle.frameInset
+        y: MenuStyle.frameInset
+        width: root.width - 2 * MenuStyle.frameInset
+        height: MenuStyle.titleHeight
+        color: MenuStyle.selectBar
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.escaped()
+        }
+        Text {
+            renderType: Text.NativeRendering
+            font.hintingPreference: Font.PreferFullHinting
+            anchors.fill: parent
+            anchors.leftMargin: 2 + MenuStyle.space2
+            anchors.rightMargin: 2
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+            font.family: MenuStyle.titleFont
+            font.pixelSize: MenuStyle.fontSize
+            font.bold: true
+            color: MenuStyle.selectText
+            textFormat: Text.PlainText
+            text: root.title
+        }
+        // The rule that keeps the strip from melting into a selected first row, inside titleHeight
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1
+            color: Config.colors.outline
+        }
+    }
+
     ColumnLayout {
         id: column
         x: MenuStyle.frameInset
-        y: MenuStyle.frameInset
+        y: MenuStyle.frameInset + root.titleBarHeight
         width: root.width - 2 * MenuStyle.frameInset
         spacing: 0
         Repeater {

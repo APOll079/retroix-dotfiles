@@ -103,3 +103,5 @@ quickshell/Idle.qml	qs-caffeine\.json	Caffeine is kept in XDG_RUNTIME_DIR (survi
 quickshell/LaptopControls.qml	btBatteryText\(root\.btDevices\)	Bluetooth button shows the lowest connected device battery, else ON / OFF
 quickshell/LaptopControls.qml	tooltip: root\.btBatteryTooltip	Bluetooth button tooltip lists "name NN%" per connected device with a known battery
 quickshell/popups/MenuRow.qml	root\.enabled && \(hover\.hovered	A disabled row does not highlight on hover or press
+quickshell/popups/PopupMenuBody.qml	onClicked: root\.escaped\(\)	Clicking a menu's title strip closes it
+quickshell/popups/SpotifyRowMenu.qml	title: menu\.song \? menu\.song\.name	The song-name title bar on the Spotify row menu

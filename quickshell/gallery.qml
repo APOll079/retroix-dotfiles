@@ -228,6 +228,15 @@ ShellRoot {
                         { text: "Properties" }
                     ]
                 }
+                Head { text: "PopupMenuBody (titled)" }
+                Popups.PopupMenuBody {
+                    title: "Song name"
+                    currentIndex: 0
+                    model: [
+                        { text: "Play", glyph: "\ue037" },
+                        { text: "Add to queue", glyph: "\ue03c" }
+                    ]
+                }
                 Item { Layout.fillHeight: true }
             }
 
