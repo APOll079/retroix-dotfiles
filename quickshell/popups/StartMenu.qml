@@ -161,6 +161,25 @@ PopupWindow {
                         }
                     }
                 }
+
+                // Mounted USB drives, one row each; a click unmounts and powers the drive off (UsbState)
+                MenuSeparator {
+                    Layout.fillWidth: true
+                    visible: UsbState.ejectable.length > 0
+                }
+                Repeater {
+                    model: UsbState.ejectable
+                    MenuRow {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        glyph: "\ue8fb"
+                        text: "Eject " + UsbState.displayName(modelData)
+                        onClicked: {
+                            UsbState.eject(modelData.dev);
+                            root.closeCallback();
+                        }
+                    }
+                }
             }
         }
     }

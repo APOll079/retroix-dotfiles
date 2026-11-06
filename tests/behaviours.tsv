@@ -132,3 +132,6 @@ quickshell/popups/CalendarTab.qml	root\.submit\(\)	Calendar tab: Enter in the ad
 quickshell/popups/CalendarTab.qml	root\.pickDay	Calendar tab: a click on a calendar day, with the add field empty, sets the due date for the next task
 quickshell/popups/CalendarTab.qml	text: "Delete"	Calendar tab: a right click on a task row opens a menu with Delete
 quickshell/popups/CalendarTab.qml	onClicked: root\.dueFor = ""	Calendar tab: the due-date chip clears the picked date
+quickshell/UsbState.qml	open=Open.*eject=Eject	A new USB drive raises a toast with Open and Eject actions
+quickshell/UsbState.qml	function eject\(dev\)	UsbState.eject (toast action and Start menu)
+quickshell/popups/StartMenu.qml	UsbState\.eject\(modelData\.dev\)	Start menu: a mounted USB drive's Eject row unmounts and powers it off
