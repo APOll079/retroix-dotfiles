@@ -43,6 +43,8 @@ Singleton {
     readonly property int gripperWidth: 4
     // Slider knob (raised bevel block, track height)
     readonly property int sliderKnobWidth: 10
+    // Slider groove (Win95 trackbar: a thin sunken channel, no fill)
+    readonly property int sliderGroove: 4
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and

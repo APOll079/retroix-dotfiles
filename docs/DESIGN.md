@@ -86,6 +86,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `separatorThickness` | int | `6` |  |
 | `gripperWidth` | int | `4` |  |
 | `sliderKnobWidth` | int | `10` |  |
+| `sliderGroove` | int | `4` |  |
 | `launcherWidth` | int | `760` |  |
 | `launcherHeight` | int | `560` |  |
 | `clipPreviewFraction` | real | `0.45` |  |

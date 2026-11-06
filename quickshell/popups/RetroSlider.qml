@@ -3,8 +3,8 @@ import QtQuick.Controls.Basic
 
 import ".."
 
-// Horizontal slider: SegmentBar track with a raised bevel knob the height of the track.
-// dim: draw the track empty (muted).
+// Win95 trackbar: a thin sunken groove across the whole width and a raised bevel thumb; no fill (the
+// accent is kept for selection and "on"). dim (muted): the thumb's face goes grey.
 Slider {
     id: root
 
@@ -13,23 +13,29 @@ Slider {
     implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
     hoverEnabled: true
 
-    background: SegmentBar {
-        value: root.visualPosition
-        dim: root.dim
+    background: Item {
+        Rectangle {
+            x: root.leftPadding
+            y: Math.round(root.topPadding + root.availableHeight / 2 - height / 2)
+            width: root.availableWidth
+            height: MenuStyle.sliderGroove
+            color: Config.colors.highlight
+            Bevel {
+                anchors.fill: parent
+                raised: false
+            }
+        }
     }
 
     handle: Rectangle {
-        x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
+        x: Math.round(root.leftPadding + root.visualPosition * (root.availableWidth - width))
         y: Math.round(root.topPadding + root.availableHeight / 2 - height / 2)
         implicitWidth: MenuStyle.sliderKnobWidth
         implicitHeight: root.implicitHeight
-        color: Config.colors.base
-        border.width: 1
-        border.color: Config.colors.outline
+        color: root.dim ? Config.colors.shadow : Config.colors.base
         Bevel {
             anchors.fill: parent
-            anchors.margins: 1
-            thickness: 1
+            button: true
             raised: !root.pressed
         }
     }
