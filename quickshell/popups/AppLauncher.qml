@@ -228,7 +228,7 @@ PanelWindow {
                                     Flickable {
                                         id: previewFlick
                                         anchors.fill: parent
-                                        visible: root.previewImage === ""
+                                        visible: root.previewImage === "" && root.previewText !== ""
                                         contentHeight: previewLabel.implicitHeight
                                         boundsBehavior: Flickable.StopAtBounds
                                         clip: true
@@ -241,10 +241,18 @@ PanelWindow {
                                             wrapMode: Text.WrapAnywhere
                                             font.family: MenuStyle.bodyFont
                                             font.pixelSize: MenuStyle.fontSize
-                                            color: root.previewText === "" ? MenuStyle.bevelDark : Config.colors.text
+                                            color: Config.colors.text
                                             textFormat: Text.PlainText
-                                            text: root.previewText === "" ? "Nothing selected" : root.previewText
+                                            text: root.previewText
                                         }
+                                    }
+
+                                    EmptyState {
+                                        anchors.centerIn: parent
+                                        width: parent.width
+                                        visible: root.previewImage === "" && root.previewText === ""
+                                        glyph: "\ue8f4"
+                                        text: "Nothing selected"
                                     }
                                 }
 
@@ -254,15 +262,11 @@ PanelWindow {
                                     padding: 2
                                     clip: true
 
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        font.hintingPreference: Font.PreferFullHinting
+                                    EmptyState {
                                         anchors.centerIn: parent
+                                        width: parent.width - 2 * MenuStyle.pad
                                         visible: root.results.length === 0
-                                        font.family: MenuStyle.bodyFont
-                                        font.pixelSize: MenuStyle.fontSize
-                                        color: MenuStyle.bevelDark
-                                        textFormat: Text.PlainText
+                                        glyph: root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
                                         text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
                                     }
 
@@ -290,6 +294,7 @@ PanelWindow {
                                             subtext: modelData.sub || ""
                                             trailing: modelData.trailing || ""
                                             glyph: modelData.glyph || ""
+                                            reserveIcon: true      // the list has icons: labels line up on rows without one
                                             iconSource: modelData.icon || ""
                                             marked: !!modelData.pinned
                                             onClicked: root.activate(index)
