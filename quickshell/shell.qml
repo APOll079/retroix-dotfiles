@@ -25,6 +25,9 @@ Scope {
     property bool vpnState: VpnState.active
     property bool nasWatch: NasWatch.active
     property bool phoneBattery: PhoneBattery.active
+    property bool screensaver: ScreensaverState.active
+    property var miniPlayerState: MiniPlayerState
+    property var overviewState: OverviewState
     property bool securityAudit: SecurityAudit.active
     property bool mouseState: MouseState.active
     property bool downloadWatch: DownloadWatch.active
@@ -54,6 +57,19 @@ Scope {
         function toggle(): void { LyricsWindowState.toggle(); }
         function open(): void { LyricsWindowState.open(); }
         function close(): void { LyricsWindowState.close(); }
+    }
+    // Screensaver: `qs ipc call screensaver start|stop|preview`; Mini player: `qs ipc call miniplayer toggle|open|close`
+    IpcHandler {
+        target: "screensaver"
+        function start(): void { ScreensaverState.start(); }
+        function stop(): void { ScreensaverState.stop(); }
+        function preview(): void { ScreensaverState.preview(); }
+    }
+    IpcHandler {
+        target: "miniplayer"
+        function toggle(): void { MiniPlayerState.toggle(); }
+        function open(): void { MiniPlayerState.open(); }
+        function close(): void { MiniPlayerState.close(); }
     }
     // Find window (popups/FindWindow.qml): `qs ipc call find toggle`
     IpcHandler {

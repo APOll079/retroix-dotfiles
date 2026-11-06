@@ -191,6 +191,19 @@ hl.window_rule({
     persistent_size = true
 })
 
+-- Quickshell's Mini player (popups/MiniPlayer.qml, a FloatingWindow titled "Mini player"): float, pinned, bottom-LEFT
+-- (the Lyrics window sits bottom-right); field names as in the lyrics rule, height measured by its test, never seen running
+hl.window_rule({
+    name  = "mini-player",
+    match = {
+        initial_title = "^Mini player$"
+    },
+    float = true,
+    pin   = true,
+    size  = { 320, 182 },
+    move  = { "16", "monitor_h-window_h-48" }
+})
+
 -- Quickshell's Find window (popups/FindWindow.qml, a FloatingWindow titled "Find: Files or Folders"): float, centred,
 -- MenuStyle.windowWidth x windowHeight; field names as in the task-manager rule above, not seen running here
 hl.window_rule({

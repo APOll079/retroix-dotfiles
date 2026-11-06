@@ -76,6 +76,11 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, screensaver / mini player / overview (all visual: only seen live)
+- [ ] Screensaver: look at starfield, pipes, mystify and random; every screen blanks; cursor jitter at the start doesn't close it, a key / click / mouse move after 0.5 s does; no start with caffeine or a fullscreen video; it fires before the dim (3 min); a static frame under reduce motion (`qs ipc call screensaver preview`, Super+Ctrl+K)
+- [ ] Mini player (Super+Ctrl+O): the LCD and the 32 px digits, the marquee on a long title, play / prev / next / seek / volume with Spotify and with another player, "Nothing playing"; the window rule (size, pinned, bottom-left)
+- [ ] Workspace overview (Super+Shift+O): cards with 1, 3, 6, 12 workspaces on both monitors; do the thumbnails capture (other workspaces too) or fall back to the label; clicks, arrows, Enter, Esc / click outside / second toggle; over a fullscreen window
+
 ### Round 4, launcher and network (never looked at, fakes only)
 - [ ] `/ name` in the launcher on your real home (fd / plocate / find order, exclusions, real xdg-open); the Find window floats, centres and takes focus (`hyprctl reload` first; Super+Ctrl+F); the AppLauncher result area with the new rows next to the Settings tab (a merge point, never seen rendered)
 - [ ] The ETH button opens the Network page (ip, ping and curl real; the speed test only on the button); `100 eur in sek` with a real frankfurter answer (does api.frankfurter.app still answer or redirect?)

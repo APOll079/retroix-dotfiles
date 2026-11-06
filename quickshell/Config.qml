@@ -119,6 +119,7 @@ DefaultApps,
 Troubleshoot,
 LoginReport,
 Network,
+Overview,
 None
 }
 property alias settings: settingsJsonAdapter.settings
@@ -247,6 +248,12 @@ property int intervalHours: 12
 // Network page: the file the Speed test button downloads (nothing runs until you press the button)
 property JsonObject networkPage: JsonObject {
 property string speedTestUrl: "https://speed.cloudflare.com/__down?bytes=25000000"
+}
+// Screensaver (Win95 style) after idle, before the dim and lock: style starfield / pipes / mystify / random; minutes 0 = off
+property JsonObject screensaver: JsonObject {
+property bool enabled: true
+property int minutes: 3
+property string style: "starfield"
 }
 // Weather from wttr.in; location "" = guessed from your IP
 property JsonObject weather: JsonObject {

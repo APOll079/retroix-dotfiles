@@ -93,6 +93,11 @@
         "networkPage": {
             "speedTestUrl": "https://speed.cloudflare.com/__down?bytes=25000000"
         },
+        "screensaver": {
+            "enabled": true,
+            "minutes": 3,
+            "style": "starfield"
+        },
         "osd": {
             "bluetooth": true,
             "volume": true

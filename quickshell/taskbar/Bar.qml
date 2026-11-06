@@ -150,6 +150,7 @@ historyCallback: function() { taskbar.toggleMenu(screenshotPanel, Config.SystemP
 }
 Popups.GamesMenu { screen: root.modelData; bar: taskbar; id: gamesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CheatSheet { screen: root.modelData; bar: taskbar; id: cheatSheet; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.Overview { screen: root.modelData; bar: taskbar; id: overviewPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ServicesPanel { screen: root.modelData; bar: taskbar; id: servicesPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
@@ -163,7 +164,7 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, overviewPanel, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -351,6 +352,13 @@ IpcHandler {
 target: "games_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep");
+}
+}
+
+IpcHandler {
+target: "overview_" + root.modelData.name
+function toggle() {
+taskbar.toggleMenu(overviewPanel, Config.SystemPopup.Overview, null, "keep");
 }
 }
 
