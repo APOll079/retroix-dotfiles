@@ -248,11 +248,43 @@ PanelWindow {
             noteTimer.restart();
     }
     onStackChanged: root.rowMenu = null
+    // A confirm takes the keyboard (Enter = the verb, Escape = Cancel) and gives it back when it is gone
+    readonly property bool confirming: root.confirmLogout || root.confirmClient
+    onConfirmingChanged: {
+        if (root.confirming)
+            keyCatcher.forceActiveFocus();
+        else
+            root.focusKeys();
+    }
+
+    function confirmAccept() {
+        if (root.confirmClient) {
+            root.confirmClient = false;
+            SpotifyState.logout();
+            root.editClient = true;
+        } else if (root.confirmLogout) {
+            root.confirmLogout = false;
+            SpotifyState.logout();
+        }
+    }
+    function confirmCancel() {
+        root.confirmLogout = false;
+        root.confirmClient = false;
+    }
 
     // Keys where there's no filter box to type in (the lyrics, the login page): the shared ones (globalKey), Escape, Space, Left / Right (seek, in the lyrics), "/" and Ctrl+F
     Item {
         id: keyCatcher
         Keys.onPressed: event => {
+            // a confirm in the status bar is open: Enter is the verb, Escape is Cancel
+            if (root.confirming && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Escape)) {
+                if (event.key === Qt.Key_Escape)
+                    root.confirmCancel();
+                else
+                    root.confirmAccept();
+                event.accepted = true;
+                return;
+            }
             if (SpotifyState.loggedIn && root.globalKey(event)) {
                 event.accepted = true;
                 return;
@@ -897,6 +929,14 @@ PanelWindow {
 
     // Back one step (to the row you opened it from); false when there was nothing to go back from
     function goBack() {
+        if (root.confirming) {
+            root.confirmCancel();
+            return true;
+        }
+        if (root.menuOpen) {
+            root.menuOpen = false;
+            return true;
+        }
         if (root.rowMenu) {
             root.rowMenu = null;
             return true;

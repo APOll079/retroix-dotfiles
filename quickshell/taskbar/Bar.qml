@@ -109,6 +109,7 @@ openServicesCallback: function() { taskbar.toggleMenu(servicesPanel, Config.Syst
 openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
+openColorHistoryCallback: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep") }
 }
 Popups.ThemeMenu {
 id: themeMenu
@@ -147,12 +148,13 @@ Popups.CheatSheet { screen: root.modelData; bar: taskbar; id: cheatSheet; closeC
 Popups.ServicesPanel { screen: root.modelData; bar: taskbar; id: servicesPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.ColorHistoryPanel { screen: root.modelData; bar: taskbar; id: colorHistoryMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.SpotifyPanel { id: spotifyPanel; screen: root.modelData; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCallback: taskbar.closeAllPopups }
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -322,6 +324,20 @@ IpcHandler {
 target: "games_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep");
+}
+}
+
+IpcHandler {
+target: "mic_" + root.modelData.name
+function toggle() {
+AudioState.toggleMic();
+}
+}
+
+IpcHandler {
+target: "colorhistory_" + root.modelData.name
+function toggle() {
+taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep");
 }
 }
 

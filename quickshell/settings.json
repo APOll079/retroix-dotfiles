@@ -2,7 +2,10 @@
     "settings": {
         "audio": {
             "eqOutputMatch": "DM15",
-            "eqPresets": []
+            "eqPresets": [],
+            "noiseOffPreset": "",
+            "noisePreset": "",
+            "rememberAppVolumes": true
         },
         "bar": {
             "fontSize": 12,
@@ -24,6 +27,7 @@
         "militaryTimeClockFormat": true,
         "notifications": {
             "dnd": false,
+            "dndWhileSharing": true,
             "maxVisible": 4,
             "monitor": "",
             "position": "top-right"

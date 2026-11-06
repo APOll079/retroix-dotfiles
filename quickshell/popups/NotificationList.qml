@@ -33,8 +33,47 @@ ColumnLayout {
         return Qt.formatDateTime(t, same ? "hh:mm" : "ddd hh:mm");
     }
 
+    // "Clear all" asks first (ConfirmBar in place of the header); Enter is the verb, Escape cancels
+    property bool confirmClear: false
+    function askClear() {
+        root.confirmClear = true;
+        root.forceActiveFocus();
+    }
+    function cancelClear() {
+        root.confirmClear = false;
+    }
+    Keys.onPressed: event => {
+        if (!root.confirmClear)
+            return;
+        if (event.key === Qt.Key_Escape)
+            root.confirmBar.cancel();
+        else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+            root.confirmBar.accept();
+        else
+            return;
+        event.accepted = true;
+    }
+    // (the list may empty meanwhile: a confirm for nothing goes away)
+    readonly property bool hasItems: NotificationStore.items.length > 0
+    onHasItemsChanged: if (!root.hasItems) root.confirmClear = false
+    readonly property var confirmBar: clearConfirm
+
+    ConfirmBar {
+        id: clearConfirm
+        Layout.fillWidth: true
+        visible: root.confirmClear
+        message: "Clear all " + NotificationStore.items.length + (NotificationStore.items.length === 1 ? " notification?" : " notifications?")
+        verb: "Clear all"
+        onAccepted: {
+            root.confirmClear = false;
+            NotificationStore.clear();
+        }
+        onCanceled: root.cancelClear()
+    }
+
     RowLayout {
         Layout.fillWidth: true
+        visible: !root.confirmClear
         spacing: MenuStyle.pad
         Text {
             renderType: Text.NativeRendering
@@ -60,7 +99,7 @@ ColumnLayout {
             Layout.preferredWidth: Math.max(dndButton.implicitWidth, clearButton.implicitWidth)
             text: "Clear all"
             visible: NotificationStore.items.length > 0
-            onClicked: NotificationStore.clear()
+            onClicked: root.askClear()
         }
     }
 

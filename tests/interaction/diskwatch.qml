@@ -52,7 +52,7 @@ ShellRoot {
 
         const p1 = DW.plan(u, {}, {}, 90, CD, 1000);
         shell.check("plan: one disk toast and one quiet unreachable toast, missing is silent", p1.toasts.length === 2);
-        shell.check("plan: disk toast text", J(p1.toasts[0]) === J(["notify-send", "-a", "Disk", "/ is 93% full", "930 GB of 1.0 TB used"]));
+        shell.check("plan: disk toast text", J(p1.toasts[0]) === J(["notify-send", "-a", "Disk usage", "/ is 93% full", "930 GB of 1.0 TB used"]));
         shell.check("plan: unreachable toast is low urgency", p1.toasts[1].includes("-u") && p1.toasts[1].includes("low") && p1.toasts[1][p1.toasts[1].length - 2] === "/mnt/disk1 is not responding");
         const p2 = DW.plan(u, p1.states, p1.unreachableAt, 90, CD, 1000 + 5 * MIN);
         shell.check("plan: the next round 5 minutes later toasts nothing (no storm)", p2.toasts.length === 0);
@@ -67,12 +67,12 @@ ShellRoot {
         shell.check("parseHealth: bad device names are dropped", h.length === 4 && h[1].passed === false && h[2].passed === null && h[2].status === "permission");
         shell.check("parseHealth: junk gives []", DW.parseHealth("").length === 0 && DW.parseHealth("{").length === 0);
         const ph = DW.planHealth(h);
-        shell.check("planHealth: failed disk gives a critical toast, permission only flags", ph.toasts.length === 1 && J(ph.toasts[0]) === J(["notify-send", "-a", "Disk", "-u", "critical", "sdb reports SMART failure", "Back up the disk and replace it."]) && ph.needsPermission === true);
+        shell.check("planHealth: failed disk gives a critical toast, permission only flags", ph.toasts.length === 1 && J(ph.toasts[0]) === J(["notify-send", "-a", "Disk health", "-u", "critical", "sdb reports SMART failure", "Back up the disk and replace it."]) && ph.needsPermission === true);
         shell.check("planHealth: all ok or missing is silent", (() => {
             const q = DW.planHealth(DW.parseHealth('[{"dev":"sda","passed":true,"status":"ok"},{"dev":"sdb","passed":null,"status":"missing"}]'));
             return q.toasts.length === 0 && q.needsPermission === false;
         })());
-        shell.check("permission toast text", J(DW.permissionToast) === J(["notify-send", "-a", "Disk", "SMART needs permission", "See docs/desktop.md"]));
+        shell.check("permission toast text", J(DW.permissionToast) === J(["notify-send", "-a", "Disk health", "SMART needs permission", "See docs/desktop.md"]));
 
         shell.check("settings: defaults read, harness inactive", Config.settings.diskWatch.percent === 90 && Config.settings.diskWatch.cooldownMinutes === 60 && J(Config.settings.diskWatch.mounts) === J(["/", "~", "/mnt/disk1", "/mnt/disk2"]) && DW.active === false && DW.smartNeedsPermission === false);
 

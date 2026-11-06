@@ -31,6 +31,15 @@ Singleton {
     // current; replace the object so bindings notice). The toast window stays hidden there.
     property var homeOpenOn: ({})
 
+    // settings notifications.dndWhileSharing (default true): while Privacy.screen is true new toasts are held back
+    // like Do Not Disturb (the history still gets them). A missing key counts as true.
+    readonly property bool dndWhileSharing: Config.settings.notifications.dndWhileSharing !== false
+
+    // Pure: does a new notification pop up as a toast? Critical ones always do (as with Do Not Disturb).
+    function showsToast(dnd, whileSharing, sharing, critical) {
+        return critical || !(dnd || (whileSharing && sharing));
+    }
+
     function add(n) {
         var entry = {
             key: root.nextId++,
@@ -53,8 +62,9 @@ Singleton {
             if (old.notif)
                 old.notif.dismiss();
         root.items = list.slice(0, root.maxItems);
-        // Do Not Disturb: straight to the history, no toast (critical ones still show)
-        if (!Config.settings.notifications.dnd || n.urgency === NotificationUrgency.Critical) {
+        // Do Not Disturb, or a screen share (settings notifications.dndWhileSharing): straight to the history,
+        // no toast (critical ones still show)
+        if (root.showsToast(Config.settings.notifications.dnd, root.dndWhileSharing, Privacy.screen, n.urgency === NotificationUrgency.Critical)) {
             const sameApp = root.toasts.some(t => t.appName === n.appName);
             const c = Object.assign({}, root.toastCounts);
             c[n.appName] = sameApp ? (c[n.appName] || 1) + 1 : 1;

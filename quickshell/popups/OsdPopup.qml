@@ -78,6 +78,14 @@ Scope {
         }
     }
 
+    // The microphone key (Super+Alt+M): the new state as text
+    Connections {
+        target: AudioState
+        function onMicToggled(muted) {
+            root.showText("Microphone", muted ? "\ue02b" : "\ue029", muted ? "MIC OFF" : "MIC ON");
+        }
+    }
+
     // Bluetooth: a device connecting or disconnecting
     Instantiator {
         model: Bluetooth.devices

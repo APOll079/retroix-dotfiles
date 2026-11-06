@@ -29,6 +29,10 @@ cliphist                    # clipboard history (Super+V)
 jq                          # binds.lua (focused monitor lookups)
 playerctl                   # XF86AudioPlay bind
 libnotify                   # notify-send (game-mode toggle)
+tesseract                   # text from a region (overlay Text mode)
+tesseract-data-swe
+tesseract-data-eng
+ffmpeg                      # Save as GIF on a recording
 gpu-screen-recorder         # screen recording and the replay buffer (overlay Record mode)
 smartmontools               # smartctl, disk health warnings (needs root: see docs/desktop.md)
 pacman-contrib              # checkupdates, paccache (Updates, Clean up)

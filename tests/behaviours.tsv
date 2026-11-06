@@ -179,3 +179,24 @@ quickshell/Weather.qml	function nextHours\(	Weather: the hourly forecast picks t
 quickshell/popups/CalendarTab.qml	hourlyRow	Calendar tab: the hourly forecast row
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Drop\-down\ terminal	Key: Desktop | Drop-down terminal
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Zoom\ around\ the\ cursor	Key: Desktop | Zoom around the cursor (toggle)
+quickshell/popups/SpotifyMoreMenu.qml	onEscaped: panel\.menuOpen = false	Spotify ... menu: Escape closes only the menu
+quickshell/popups/SpotifyMoreMenu.qml	body\.forceActiveFocus	Spotify ... menu takes the keyboard when it opens
+quickshell/popups/SpotifyPanel.qml	function confirmAccept	Spotify confirms: Enter is the verb
+quickshell/popups/SpotifyPanel.qml	root\.confirmCancel\(\)	Spotify confirms: Escape cancels
+quickshell/popups/NotificationList.qml	verb: "Clear all"	Notification history: Clear all asks first (ConfirmBar)
+quickshell/popups/NotificationList.qml	function askClear	Notification history: the Clear all button opens the confirm
+quickshell/popups/AudioTab.qml	checked: streamRow\.muted	Audio tab: a muted app's button is sunken
+quickshell/popups/AudioTab.qml	AudioState\.setNoise	Audio tab: Noise filter button
+quickshell/popups/OsdPopup.qml	MIC OFF	OSD: the mic key shows MIC OFF / MIC ON
+quickshell/AudioState.qml	function toggleMic	The mic key toggles the microphone
+quickshell/AudioState.qml	Sound now plays on	Toast when the default output changes
+quickshell/AudioState.qml	function volumeToApply	Remembered per-app volumes are re-applied
+quickshell/NotificationStore.qml	function showsToast	Toasts held back by Do Not Disturb or a screen share
+quickshell/popups/ScreenshotOverlay.qml	function setOcr	Snipping overlay: the Text (OCR) choice
+quickshell/RecordState.qml	Drag to select the text	Overlay hint for Text mode
+quickshell/RecordState.qml	gif="Save as GIF"	Recording saved toast: Save as GIF action
+quickshell/popups/ColorHistoryPanel.qml	ColorHistory\.copy\(	Colour history: a click copies the hex
+quickshell/ColorHistory.qml	function withColor	Colour history keeps the last 20, newest first
+quickshell/popups/StartMenu.qml	text: "Colours"	Start menu: Colours opens the colour history
+quickshell/taskbar/Bar.qml	target: "mic_"	IPC handler mic_<monitor> (used by the mic key)
+hypr/binds.lua	\-\-\ help:\ Audio\ \|\ Mute\ /\ unmute\ the\ microphone	Key: Audio | Mute / unmute the microphone

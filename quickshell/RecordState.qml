@@ -80,7 +80,10 @@ Singleton {
     }
 
     // The overlay's hint line: what the next click does, or the first problem (only while Record is armed)
-    function hintText(mode, record, pre) {
+    // ocr (optional): the Text switch is on, so only a region makes sense
+    function hintText(mode, record, pre, ocr) {
+        if (ocr === true)
+            return "Drag to select the text. Esc cancels.";
         if (record && pre && pre.problems && pre.problems.length > 0)
             return pre.problems[0];
         let t;
@@ -133,11 +136,60 @@ Singleton {
         return ["sh", "-c", 'a=$(notify-send -a Recording -A default=Open "$1" "$2"); [ "$a" = default ] && xdg-open "$3"', "sh", title, body, file];
     }
 
+    // The "Recording saved" toast: Open, and a second action "Save as GIF" that runs scripts/gif.sh on the video and
+    // answers with a "GIF saved" toast (Open) or "GIF failed". Title, body, file and the script are positional
+    // parameters, never part of the script text.
+    function savedToastCommand(title, body, file, gifScript) {
+        const sh = 'a=$(notify-send -a Recording -A default=Open -A gif="Save as GIF" "$1" "$2"); '
+            + 'case $a in '
+            + 'default) xdg-open "$3" ;; '
+            + 'gif) g=$(sh "$4" "$3" 2>/dev/null); rc=$?; '
+            + 'if [ "$rc" -eq 0 ]; then b=$(notify-send -a Recording -A default=Open "GIF saved" "$(basename "$g")"); [ "$b" = default ] && xdg-open "$g"; '
+            + 'elif [ "$rc" -eq 2 ]; then notify-send -a Recording "GIF failed" "ffmpeg is not installed"; '
+            + 'else notify-send -a Recording "GIF failed" "ffmpeg could not make the GIF"; fi ;; '
+            + 'esac';
+        return ["sh", "-c", sh, "sh", title, body, file, gifScript];
+    }
+
     function basename(path) {
         return String(path).split("/").pop();
     }
 
+    // The first non-empty line of `text`, trimmed, at most `max` characters (Array.from keeps a surrogate pair whole)
+    function firstLine(text, max) {
+        const line = String(text).split("\n").map(l => l.trim()).find(l => l !== "") || "";
+        return Array.from(line).slice(0, max).join("");
+    }
+
+    // ocr.sh arguments, and the toast for its exit code: 0 = text copied (the first line, 80 characters), 2 = no tesseract,
+    // 3 = nothing recognised, anything else = failed
+    function ocrCommand(script, geometry) {
+        return [script, geometry];
+    }
+    function ocrToast(code, text) {
+        if (code === 0)
+            return { title: "Text copied", body: firstLine(text, 80) };
+        if (code === 2)
+            return { title: "tesseract is not installed", body: "" };
+        if (code === 3)
+            return { title: "No text found", body: "" };
+        return { title: "Text recognition failed", body: "" };
+    }
+    function ocrNotify(title, body) {
+        return ["notify-send", "-a", "Text", title, body];
+    }
+
     // ---- live part ----
+
+    // Read the text in a region (WxH+X+Y) and copy it; the toast says what happened
+    function ocr(geometry) {
+        if (!active || ocrProc.running)
+            return;
+        ocrProc.code = -1;
+        ocrProc.streamDone = false;
+        ocrProc.command = ocrCommand(Quickshell.shellDir + "/scripts/ocr.sh", geometry);
+        ocrProc.running = true;
+    }
 
     function toast(title, body, file) {
         Quickshell.execDetached(toastCommand(title, body, file));
@@ -220,6 +272,33 @@ Singleton {
         if (active) {
             statusProc.running = true;
             replayStatusProc.running = true;
+        }
+    }
+
+    // The toast comes when both the output and the exit code are in (either may arrive first)
+    Process {
+        id: ocrProc
+        property int code: -1
+        property bool streamDone: false
+        property string text: ""
+        function finish() {
+            if (ocrProc.code < 0 || !ocrProc.streamDone)
+                return;
+            const t = root.ocrToast(ocrProc.code, ocrProc.text);
+            ocrProc.code = -1;
+            ocrProc.streamDone = false;
+            Quickshell.execDetached(root.ocrNotify(t.title, t.body));
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                ocrProc.text = text;
+                ocrProc.streamDone = true;
+                ocrProc.finish();
+            }
+        }
+        onExited: code => {
+            ocrProc.code = code;
+            ocrProc.finish();
         }
     }
 
@@ -329,7 +408,7 @@ Singleton {
                 root.elapsed = 0;
                 root.file = "";
                 if (f !== "")
-                    root.toast("Recording saved", root.basename(f), f);
+                    Quickshell.execDetached(root.savedToastCommand("Recording saved", root.basename(f), f, Quickshell.shellDir + "/scripts/gif.sh"));
             }
         }
     }

@@ -33,6 +33,9 @@ PanelWindow {
     // Stop and the picks shoot as usual.
     property bool record: false
     property bool recordMic: false
+    // Text switch (the third choice next to Shot / Record): a region drag reads the text in it (scripts/ocr.sh) and copies it;
+    // region only, so Window / Screen / All are disabled while it is on
+    property bool ocr: false
     onRecordMicChanged: root.refreshCheck()   // Mic on / off changes what the preflight asks
     readonly property bool recordArmed: root.record && !RecordState.recording
     property var recordArgs: null
@@ -179,9 +182,12 @@ PanelWindow {
             BevelButton {
                 text: "Shot"
                 glyph: "\ue412"
-                checked: !root.record && !RecordState.recording
+                checked: !root.record && !root.ocr && !RecordState.recording
                 focusPolicy: Qt.NoFocus
-                onClicked: root.setRecord(false)
+                onClicked: {
+                    root.setOcr(false);
+                    root.setRecord(false);
+                }
             }
             BevelButton {
                 text: RecordState.recording ? "Stop" : "Record"
@@ -196,6 +202,13 @@ PanelWindow {
                         root.setRecord(true);
                     }
                 }
+            }
+            BevelButton {
+                text: "Text"
+                glyph: "\ue262"
+                checked: root.ocr
+                focusPolicy: Qt.NoFocus
+                onClicked: root.setOcr(true)
             }
             MenuSeparator {
                 vertical: true
@@ -212,6 +225,7 @@ PanelWindow {
                     text: modelData.text
                     glyph: modelData.glyph
                     checked: root.mode === modelData.key
+                    enabled: !root.ocr || modelData.key === "region"
                     focusPolicy: Qt.NoFocus
                     onClicked: root.pick(modelData.key)
                 }
@@ -266,7 +280,7 @@ PanelWindow {
                 font.family: MenuStyle.bodyFont
                 font.pixelSize: MenuStyle.fontSize
                 color: RecordState.hintIsProblem(root.record, RecordState.preflight) ? Config.colors.urgent : Config.colors.text
-                text: RecordState.hintText(root.mode, root.recordArmed, RecordState.preflight)
+                text: RecordState.hintText(root.mode, root.recordArmed, RecordState.preflight, root.ocr)
             }
             BevelButton {
                 visible: root.recordArmed && (root.mode === "screen" || root.mode === "all")
@@ -302,7 +316,17 @@ PanelWindow {
     function setRecord(on) {
         root.record = on;
         if (on)
+            root.ocr = false;
+        if (on)
             root.refreshCheck();
+    }
+    // Text: region only
+    function setOcr(on) {
+        root.ocr = on;
+        if (on) {
+            root.record = false;
+            root.setMode("region");
+        }
     }
     function refreshCheck() {
         if (root.record)
@@ -322,6 +346,8 @@ PanelWindow {
 
     // Toolbar buttons and keys 1-4: Screen and All shoot straight away
     function pick(m) {
+        if (root.ocr && m !== "region")
+            return;
         root.setMode(m);
         // Recording waits for the Start button (or Enter); a plain shot is taken at once
         if ((m === "screen" || m === "all") && !root.recordArmed)
@@ -375,6 +401,11 @@ PanelWindow {
 
     function runShot() {
         const r = root.focusRect;
+        if (root.ocr) {
+            RecordState.ocr(RecordState.geometry(r.x + root.scr.x, r.y + root.scr.y, r.width, r.height));
+            closeTimer.restart();
+            return;
+        }
         let args;
         // How scripts/shot-name.sh gets the class: "q" = it asks Hyprland for the focused window,
         // "c" = use the class that follows (the picked window's, or "screenshot" for All)
@@ -451,6 +482,7 @@ PanelWindow {
         root.dragging = false;
         root.setMode("region");
         root.record = false;   // every open starts as a plain shot; the record IPC sets it after open()
+        root.ocr = false;
         root.visible = true;
         keys.forceActiveFocus();
     }

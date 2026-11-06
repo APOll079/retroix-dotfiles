@@ -80,8 +80,8 @@ Row {
         id: micIcon
         visible: Privacy.mic
         interactive: false
-        urgent: true
-        iconFontValue: "\ue029"
+        urgent: Privacy.micLive   // an app is recording and the microphone is not muted
+        iconFontValue: Privacy.micMuted ? "\ue02b" : "\ue029"
     }
     BarButton {
         id: screenIcon

@@ -114,6 +114,7 @@ Spotify,
 Wallpapers,
 Updates,
 Cleanup,
+ColorHistory,
 None
 }
 property alias settings: settingsJsonAdapter.settings
@@ -155,6 +156,8 @@ property bool monochromeTrayIcons: true
 // maxVisible = stack limit; monitor = output name ("DP-2"), "focused", or "" (compositor default)
 property JsonObject notifications: JsonObject {
 property bool dnd: false
+// hold toasts back (the history still keeps them) while a screen share is running; critical ones still show
+property bool dndWhileSharing: true
 property string position: "top-right"
 property int maxVisible: 4
 property string monitor: ""
@@ -218,6 +221,11 @@ property bool metric: true
 property JsonObject audio: JsonObject {
 property string eqOutputMatch: ""
 property var eqPresets: []
+// per-app volumes you set are remembered by application name and re-applied when the app plays again
+property bool rememberAppVolumes: true
+// EasyEffects presets the Noise filter button loads to switch input noise reduction on / off ("" = the button is disabled)
+property string noisePreset: ""
+property string noiseOffPreset: ""
 }
 // Wallpaper browser (Themes > Wallpapers...): the folder it lists (top level only; ~ allowed)
 property JsonObject wallpaper: JsonObject {

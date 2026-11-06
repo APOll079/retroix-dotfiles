@@ -27,6 +27,13 @@ Scope {
     property var cleanupState: CleanupState
     // keeps the recorder state alive (picks up a recording that survived a reload)
     property bool recorder: RecordState.recording
+    // keeps the audio state alive (output toast, remembered app volumes)
+    property bool audioState: AudioState.live
+    // the colour picker bind reports what it picked: `qs ipc call colors add "#rrggbb"`
+    IpcHandler {
+        target: "colors"
+        function add(hex: string): void { ColorHistory.add(hex); }
+    }
     Taskbar.Bar {}
     Popups.OsdPopup {}
     Popups.NotificationDaemon {}

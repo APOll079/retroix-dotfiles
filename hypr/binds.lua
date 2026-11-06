@@ -29,7 +29,8 @@ hl.bind(mainMod .. " + ALT" .. " + " .. "S", hl.dsp.exec_cmd(recordCmd("replaySa
 hl.bind(mainMod .. " + ALT" .. " + " .. "P", hl.dsp.exec_cmd(recordCmd("pauseToggle")))  -- help: Screen | Pause / resume the recording
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
-hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd("hyprpicker -a"))  -- help: Screen | Pick a colour
+hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd([[bash -c 'c=$(sh ~/.config/quickshell/scripts/colorpick.sh) && [ -n "$c" ] && qs ipc call colors add "$c"']]))  -- help: Screen | Pick a colour
+hl.bind(mainMod .. " + ALT" .. " + " .. "M", hl.dsp.exec_cmd([[bash -c 'qs ipc call mic_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Audio | Mute / unmute the microphone
 -- Task Manager (quickshell TaskManager.qml): one real window; opens it, or focuses it when it is
 -- already open. Over a fullscreen game or video it leaves fullscreen first, so the window can't
 -- open hidden behind it (misc.on_focus_under_fullscreen only covers tiled windows).

@@ -28,29 +28,17 @@ StatusBar {
     BevelButton {
         visible: bar.confirming
         implicitHeight: MenuStyle.spotifyStatusHeight
-        text: panel.confirmClient ? "Change" : "Log out"
-        isDefault: true     // the verb is the default button; the 18 px bar has no room for a ConfirmBar
+        text: "Cancel"
         focusPolicy: Qt.NoFocus
-        onClicked: {
-            if (panel.confirmClient) {
-                panel.confirmClient = false;
-                SpotifyState.logout();
-                panel.editClient = true;
-            } else {
-                panel.confirmLogout = false;
-                SpotifyState.logout();
-            }
-        }
+        onClicked: panel.confirmCancel()
     }
     BevelButton {
         visible: bar.confirming
         implicitHeight: MenuStyle.spotifyStatusHeight
-        text: "Cancel"
+        text: panel.confirmClient ? "Change client ID" : "Log out"
+        isDefault: true     // the verb is the default button; the 18 px bar has no room for a ConfirmBar
         focusPolicy: Qt.NoFocus
-        onClicked: {
-            panel.confirmLogout = false;
-            panel.confirmClient = false;
-        }
+        onClicked: panel.confirmAccept()
     }
     BevelButton {
         visible: !bar.confirming

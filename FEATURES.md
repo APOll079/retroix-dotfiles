@@ -62,6 +62,14 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Notification history search: filters live while the panel keeps its keys (Super+N toggles), Escape twice (clear, then release the keyboard), right-click removes the right entry on a filtered list
 - [ ] Hourly forecast in the Calendar tab: times match the place's local time (checked only against a fixture), four cells fit at 480 px (long values like "-12°C" may elide)
 
+### Round 3, audio / capture / Spotify (never looked at, fakes only)
+- [ ] Super+Alt+M with `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` and the OSD; the mic icon only shows while an app records
+- [ ] Noise filter: does `easyeffects -l <audio.noisePreset>` switch input noise reduction on, and `noiseOffPreset` / the last EQ preset off, without disturbing the output preset? (set both in settings.json first)
+- [ ] Output toast with a Bluetooth sink connecting / dropping; remembered volumes re-applied to a real stream (a browser with several streams); DND while sharing with a real portal stream
+- [ ] Overlay Text mode: OCR on screen text (Swedish + English; install tesseract + data); "Save as GIF" on the recording toast (does your notification daemon show both actions?); `hyprpicker -a` prints #rrggbb so Super+Shift+C fills Start > Colours
+- [ ] Spotify drawer in real focus: Escape / Enter on the "..." menu and both confirms
+- [ ] Failed-disk / network toasts no longer replace each other (distinct app names)
+
 ### Round 3, my share (never looked at)
 - [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Alt+T drops the terminal down and hides it again; Super+Alt+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
 - [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed

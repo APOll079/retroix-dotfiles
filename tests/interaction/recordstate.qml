@@ -79,6 +79,27 @@ ShellRoot {
         shell.check("toast with an Open action keeps title, body and file as arguments", t[0] === "sh" && t[1] === "-c" && t[3] === "sh" && t.slice(4).join("|") === "Recording saved|a.mp4|/v/a.mp4" && t[2].indexOf("a.mp4") < 0 && t[2].indexOf("-A default=Open") > 0);
         shell.check("toast without a file is a plain notify-send", R.toastCommand("Replay isn't running", "", "").join("|") === "notify-send|-a|Recording|Replay isn't running|");
         shell.check("basename", R.basename("/v/a b.mp4") === "a b.mp4");
+
+        // The "Recording saved" toast with a second action: Save as GIF
+        const g = R.savedToastCommand("Recording saved", "a b.mp4", "/v/a b.mp4", "/s/gif.sh");
+        shell.check("saved toast: sh -c, then title, body, file and the gif script as plain parameters", g[0] === "sh" && g[1] === "-c" && g[3] === "sh" && g.slice(4).join("|") === "Recording saved|a b.mp4|/v/a b.mp4|/s/gif.sh");
+        shell.check("saved toast: keeps Open and adds gif=Save as GIF", g[2].indexOf("-A default=Open") > 0 && g[2].indexOf('-A gif="Save as GIF"') > 0);
+        shell.check("saved toast: nothing from outside is in the script text", g[2].indexOf("a b.mp4") < 0 && g[2].indexOf("/s/gif.sh") < 0);
+        shell.check("saved toast: GIF saved with Open, and the two failures", g[2].indexOf('"GIF saved"') > 0 && g[2].indexOf("ffmpeg is not installed") > 0 && g[2].indexOf("ffmpeg could not make the GIF") > 0);
+        shell.check("the replay toast is unchanged (one Open action only)", R.toastCommand("Replay saved", "r.mp4", "/v/r.mp4")[2].indexOf("gif") < 0);
+
+        // Text (OCR) mode of the snipping overlay
+        shell.check("hint: Text mode says to drag over the text", R.hintText("region", false, none, true) === "Drag to select the text. Esc cancels.");
+        shell.check("hint: Text mode wins over a Record problem, the old hints are unchanged without it", R.hintText("region", true, bad, true) === "Drag to select the text. Esc cancels." && R.hintText("region", false, none, false) === "Drag to select an area. Esc cancels." && R.hintText("region", true, bad) === "No microphone found");
+        shell.check("ocr command is the script and the region as separate arguments", R.ocrCommand("/s/ocr.sh", "100x50+20+30").join("|") === "/s/ocr.sh|100x50+20+30");
+        shell.check("ocr toast: text copied shows the first line", R.ocrToast(0, "Hello world\nsecond").title === "Text copied" && R.ocrToast(0, "Hello world\nsecond").body === "Hello world");
+        shell.check("ocr toast: leading blank lines and spaces are skipped", R.ocrToast(0, "\n  \n  Hi there  \nx").body === "Hi there");
+        shell.check("ocr toast: the line is cut at 80 characters", R.ocrToast(0, "x".repeat(100)).body === "x".repeat(80));
+        shell.check("ocr toast: a character outside the BMP counts as one", Array.from(R.firstLine("\ud83d\ude00".repeat(90), 80)).length === 80);
+        shell.check("ocr toast: no tesseract", R.ocrToast(2, "").title === "tesseract is not installed");
+        shell.check("ocr toast: nothing recognised, and any other failure", R.ocrToast(3, "").title === "No text found" && R.ocrToast(1, "").title === "Text recognition failed");
+        shell.check("ocr notify keeps the text as plain arguments", R.ocrNotify("Text copied", "a; touch x").join("|") === "notify-send|-a|Text|Text copied|a; touch x");
+        shell.check("ocr() does nothing under the harness", (R.ocr("10x10+0+0"), true));
         shell.check("inactive under QS_NO_APPLY", R.active === false && R.recording === false && R.replaying === false);
 
         console.log("TEST done failures=" + shell.failures);

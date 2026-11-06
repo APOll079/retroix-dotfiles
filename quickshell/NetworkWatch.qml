@@ -120,7 +120,8 @@ Singleton {
         const t = Object.assign({}, lastToast);
         t[key] = now;
         lastToast = t;
-        const args = ["notify-send", "-a", "Network", title(key, fire)];
+        // the link and the pinged hosts are different app names, so a host toast never replaces the link toast
+        const args = ["notify-send", "-a", key === "link" ? "Network" : "Ping", title(key, fire)];
         if (key !== "link" && fire === "down")
             args.push("No answer to ping");
         Quickshell.execDetached(args);

@@ -137,6 +137,16 @@ ColumnLayout {
                 text: AudioState.micMuted ? "MUTE" : Math.round(AudioState.micVolume * 100) + "%"
             }
         }
+
+        // EasyEffects' input noise reduction, as a preset (settings audio.noisePreset); sunken while on.
+        // Disabled, with the setting named in its label, until the preset is set or when the call failed.
+        BevelButton {
+            Layout.fillWidth: true
+            text: AudioState.noiseText
+            checked: AudioState.noiseOn && AudioState.noiseUsable
+            enabled: AudioState.noiseUsable
+            onClicked: AudioState.setNoise(!AudioState.noiseOn)
+        }
     }
 
     // === PER-APP VOLUME ===
@@ -198,6 +208,8 @@ ColumnLayout {
                         readonly property bool muted: lead.audio ? lead.audio.muted : false
                         function setVolume(v) {
                             for (var n of modelData.nodes) if (n.audio) n.audio.volume = v;
+                            // only an app whose slider was moved here is remembered (and put back when it plays again)
+                            AudioState.rememberAppVolume(modelData.name, v);
                         }
                         function setMuted(m) {
                             for (var n of modelData.nodes) if (n.audio) n.audio.muted = m;
@@ -224,6 +236,7 @@ ColumnLayout {
                             BevelButton {
                                 implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
                                 glyph: streamRow.muted ? "\ue04f" : "\ue050"
+                                checked: streamRow.muted
                                 onClicked: streamRow.setMuted(!streamRow.muted)
                             }
 

@@ -16,6 +16,7 @@ PopupWindow {
     property var openKeysCallback: function () {}
     property var openUpdatesCallback: function () {}
     property var openCleanupCallback: function () {}
+    property var openColorHistoryCallback: function () {}
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -158,6 +159,15 @@ PopupWindow {
                         onClicked: {
                             root.closeCallback();
                             root.openKeysCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Colours"
+                        glyph: "\ue40a"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openColorHistoryCallback();
                         }
                     }
                 }

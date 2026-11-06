@@ -126,10 +126,10 @@ Singleton {
                 const res = root.step(st[r.mount] || root.newState(), r.usedPercent, percent, percent - root.rearmPoints, cooldownMs, now);
                 st[r.mount] = res.state;
                 if (res.fire)
-                    toasts.push(["notify-send", "-a", "Disk", r.mount + " is " + r.usedPercent + "% full", root.formatBytes(r.used) + " of " + root.formatBytes(r.size) + " used"]);
+                    toasts.push(["notify-send", "-a", "Disk usage", r.mount + " is " + r.usedPercent + "% full", root.formatBytes(r.used) + " of " + root.formatBytes(r.size) + " used"]);
             } else if (r.status === "unreachable" && root.unreachableDue(un[r.mount], cooldownMs, now)) {
                 un[r.mount] = now;
-                toasts.push(["notify-send", "-a", "Disk", "-u", "low", r.mount + " is not responding", "It did not answer within 3 seconds."]);
+                toasts.push(["notify-send", "-a", "Disk offline", "-u", "low", r.mount + " is not responding", "It did not answer within 3 seconds."]);
             }
         }
         return { toasts: toasts, states: st, unreachableAt: un };
@@ -141,14 +141,14 @@ Singleton {
         let needs = false;
         for (const r of results) {
             if (r.status === "failed")
-                toasts.push(["notify-send", "-a", "Disk", "-u", "critical", r.dev + " reports SMART failure", "Back up the disk and replace it."]);
+                toasts.push(["notify-send", "-a", "Disk health", "-u", "critical", r.dev + " reports SMART failure", "Back up the disk and replace it."]);
             else if (r.status === "permission")
                 needs = true;
         }
         return { toasts: toasts, needsPermission: needs };
     }
 
-    readonly property var permissionToast: ["notify-send", "-a", "Disk", "SMART needs permission", "See docs/desktop.md"]
+    readonly property var permissionToast: ["notify-send", "-a", "Disk health", "SMART needs permission", "See docs/desktop.md"]
 
     // ---- live part ----
     function run(args) {
