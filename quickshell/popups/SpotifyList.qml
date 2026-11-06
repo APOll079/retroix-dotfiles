@@ -71,17 +71,14 @@ SunkenField {
         }
     }
 
-    Text {
-        renderType: Text.NativeRendering
-        font.hintingPreference: Font.PreferFullHinting
+    EmptyState {
         anchors.centerIn: parent
         width: parent.width - 2 * MenuStyle.pad
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.Wrap
         visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
-        font.family: MenuStyle.bodyFont
-        font.pixelSize: text.length <= MenuStyle.spotifyEmptyBigChars ? MenuStyle.spotifyTitleSize : MenuStyle.fontSize
-        color: MenuStyle.bevelDark
+        glyph: panel.searchMode ? panel.kindGlyph("searchrow")
+            : (panel.tab === "liked" || (panel.view !== null && panel.view.kind === "liked")) && !panel.addMode ? panel.kindGlyph("liked")
+            : panel.tab === "queue" && panel.view === null && !panel.addMode ? "\ue03c"
+            : panel.kindGlyph("")
         text: panel.emptyText()
     }
 
