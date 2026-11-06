@@ -17,6 +17,8 @@ Button {
     property string markGlyph: "\ue5ca"     // the sign shown when marked (default: a check)
     property bool selected: false
     property int iconBox: MenuStyle.iconSize   // the icon / thumbnail square (the Spotify lists use a bigger one)
+    // The icon column keeps its width even when this row has no icon, so labels line up down a menu
+    property bool reserveIcon: true
     property bool accentTitle: false           // the title in the accent colour (the playing song)
     property bool trailingDim: false           // the trailing text dim (a duration column)
     readonly property bool lit: hover.hovered || hovered || visualFocus || down || selected
@@ -48,7 +50,7 @@ Button {
         Item {
             Layout.preferredWidth: root.iconBox
             Layout.preferredHeight: root.iconBox
-            visible: root.glyph !== "" || root.iconSource != ""
+            visible: root.reserveIcon || root.glyph !== "" || root.iconSource != ""
             Image {
                 id: appIcon
                 anchors.fill: parent
