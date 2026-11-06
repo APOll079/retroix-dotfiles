@@ -86,6 +86,14 @@ Scope {
         }
     }
 
+    // Test mic (Home tab): the loopback starts
+    Connections {
+        target: AudioState
+        function onMicTestStarted() {
+            root.showText("Microphone", "\ue029", "MIC TEST");
+        }
+    }
+
     // Bluetooth: a device connecting or disconnecting
     Instantiator {
         model: Bluetooth.devices

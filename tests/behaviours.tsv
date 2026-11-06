@@ -221,3 +221,18 @@ quickshell/LaptopControls.qml	onClicked: NasWatch\.remountStale\(\)	The bar's NA
 quickshell/popups/MenuRow.qml	property bool hoverLit	MenuRow: lists where the pointer moves the cursor turn the hover bar off (one lit row)
 quickshell/taskbar/Bar.qml	openLauncherMode\("clipboard", true\)	Super+V opens the clipboard on its own, without the launcher tabs
 quickshell/popups/AppLauncher.qml	tabsShown: !root\.standalone	The standalone clipboard window has no Apps / Games tabs
+quickshell/Idle.qml	function stayAwakeDecision	Stay awake: no dim / lock / screen-off while the focused window is fullscreen (idle.stayAwakeInFullscreen)
+quickshell/NotificationStore.qml	function muteApp	Muted apps: no toast, history keeps the notification
+quickshell/NotificationStore.qml	priority === true	Priority apps get through Do Not Disturb and the screen-share hold
+quickshell/popups/NotificationDaemon.qml	Don't show toasts from	Toast right-click menu: Hide toast, mute the app, priority app
+quickshell/popups/NotificationList.qml	Muted apps \(	Notification history: Muted apps (n) lists them, picking one unmutes
+quickshell/PhoneBattery.qml	phone\.sh	Phone battery singleton reads scripts/phone.sh battery
+quickshell/popups/AudioTab.qml	AudioState\.toggleMicTest	Audio tab: Test mic button (5 s loopback, second click stops)
+quickshell/popups/OsdPopup.qml	MIC TEST	OSD: Test mic shows MIC TEST
+quickshell/popups/AudioTab.qml	Play on	Audio tab: right-click an app > Play on (move-sink.sh)
+quickshell/Media.qml	function trackToastDecision	Track toast: Now playing on song change when spotifyExtras.trackToast is on
+quickshell/Media.qml	function pickBarPlayer	Bar centre: Spotify first, else a playing player, paused one stays dimmed
+quickshell/Media.qml	function likeMenu	Like / Unlike and Add to playlist for the bar's right-click menu
+quickshell/popups/PhoneTab.qml	Send to phone	Phone tab: Send to phone sends a file or a link (kdeshare.sh)
+quickshell/LaptopControls.qml	onClicked: root\.openPhoneTab\(phoneBtn\)	The bar's phone battery button opens the Phone tab
+quickshell/taskbar/Bar.qml	Media\.likeMenu\(	Bar: right-click on the now-playing text opens Like / Add to playlist

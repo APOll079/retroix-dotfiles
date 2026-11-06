@@ -120,6 +120,23 @@ Scope {
                     width: MenuStyle.widthMedium
                     height: visible ? MenuStyle.chromeHeight + Math.max(content.implicitHeight, 32) : 0
 
+                    // The right-click menu: Hide toast (what a right-click did before), then the per-app switches.
+                    // The app lists are settings.json notifications.mutedApps / priorityApps (NotificationStore).
+                    function openMenu(x, y) {
+                        const app = notifItem.modelData.appName;
+                        const named = app !== "";
+                        toastMenu.model = [
+                            { text: "Hide toast", glyph: "\ue5cd", action: () => notifItem.close() },
+                            { separator: true },
+                            { text: named ? "Don't show toasts from " + app : "Don't show toasts from this app", glyph: "\ue7f6", enabled: named, action: () => NotificationStore.muteApp(app) },
+                            { text: named ? "Always show toasts from " + app : "Always show toasts from this app", glyph: "\ue838", checked: NotificationStore.listHas(NotificationStore.priorityApps, app), enabled: named, action: () => NotificationStore.setPriority(app, !NotificationStore.listHas(NotificationStore.priorityApps, app)) }
+                        ];
+                        toastMenu.openAt(notifItem, x, y);
+                    }
+                    PopupMenu {
+                        id: toastMenu
+                    }
+
                     // Fade out, then hide the toast. The notification itself stays alive in the
                     // history so it can still be opened from there.
                     function close() {
@@ -134,7 +151,7 @@ Scope {
                     }
 
                     Timer {
-                        running: notifItem.visible && !hover.hovered && !notifItem.replyOpen && !notifItem.critical && notifItem.modelData.expireTimeout !== 0
+                        running: notifItem.visible && !hover.hovered && !toastMenu.visible && !notifItem.replyOpen && !notifItem.critical && notifItem.modelData.expireTimeout !== 0
                         interval: notifItem.modelData.expireTimeout > 0 ? Math.max(notifItem.modelData.expireTimeout * 1000, MenuStyle.notificationTimeout) : MenuStyle.notificationTimeout
                         onTriggered: notifItem.close()
                     }
@@ -158,7 +175,8 @@ Scope {
                         titleTextColor: notifItem.critical ? MenuStyle.urgentText : Config.colors.text
                         
                         // Left-click opens it (the app's default action, e.g. the Discord chat);
-                        // right-click just hides the toast. Below the content so action buttons win.
+                        // right-click opens a small menu (Hide toast, mute the app, priority app).
+                        // Below the content so action buttons win.
                         MouseArea {
                             anchors.fill: parent
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -167,7 +185,7 @@ Scope {
                                 if (mouse.button === Qt.LeftButton)
                                     NotificationStore.activate(notifItem.modelData);
                                 else
-                                    notifItem.close();
+                                    notifItem.openMenu(mouse.x, mouse.y);
                             }
                         }
 

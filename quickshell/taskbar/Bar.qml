@@ -235,7 +235,7 @@ onClicked: taskbar.toggleMenu(themeMenu, Config.SystemPopup.ThemePicker, themeMe
 }
 // Wallpapers live in the Themes menu ("Wallpapers..."), Services in the Start menu (Services); neither has its own bar button.
 // Bar middle: the current Spotify lyric line (Lyrics.qml), else "Artist - Title"; dimmed while
-// paused; nothing at all when Spotify is closed or another player is active.
+// paused. With no Spotify, another playing MPRIS player (YouTube in Zen, VLC...) is shown instead (Media.barPlayer).
 BarButton {
 id: nowPlaying
 visible: Media.text !== ""
@@ -247,19 +247,33 @@ strong: true
 dim: Media.paused
 label: Lyrics.line !== "" && !Media.paused ? Lyrics.line : Media.text
 maxLabelWidth: Math.max(0, Math.min(MenuStyle.barMediaMaxWidth, taskbar.centreRoom(trayWell.x)))
-// Left click: the Spotify drawer; middle click: play / pause
+// Left click: the Spotify drawer; middle click: play / pause (Spotify, else the other player shown); right click:
+// Like / Unlike and Add to playlist for the current Spotify song
 MouseArea {
 anchors.fill: parent
-acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 cursorShape: Qt.PointingHandCursor
 onClicked: mouse => {
 if (mouse.button === Qt.MiddleButton) {
-if (Media.spotify && Media.spotify.canTogglePlaying)
-Media.spotify.togglePlaying();
+const p = Media.barPlayer;
+if (p && p.canTogglePlaying)
+p.togglePlaying();
+} else if (mouse.button === Qt.RightButton) {
+Media.likeMenu(() => {
+if (!spotifyPanel.visible)
+taskbar.toggleMenu(spotifyPanel, Config.SystemPopup.Spotify, null, "keep");
+spotifyPanel.toggleAddMode();
+}, m => {
+likeMenu.model = m;
+likeMenu.openAt(nowPlaying, mouse.x, mouse.y);
+});
 } else {
 taskbar.toggleMenu(spotifyPanel, Config.SystemPopup.Spotify, null, "keep");
 }
 }
+}
+Popups.PopupMenu {
+id: likeMenu
 }
 }
 
@@ -443,6 +457,7 @@ LaptopControls {
 id: laptopControls
 currentPopup: root.currentPopup
 toggleMenu: taskbar.toggleMenu
+openPhoneTab: function(item) { taskbar.openSidePanel(2, item) }
 bluetoothMenuRef: bluetoothMenu
 sysMonMenuRef: sysMonMenu
 showGpu: Media.text === "" || taskbar.centreRoom(taskbar.rightStartWithGpu) >= Math.min(MenuStyle.barMediaMinWidth, nowPlayingMetrics.advanceWidth)

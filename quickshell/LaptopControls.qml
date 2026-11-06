@@ -15,6 +15,8 @@ Row {
     property var toggleMenu: function(menu, popup, item) {}
     property var bluetoothMenuRef: null
     property var sysMonMenuRef: null
+    // Bar.qml: opens the side panel on its Phone tab (the phone battery button)
+    property var openPhoneTab: function(item) {}
     // Bar.qml turns the GPU part of the sysmon button off when the centre text needs the room
     property bool showGpu: true
 
@@ -50,10 +52,10 @@ Row {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
-        + (vpnBtn.visible ? vpnBtn.width : 0) + (nasBtn.visible ? nasBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
+        + (vpnBtn.visible ? vpnBtn.width : 0) + (nasBtn.visible ? nasBtn.width : 0) + (phoneBtn.visible ? phoneBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
         + caffeineBtn.width + ethLabel.width + btBtn.width
     // The gaps between the buttons that are shown (caffeine, sysmon, ETH and Bluetooth always are), plus one to the tray
-    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (nasBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
+    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (nasBtn.visible ? 1 : 0) + (phoneBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
     readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth + root.spacing * root.itemCount
 
     // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
@@ -156,6 +158,16 @@ Row {
         maxLabelWidth: MenuStyle.barLabelButtonWidth * 2
         tooltip: VpnState.tooltip(VpnState.names)
         onClicked: VpnState.disconnect()
+    }
+
+    // Phone battery (PhoneBattery, KDE Connect): shown while the phone is connected; a click opens the Phone tab
+    BarButton {
+        id: phoneBtn
+        visible: PhoneBattery.connected
+        iconFontValue: "\ue324"
+        label: PhoneBattery.label
+        tooltip: PhoneBattery.tooltip
+        onClicked: root.openPhoneTab(phoneBtn)
     }
 
     // NAS (NasWatch): shown while a configured mount is up or stale; a click remounts the stale / unmounted one

@@ -41,18 +41,29 @@ Singleton {
         } catch (e) {}
     }
 
-    readonly property bool dimmed: cfg.enabled && cfg.dimMinutes > 0 && dimMonitor.isIdle
+    // Stay awake during video: with settings idle.stayAwakeInFullscreen (default true; a missing key counts as true)
+    // the dim / lock / screen-off monitors are off while the focused window is fullscreen (a video). The wlr
+    // foreign-toplevel `fullscreen` flag is live, unlike Hyprland's workspace IPC snapshot. Caffeine is separate:
+    // it is the IdleInhibitor in Bar.qml and works whatever this says.
+    // Pure: should a fullscreen window keep the screen awake?
+    function stayAwakeDecision(fullscreen, setting) {
+        return fullscreen === true && setting !== false;
+    }
+    readonly property bool fullscreenFocused: ToplevelManager.activeToplevel !== null && ToplevelManager.activeToplevel.fullscreen === true
+    readonly property bool videoAwake: root.stayAwakeDecision(root.fullscreenFocused, cfg.stayAwakeInFullscreen)
+
+    readonly property bool dimmed: cfg.enabled && cfg.dimMinutes > 0 && !root.videoAwake && dimMonitor.isIdle
 
     IdleMonitor {
         id: dimMonitor
-        enabled: root.cfg.enabled && root.cfg.dimMinutes > 0
+        enabled: root.cfg.enabled && root.cfg.dimMinutes > 0 && !root.videoAwake
         respectInhibitors: true
         timeout: root.cfg.dimMinutes * 60
     }
 
     IdleMonitor {
         id: lockMonitor
-        enabled: root.cfg.enabled && root.cfg.lockMinutes > 0
+        enabled: root.cfg.enabled && root.cfg.lockMinutes > 0 && !root.videoAwake
         respectInhibitors: true
         timeout: root.cfg.lockMinutes * 60
         onIsIdleChanged: {
@@ -63,7 +74,7 @@ Singleton {
 
     IdleMonitor {
         id: screenMonitor
-        enabled: root.cfg.enabled && root.cfg.screenOffMinutes > 0
+        enabled: root.cfg.enabled && root.cfg.screenOffMinutes > 0 && !root.videoAwake
         respectInhibitors: true
         timeout: root.cfg.screenOffMinutes * 60
         onIsIdleChanged: Hyprland.dispatch(isIdle ? "hl.dsp.dpms({ action = \"disable\" })" : "hl.dsp.dpms({ action = \"enable\" })")

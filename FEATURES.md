@@ -76,6 +76,12 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, desktop / notifications / audio / phone (never looked at, fakes only)
+- [ ] A fullscreen video past the dim time keeps the screen on; right-click a toast opens the menu (closes on Esc / click outside), mute and priority work, "Muted apps (n)" unmutes
+- [ ] Phone battery on the bar with a real phone (are the KDE Connect D-Bus names right?), Send to phone with a file and a link
+- [ ] Test mic with headphones (Stop and closing the tab end it, no `pw-loopback` left); "Play on" with a real stream (if nothing moves, the stream id mapping is the guess)
+- [ ] Bar centre: a YouTube tab in Zen with Spotify closed shows on the bar; right-click the text: Like / Add to playlist; track toast on a real song change (`spotifyExtras.trackToast`)
+
 ### Round 4, my share (never looked at)
 - [ ] Super+V opens the clipboard with no tabs; Super+D still has Apps / Games / Clipboard and the Clipboard tab works there
 - [ ] Themes menu: "win95" and "platinum" appear; applying each re-colours the bar, kitty and GTK; do the borders and the select colour read well? (apply.py accepts both)

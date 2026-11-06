@@ -8,7 +8,8 @@ import ".."
 // Phone tab of the side panel (Super+N > Phone): KDE Connect through `kdeconnect-cli`. Lists the phones
 // kdeconnectd knows, with Pair / Unpair, Ping, Send clipboard and Send file (a typed path; there is
 // no file picker). Phone notifications arrive on their own through the notification daemon, and
-// clipboard sync is a per-device plugin switch in the phone app.
+// clipboard sync is a per-device plugin switch in the phone app. "Send to phone" sends a typed file path or an
+// http(s) link through scripts/kdeshare.sh (the status line shows the result).
 // `kdeconnect-cli -l` is expected as "- Name: id (paired and reachable)" per line.
 // `active` is true while this tab is showing.
 ColumnLayout {
@@ -143,7 +144,7 @@ ColumnLayout {
             renderType: Text.NativeRendering
             font.hintingPreference: Font.PreferFullHinting
             anchors.fill: parent
-            placeholderText: "File path, e.g. ~/shot.png"
+            placeholderText: "File path or link, e.g. ~/shot.png"
             placeholderTextColor: MenuStyle.bevelDark
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
@@ -158,7 +159,7 @@ ColumnLayout {
     }
     BevelButton {
         Layout.fillWidth: true
-        text: "Send file"
+        text: "Send to phone"
         glyph: "\ue2c6"
         enabled: root.usable && !root.busy && pathInput.text.trim() !== ""
         focusPolicy: Qt.NoFocus
@@ -207,13 +208,30 @@ ColumnLayout {
         cmdProc.running = true;
     }
 
+    // Pure: the kdeshare.sh call for a device and a typed path or link, or null when either is unusable (the script
+    // checks again; its arguments never go through shell text)
+    function shareCommand(deviceId, what) {
+        const w = String(what || "").trim();
+        if (!/^[A-Za-z0-9_]+$/.test(String(deviceId || "")) || w === "" || w.charAt(0) === "-")
+            return null;
+        return ["sh", Quickshell.shellDir + "/scripts/kdeshare.sh", deviceId, w];
+    }
+    // Pure: the status line after a send
+    function sentMessage(what) {
+        const w = String(what || "").trim();
+        return /^https?:\/\//.test(w) ? "Sent link" : "Sent " + w.split("/").pop();
+    }
+
     function sendFile() {
-        let p = pathInput.text.trim();
+        const p = pathInput.text.trim();
         if (p === "" || !root.usable || root.busy)
             return;
-        if (p.startsWith("~/"))
-            p = Quickshell.env("HOME") + p.slice(1);
-        root.run(["--share", p], "Sent " + p.split("/").pop());
+        const cmd = root.shareCommand(root.current.id, p);
+        if (cmd === null)
+            return;
+        cmdProc.done = root.sentMessage(p);
+        cmdProc.command = cmd;
+        cmdProc.running = true;
     }
 
     Process {

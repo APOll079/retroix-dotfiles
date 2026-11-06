@@ -259,6 +259,39 @@ Singleton {
         }
     }
 
+    // --- hear yourself (Home tab: Test mic) ---
+    // scripts/micloop.sh start plays the default input through the default output for 5 s (feedback with speakers!);
+    // a second click runs `micloop.sh stop`, closing the tab stops it too. The loopback runs under `timeout`, so it ends
+    // by itself even if Quickshell dies. micTestStarted() lets the OSD say MIC TEST.
+    signal micTestStarted()
+    readonly property bool micTesting: micTestProc.running
+    // Pure: the button label
+    function micTestLabel(testing) {
+        return testing ? "Stop test" : "Test mic";
+    }
+    function toggleMicTest() {
+        if (!root.live)
+            return;
+        if (micTestProc.running) {
+            root.stopMicTest();
+            return;
+        }
+        micTestProc.running = true;
+        root.micTestStarted();
+    }
+    function stopMicTest() {
+        if (root.live && micTestProc.running)
+            Quickshell.execDetached(["sh", Quickshell.shellDir + "/scripts/micloop.sh", "stop"]);
+    }
+    Process {
+        id: micTestProc
+        command: ["sh", Quickshell.shellDir + "/scripts/micloop.sh", "start"]
+        onExited: code => {
+            if (code !== 0)
+                console.warn("[AudioState] micloop.sh start failed (exit " + code + ")");
+        }
+    }
+
     // --- toast when the default output changes ---
     property var announcedOutput: null      // { name, description } of the output the last toast (or the start) knew
     function outputInfo(node) {

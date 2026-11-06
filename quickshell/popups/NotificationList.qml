@@ -103,6 +103,31 @@ ColumnLayout {
         }
     }
 
+    // Apps whose toasts are switched off (right-click a toast > Don't show toasts from ...): this button shows while
+    // there are any and opens the list; picking one unmutes it. Their notifications still land in the history.
+    BevelButton {
+        id: mutedButton
+        objectName: "mutedButton"
+        Layout.fillWidth: true
+        visible: !root.confirmClear && NotificationStore.mutedApps.length > 0
+        text: "Muted apps (" + NotificationStore.mutedApps.length + ")"
+        glyph: "\ue7f6"
+        focusPolicy: Qt.NoFocus
+        onClicked: root.openMutedMenu()
+    }
+    // the model of the list: one entry per muted app, picking it unmutes
+    function mutedEntries(apps) {
+        return Array.from(apps || []).map(a => ({ text: "Unmute " + a, glyph: "\ue7f6", action: () => NotificationStore.unmuteApp(a) }));
+    }
+    function openMutedMenu() {
+        mutedMenu.model = root.mutedEntries(NotificationStore.mutedApps);
+        mutedMenu.openAt(mutedButton, 0, mutedButton.height);
+    }
+    readonly property var mutedMenuItem: mutedMenu
+    PopupMenu {
+        id: mutedMenu
+    }
+
     // The history filter (the box under the header): matches app name, title and body, case-insensitive
     property string query: ""
     // Pure: the entries of `items` that match `query`, in their order. An empty query returns `items` itself.

@@ -35,9 +35,45 @@ Singleton {
     // like Do Not Disturb (the history still gets them). A missing key counts as true.
     readonly property bool dndWhileSharing: Config.settings.notifications.dndWhileSharing !== false
 
-    // Pure: does a new notification pop up as a toast? Critical ones always do (as with Do Not Disturb).
-    function showsToast(dnd, whileSharing, sharing, critical) {
-        return critical || !(dnd || (whileSharing && sharing));
+    // Muted and priority apps (settings notifications.mutedApps / priorityApps: arrays of app names, a missing key is
+    // an empty list). Pure list helpers: they never change their input, add / remove return a new array.
+    function nameList(v) {
+        return Array.from(v || []).map(String);
+    }
+    function listHas(list, name) {
+        return name !== "" && root.nameList(list).indexOf(String(name)) >= 0;
+    }
+    function listAdd(list, name) {
+        const l = root.nameList(list);
+        name = String(name || "");
+        if (name === "" || l.indexOf(name) >= 0)
+            return l;
+        return l.concat([name]);
+    }
+    function listRemove(list, name) {
+        return root.nameList(list).filter(x => x !== String(name));
+    }
+    readonly property var mutedApps: root.nameList(Config.settings.notifications.mutedApps)
+    readonly property var priorityApps: root.nameList(Config.settings.notifications.priorityApps)
+    function muteApp(name) {
+        Config.settings.notifications.mutedApps = root.listAdd(Config.settings.notifications.mutedApps, name);
+        // toasts already up from that app go too (the history keeps them)
+        root.toasts = root.toasts.filter(t => t.appName !== name);
+    }
+    function unmuteApp(name) {
+        Config.settings.notifications.mutedApps = root.listRemove(Config.settings.notifications.mutedApps, name);
+    }
+    function setPriority(name, on) {
+        Config.settings.notifications.priorityApps = on ? root.listAdd(Config.settings.notifications.priorityApps, name) : root.listRemove(Config.settings.notifications.priorityApps, name);
+    }
+
+    // Pure: does a new notification pop up as a toast? Critical ones always do (as with Do Not Disturb), and so do
+    // priority apps (they get through Do Not Disturb and the screen-share hold). A muted app never toasts, not even
+    // as a priority app or critical: the owner switched it off by name. The history stores it either way.
+    function showsToast(dnd, whileSharing, sharing, critical, priority, muted) {
+        if (muted === true)
+            return false;
+        return critical || priority === true || !(dnd || (whileSharing && sharing));
     }
 
     function add(n) {
@@ -63,8 +99,8 @@ Singleton {
                 old.notif.dismiss();
         root.items = list.slice(0, root.maxItems);
         // Do Not Disturb, or a screen share (settings notifications.dndWhileSharing): straight to the history,
-        // no toast (critical ones still show)
-        if (root.showsToast(Config.settings.notifications.dnd, root.dndWhileSharing, Privacy.screen, n.urgency === NotificationUrgency.Critical)) {
+        // no toast (critical and priority-app ones still show); a muted app never toasts
+        if (root.showsToast(Config.settings.notifications.dnd, root.dndWhileSharing, Privacy.screen, n.urgency === NotificationUrgency.Critical, root.listHas(Config.settings.notifications.priorityApps, n.appName), root.listHas(Config.settings.notifications.mutedApps, n.appName))) {
             const sameApp = root.toasts.some(t => t.appName === n.appName);
             const c = Object.assign({}, root.toastCounts);
             c[n.appName] = sameApp ? (c[n.appName] || 1) + 1 : 1;

@@ -24,6 +24,7 @@ Scope {
     property bool networkWatch: NetworkWatch.active
     property bool vpnState: VpnState.active
     property bool nasWatch: NasWatch.active
+    property bool phoneBattery: PhoneBattery.active
     property bool downloadWatch: DownloadWatch.active
     property var updateState: UpdateState
     property var cleanupState: CleanupState

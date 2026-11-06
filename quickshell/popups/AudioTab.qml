@@ -12,6 +12,9 @@ ColumnLayout {
     id: root
     property bool active: false
     spacing: MenuStyle.pad
+    // closing the tab (or the panel) ends a running mic test
+    onActiveChanged: if (!active) AudioState.stopMicTest()
+    Component.onDestruction: AudioState.stopMicTest()
 
     // === OUTPUT ===
     // The hardware sinks. EasyEffects sits in front of them and follows the default sink (see
@@ -138,6 +141,18 @@ ColumnLayout {
             }
         }
 
+        // Hear yourself for 5 s through the default output (careful with speakers: feedback). Sunken while on; a second
+        // click stops it, and so does closing the tab.
+        BevelButton {
+            Layout.fillWidth: true
+            objectName: "micTestButton"
+            text: AudioState.micTestLabel(AudioState.micTesting)
+            glyph: "\ue029"
+            checked: AudioState.micTesting
+            focusPolicy: Qt.NoFocus
+            onClicked: AudioState.toggleMicTest()
+        }
+
         // EasyEffects' input noise reduction, as a preset (settings audio.noisePreset); sunken while on.
         // Disabled, with the setting named in its label, until the preset is set or when the call failed.
         BevelButton {
@@ -147,6 +162,39 @@ ColumnLayout {
             enabled: AudioState.noiseUsable
             onClicked: AudioState.setNoise(!AudioState.noiseOn)
         }
+    }
+
+    // === PLAY ON ===
+    // Right-click an app in the list below: "Play on" with the outputs of the Output group above, a check mark on the
+    // current one; picking one moves every stream of that app (scripts/move-sink.sh <stream id> <sink id>, which runs
+    // `pactl move-sink-input`). Pure: the menu entries, and the commands (ids must be integers, others are skipped).
+    function playOnEntries(outputs, current, streams) {
+        if (outputs.length === 0)
+            return [{ text: "No outputs", enabled: false }];
+        // (PopupMenu has no title strip: a dim first row and a rule name it)
+        return [{ text: "Play on", enabled: false }, { separator: true }].concat(outputs.map(o => ({
+            text: o.description || o.nickname || o.name,
+            glyph: /^bluez/i.test(o.name) ? "\ue1a7" : "\ue050",
+            checked: o === current,
+            action: () => root.moveStreams(streams, o)
+        })));
+    }
+    function moveCommands(streams, sink) {
+        const isId = v => typeof v === "number" ? Number.isInteger(v) && v >= 0 : /^\d+$/.test(String(v));
+        if (!sink || !isId(sink.id))
+            return [];
+        return streams.filter(n => isId(n.id)).map(n => ["sh", Quickshell.shellDir + "/scripts/move-sink.sh", String(n.id), String(sink.id)]);
+    }
+    function moveStreams(streams, sink) {
+        for (const c of root.moveCommands(streams, sink))
+            Quickshell.execDetached(c);
+    }
+    PopupMenu {
+        id: playOnMenu
+    }
+    function openPlayOn(item, x, y, streams) {
+        playOnMenu.model = root.playOnEntries(AudioState.outputs, AudioState.currentOutput, streams);
+        playOnMenu.openAt(item, x, y);
     }
 
     // === PER-APP VOLUME ===
@@ -216,6 +264,12 @@ ColumnLayout {
                         }
                         Layout.fillWidth: true
                         spacing: MenuStyle.space2
+
+                        // right-click: Play on > the outputs (left clicks stay with the buttons and the slider)
+                        TapHandler {
+                            acceptedButtons: Qt.RightButton
+                            onTapped: root.openPlayOn(streamRow, point.position.x, point.position.y, streamRow.modelData.nodes)
+                        }
 
                         Text {
                             renderType: Text.NativeRendering
