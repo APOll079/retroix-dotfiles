@@ -27,6 +27,13 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
+    // The side banner's width. MenuStyle should name it (e.g. bannerWidth) so the Start menu shares it.
+    readonly property int bannerWidth: 24
+    readonly property string themeName: {
+        const t = Config.settings.currentTheme || "";
+        return t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
     property string mode: "apps"          // apps | windows | games | clipboard
     property string category: "all"
     property var results: []
@@ -40,14 +47,14 @@ PanelWindow {
 
     // Category filter: glyph + freedesktop categories it matches
     readonly property var categories: [
-        { key: "all", glyph: "", cats: [] },
-        { key: "web", glyph: "", cats: ["Network", "WebBrowser", "Email", "Chat"] },
-        { key: "media", glyph: "", cats: ["AudioVideo", "Audio", "Video", "Music", "Player"] },
-        { key: "dev", glyph: "", cats: ["Development", "IDE"] },
-        { key: "graphics", glyph: "", cats: ["Graphics", "Photography"] },
-        { key: "office", glyph: "", cats: ["Office", "TextEditor"] },
-        { key: "system", glyph: "", cats: ["System", "Settings", "Monitor"] },
-        { key: "utility", glyph: "", cats: ["Utility", "Accessories"] }
+        { key: "all", glyph: "\ue5c3", cats: [] },
+        { key: "web", glyph: "\ue894", cats: ["Network", "WebBrowser", "Email", "Chat"] },
+        { key: "media", glyph: "\ue405", cats: ["AudioVideo", "Audio", "Video", "Music", "Player"] },
+        { key: "dev", glyph: "\ue86f", cats: ["Development", "IDE"] },
+        { key: "graphics", glyph: "\ue40a", cats: ["Graphics", "Photography"] },
+        { key: "office", glyph: "\ue873", cats: ["Office", "TextEditor"] },
+        { key: "system", glyph: "\ue8b8", cats: ["System", "Settings", "Monitor"] },
+        { key: "utility", glyph: "\ue869", cats: ["Utility", "Accessories"] }
     ]
 
     // An Overlay-layer panel, not a popup of the bar: the bar sits below fullscreen windows, so a
@@ -89,214 +96,241 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: root.mode === "windows" ? "Windows" : root.mode === "clipboard" ? "Clipboard" : root.mode === "games" ? "Games" : "Search"
-            windowTitleIcon: root.mode === "windows" ? "" : root.mode === "clipboard" ? "" : ""
+            windowTitleIcon: root.mode === "windows" ? "\ue8f9" : root.mode === "clipboard" ? "\ue14f" : "\ue8b6"
 
-            ColumnLayout {
+            RowLayout {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                // Tabs
-                RowLayout {
+                // Win95 side banner: the accent stripe with the current theme's name written up it
+                Rectangle {
+                    Layout.preferredWidth: root.bannerWidth
+                    Layout.fillHeight: true
+                    color: MenuStyle.selectBar
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        rotation: -90
+                        transformOrigin: Item.TopLeft
+                        x: Math.round((parent.width - implicitHeight) / 2)
+                        y: parent.height - MenuStyle.pad
+                        font.family: MenuStyle.titleFont
+                        font.pixelSize: MenuStyle.iconSize
+                        font.bold: true
+                        color: MenuStyle.selectText
+                        textFormat: Text.PlainText
+                        text: root.themeName
+                    }
+                }
+
+                ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: MenuStyle.gap
-                    Repeater {
-                        model: root.tabs
-                        BevelButton {
-                            Layout.fillWidth: true
-                            text: modelData.text
-                            glyph: modelData.glyph
-                            checked: root.tabOf(root.mode) === modelData.key
-                            focusPolicy: Qt.NoFocus
-                            onClicked: {
-                                if (root.tabOf(root.mode) !== modelData.key)
-                                    root.open(modelData.key);
-                                searchInput.focusInput();
+                    Layout.fillHeight: true
+                    spacing: MenuStyle.pad
+
+                    // Tabs
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: MenuStyle.gap
+                        Repeater {
+                            model: root.tabs
+                            BevelButton {
+                                Layout.fillWidth: true
+                                text: modelData.text
+                                glyph: modelData.glyph
+                                checked: root.tabOf(root.mode) === modelData.key
+                                focusPolicy: Qt.NoFocus
+                                onClicked: {
+                                    if (root.tabOf(root.mode) !== modelData.key)
+                                        root.open(modelData.key);
+                                    searchInput.focusInput();
+                                }
                             }
                         }
                     }
-                }
 
-                SearchBox {
-                    id: searchInput
-                    Layout.fillWidth: true
-                    visible: !(root.mode === "games" && gamesView.addMode)
-                    fontSize: MenuStyle.searchFontSize
-                    onTextChanged: {
-                        root.confirmKey = "";
-                        root.rebuild();
+                    SearchBox {
+                        id: searchInput
+                        Layout.fillWidth: true
+                        visible: !(root.mode === "games" && gamesView.addMode)
+                        fontSize: MenuStyle.searchFontSize
+                        onTextChanged: {
+                            root.confirmKey = "";
+                            root.rebuild();
+                        }
+                        Component.onCompleted: searchInput.focusInput()
+                        onKeyPressed: event => root.handleKey(event)
                     }
-                    Component.onCompleted: searchInput.focusInput()
-                    onKeyPressed: event => root.handleKey(event)
-                }
 
-                // Category filter (apps only)
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: root.mode === "apps" && !root.optionsFor && !searchInput.text.startsWith(",")
-                    spacing: MenuStyle.gap
-                    Repeater {
-                        model: root.categories
+                    // Category filter (apps only)
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.mode === "apps" && !root.optionsFor && !searchInput.text.startsWith(",")
+                        spacing: MenuStyle.gap
+                        Repeater {
+                            model: root.categories
+                            BevelButton {
+                                Layout.fillWidth: true
+                                glyph: modelData.glyph
+                                checked: root.category === modelData.key
+                                focusPolicy: Qt.NoFocus
+                                onClicked: {
+                                    root.category = modelData.key;
+                                    root.rebuild();
+                                    searchInput.focusInput();
+                                }
+                            }
+                        }
                         BevelButton {
-                            Layout.fillWidth: true
-                            glyph: modelData.glyph
-                            checked: root.category === modelData.key
+                            visible: root.hiddenCount > 0
+                            text: "Hidden (" + root.hiddenCount + ")"
+                            checked: root.category === "hidden"
                             focusPolicy: Qt.NoFocus
                             onClicked: {
-                                root.category = modelData.key;
+                                root.category = root.category === "hidden" ? "all" : "hidden";
                                 root.rebuild();
                                 searchInput.focusInput();
                             }
                         }
                     }
-                    BevelButton {
-                        visible: root.hiddenCount > 0
-                        text: "Hidden (" + root.hiddenCount + ")"
-                        checked: root.category === "hidden"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: {
-                            root.category = root.category === "hidden" ? "all" : "hidden";
-                            root.rebuild();
-                            searchInput.focusInput();
-                        }
-                    }
-                }
 
-                // Games tab: the cover grid
-                GamesView {
-                    id: gamesView
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.mode === "games"
-                    query: root.mode === "games" ? searchInput.text.trim() : ""
-                    closeCallback: root.closeCallback
-                    onFocusSearch: searchInput.focusInput()
-                }
-
-                // Results; in clipboard mode a preview pane sits on the left of the list
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.mode !== "games"
-                    spacing: MenuStyle.pad
-
-                    SunkenField {
-                        id: preview
-                        visible: root.mode === "clipboard"
-                        Layout.fillHeight: true
-                        Layout.preferredWidth: parent.width * MenuStyle.clipPreviewFraction
-                        padding: MenuStyle.pad
-                        clip: true
-
-                        Image {
-                            anchors.fill: parent
-                            visible: root.previewImage !== ""
-                            source: root.previewImage === "" ? "" : "file://" + root.previewImage
-                            sourceSize.width: preview.width * 2
-                            fillMode: Image.PreserveAspectFit
-                            asynchronous: true
-                            cache: false
-                        }
-
-                        Flickable {
-                            anchors.fill: parent
-                            visible: root.previewImage === ""
-                            contentHeight: previewLabel.implicitHeight
-                            boundsBehavior: Flickable.StopAtBounds
-                            clip: true
-                            Text {
-                                id: previewLabel
-                                renderType: Text.NativeRendering
-                                font.hintingPreference: Font.PreferFullHinting
-                                width: parent.width
-                                wrapMode: Text.WrapAnywhere
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                color: root.previewText === "" ? MenuStyle.bevelDark : Config.colors.text
-                                textFormat: Text.PlainText
-                                text: root.previewText === "" ? "Nothing selected" : root.previewText
-                            }
-                        }
-                    }
-
-                    SunkenField {
+                    // Games tab: the cover grid
+                    GamesView {
+                        id: gamesView
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        padding: 2
-                        clip: true
+                        visible: root.mode === "games"
+                        query: root.mode === "games" ? searchInput.text.trim() : ""
+                        closeCallback: root.closeCallback
+                        onFocusSearch: searchInput.focusInput()
+                    }
 
-                        Text {
-                            renderType: Text.NativeRendering
-                            font.hintingPreference: Font.PreferFullHinting
-                            anchors.centerIn: parent
-                            visible: root.results.length === 0
-                            font.family: MenuStyle.bodyFont
-                            font.pixelSize: MenuStyle.fontSize
-                            color: MenuStyle.bevelDark
-                            textFormat: Text.PlainText
-                            text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
-                        }
+                    // Results; in clipboard mode a preview pane sits on the left of the list
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.mode !== "games"
+                        spacing: MenuStyle.pad
 
-                        ListView {
-                            id: appsView
-                            anchors.fill: parent
-                            model: root.results
-                            currentIndex: 0
-                            onCurrentIndexChanged: {
-                                positionViewAtIndex(currentIndex, ListView.Contain);
-                                // Moving the cursor off an armed row disarms it
-                                const r = root.results[currentIndex];
-                                if (root.confirmKey !== "" && !root.keepArm && (!r || r.key !== root.confirmKey))
-                                    root.disarm();
-                            }
-                            flickableDirection: Flickable.VerticalFlick
-                            boundsBehavior: Flickable.DragOverBounds
-                            maximumFlickVelocity: 3500
+                        SunkenField {
+                            id: preview
+                            visible: root.mode === "clipboard"
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: parent.width * MenuStyle.clipPreviewFraction
+                            padding: MenuStyle.pad
                             clip: true
 
-                            delegate: MenuRow {
-                                width: appsView.width
-                                selected: index === appsView.currentIndex
-                                text: modelData.title
-                                subtext: modelData.sub || ""
-                                trailing: modelData.trailing || ""
-                                glyph: modelData.glyph || ""
-                                iconSource: modelData.icon || ""
-                                marked: !!modelData.pinned
-                                onClicked: root.activate(index)
-                                // Clipboard: the preview follows the pointer too
-                                onHoveredChanged: {
-                                    if (hovered && root.mode === "clipboard")
-                                        appsView.currentIndex = index;
-                                    // The pointer leaving an armed row disarms it
-                                    else if (!hovered && modelData.key && modelData.key === root.confirmKey)
-                                        root.disarm();
-                                }
-
-                                // Right-click: the app's options
-                                TapHandler {
-                                    acceptedButtons: Qt.RightButton
-                                    onTapped: root.openOptionsAt(index)
-                                }
+                            Image {
+                                anchors.fill: parent
+                                visible: root.previewImage !== ""
+                                source: root.previewImage === "" ? "" : "file://" + root.previewImage
+                                sourceSize.width: preview.width * 2
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                cache: false
                             }
 
-                            ScrollIndicator.vertical: ScrollIndicator {
-                                active: appsView.moving
+                            Flickable {
+                                anchors.fill: parent
+                                visible: root.previewImage === ""
+                                contentHeight: previewLabel.implicitHeight
+                                boundsBehavior: Flickable.StopAtBounds
+                                clip: true
+                                Text {
+                                    id: previewLabel
+                                    renderType: Text.NativeRendering
+                                    font.hintingPreference: Font.PreferFullHinting
+                                    width: parent.width
+                                    wrapMode: Text.WrapAnywhere
+                                    font.family: MenuStyle.bodyFont
+                                    font.pixelSize: MenuStyle.fontSize
+                                    color: root.previewText === "" ? MenuStyle.bevelDark : Config.colors.text
+                                    textFormat: Text.PlainText
+                                    text: root.previewText === "" ? "Nothing selected" : root.previewText
+                                }
+                            }
+                        }
+
+                        SunkenField {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            padding: 2
+                            clip: true
+
+                            Text {
+                                renderType: Text.NativeRendering
+                                font.hintingPreference: Font.PreferFullHinting
+                                anchors.centerIn: parent
+                                visible: root.results.length === 0
+                                font.family: MenuStyle.bodyFont
+                                font.pixelSize: MenuStyle.fontSize
+                                color: MenuStyle.bevelDark
+                                textFormat: Text.PlainText
+                                text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
+                            }
+
+                            ListView {
+                                id: appsView
+                                anchors.fill: parent
+                                model: root.results
+                                currentIndex: 0
+                                onCurrentIndexChanged: {
+                                    positionViewAtIndex(currentIndex, ListView.Contain);
+                                    // Moving the cursor off an armed row disarms it
+                                    const r = root.results[currentIndex];
+                                    if (root.confirmKey !== "" && !root.keepArm && (!r || r.key !== root.confirmKey))
+                                        root.disarm();
+                                }
+                                flickableDirection: Flickable.VerticalFlick
+                                boundsBehavior: Flickable.DragOverBounds
+                                maximumFlickVelocity: 3500
+                                clip: true
+
+                                delegate: MenuRow {
+                                    width: appsView.width
+                                    selected: index === appsView.currentIndex
+                                    text: modelData.title
+                                    subtext: modelData.sub || ""
+                                    trailing: modelData.trailing || ""
+                                    glyph: modelData.glyph || ""
+                                    iconSource: modelData.icon || ""
+                                    marked: !!modelData.pinned
+                                    onClicked: root.activate(index)
+                                    // Clipboard: the preview follows the pointer too
+                                    onHoveredChanged: {
+                                        if (hovered && root.mode === "clipboard")
+                                            appsView.currentIndex = index;
+                                        // The pointer leaving an armed row disarms it
+                                        else if (!hovered && modelData.key && modelData.key === root.confirmKey)
+                                            root.disarm();
+                                    }
+
+                                    // Right-click: the app's options
+                                    TapHandler {
+                                        acceptedButtons: Qt.RightButton
+                                        onTapped: root.openOptionsAt(index)
+                                    }
+                                }
+
+                                ScrollIndicator.vertical: ScrollIndicator {
+                                    active: appsView.moving
+                                }
                             }
                         }
                     }
-                }
 
-                // Clipboard keys, one dim line like the Games bottom row
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    Layout.fillWidth: true
-                    visible: root.mode === "clipboard"
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
-                    text: root.clipLines.length + (root.clipLines.length === 1 ? " entry" : " entries") + " · Enter copies · Del removes (Shift+Del while typing) · Down to the end for Clear all"
+                    // Clipboard keys, one dim line like the Games bottom row
+                    Text {
+                        renderType: Text.NativeRendering
+                        font.hintingPreference: Font.PreferFullHinting
+                        Layout.fillWidth: true
+                        visible: root.mode === "clipboard"
+                        elide: Text.ElideRight
+                        font.family: MenuStyle.bodyFont
+                        font.pixelSize: MenuStyle.fontSize
+                        color: MenuStyle.bevelDark
+                        text: root.clipLines.length + (root.clipLines.length === 1 ? " entry" : " entries") + " · Enter copies · Del removes (Shift+Del while typing) · Down to the end for Clear all"
+                    }
                 }
             }
         }
@@ -436,7 +470,7 @@ PanelWindow {
         const items = [];
         const calc = Utils.Calc.evaluate(q);
         if (calc !== "")
-            items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "", run: () => root.copy(calc.replace(/ [a-z/]+$/, "")) });
+            items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, "")) });
         for (const s of root.sessionItems(q))
             items.push(s);
         root.setResults(items.concat(root.appItems(q)), 0);
@@ -458,7 +492,7 @@ PanelWindow {
     function appItem(entry) {
         return {
             title: entry.name,
-            glyph: "",
+            glyph: "\ue5c3",
             icon: Utils.AppSearch.getIcon(entry.icon),
             pinned: LauncherState.isPinned(entry.id),
             entry: entry,
@@ -529,7 +563,7 @@ PanelWindow {
             .map(t => ({
                 title: t.title,
                 trailing: t.workspace ? t.workspace.name.replace("special:", "*") : "",
-                glyph: "",
+                glyph: "\ue8f9",
                 icon: t.wayland ? Utils.AppSearch.getIcon(t.wayland.appId) : "",
                 run: () => {
                     Hyprland.dispatch("hl.dsp.focus({ window = \"address:0x" + t.address + "\" })");
@@ -589,12 +623,12 @@ PanelWindow {
             return root.uninstallItems();
         const pinned = LauncherState.isPinned(entry.id);
         const items = [
-            { title: "Launch " + entry.name, glyph: "", run: () => root.appItem(entry).run() },
-            { title: pinned ? "Unpin" : "Pin to the top", glyph: "", run: () => { LauncherState.togglePin(entry.id); root.closeOptions(); } }
+            { title: "Launch " + entry.name, glyph: "\ue89e", run: () => root.appItem(entry).run() },
+            { title: pinned ? "Unpin" : "Pin to the top", glyph: "\uf10d", run: () => { LauncherState.togglePin(entry.id); root.closeOptions(); } }
         ];
         if (pinned) {
-            items.push({ title: "Move up", glyph: "", run: () => { LauncherState.move(entry.id, -1); root.rebuild(); } });
-            items.push({ title: "Move down", glyph: "", run: () => { LauncherState.move(entry.id, 1); root.rebuild(); } });
+            items.push({ title: "Move up", glyph: "\ue5d8", run: () => { LauncherState.move(entry.id, -1); root.rebuild(); } });
+            items.push({ title: "Move down", glyph: "\ue5db", run: () => { LauncherState.move(entry.id, 1); root.rebuild(); } });
         }
         const hidden = LauncherState.isHidden(entry.id);
         items.push({ title: hidden ? "Unhide" : "Hide from the launcher", glyph: hidden ? "\ue8f4" : "\ue8f5", run: () => {
@@ -608,7 +642,7 @@ PanelWindow {
             ownerProc.command = ["sh", Quickshell.shellDir + "/scripts/app-owner.sh", entry.id];
             ownerProc.running = true;
         } });
-        items.push({ title: "Back", glyph: "", run: () => root.closeOptions() });
+        items.push({ title: "Back", glyph: "\ue5c4", run: () => root.closeOptions() });
         return items;
     }
 
@@ -618,7 +652,7 @@ PanelWindow {
         if (u.kind === "none")
             return [
                 { title: "No package owns " + u.name, sub: "Only Hide is possible", glyph: "\ue002", run: () => root.closeOptions() },
-                { title: "Back", glyph: "", run: () => root.closeOptions() }
+                { title: "Back", glyph: "\ue5c4", run: () => root.closeOptions() }
             ];
         return [
             { title: "Remove " + u.pkg + "?", sub: u.kind === "flatpak" ? "flatpak uninstall" : "yay -Rns", glyph: "\ue872", run: () => {
@@ -626,7 +660,7 @@ PanelWindow {
                 Quickshell.execDetached([Config.settings.execCommands.terminal, "fish", "-c", cmd + "; echo; read -P 'Press Enter to close'"]);
                 root.closeCallback();
             } },
-            { title: "Cancel", glyph: "", run: () => root.closeOptions() }
+            { title: "Cancel", glyph: "\ue5c4", run: () => root.closeOptions() }
         ];
     }
 
