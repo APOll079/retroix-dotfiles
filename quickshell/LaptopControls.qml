@@ -80,6 +80,7 @@ Row {
     // Privacy: mic / screen-share icons in the urgent colour, only while something records
     BarButton {
         id: micIcon
+        flat: true   // an indicator, not a button: no bevel
         visible: Privacy.mic
         interactive: false
         urgent: Privacy.micLive   // an app is recording and the microphone is not muted
@@ -87,6 +88,7 @@ Row {
     }
     BarButton {
         id: screenIcon
+        flat: true
         visible: Privacy.screen
         interactive: false
         urgent: true
@@ -117,6 +119,7 @@ Row {
     // Replay buffer armed (Super+Ctrl+R toggles, Super+Ctrl+S saves the last seconds)
     BarButton {
         id: replayInd
+        flat: true
         visible: RecordState.replaying
         interactive: false
         dim: true
@@ -173,6 +176,7 @@ Row {
     // Logitech mouse battery (MouseState, Solaar): shown only while it reports one
     BarButton {
         id: mouseBtn
+        flat: true
         visible: MouseState.visibleInBar
         interactive: false
         iconFontValue: "\ue323"

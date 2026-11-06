@@ -30,6 +30,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("flatpak run com.github.wwmm.easyeffects --gapplication-service")
     hl.exec_cmd("hyprpaper")
     mark("hyprpaper")
+    -- Solaar in the background (hidden window, tray only) so the Logitech battery in the bar can be read; skipped if it isn't installed
+    hl.exec_cmd("sh -c 'command -v solaar >/dev/null 2>&1 && exec solaar --window=hide'")
     hl.exec_cmd("kdeconnectd")  -- phone link (side panel > Phone tab)
     hl.exec_cmd("xsettingsd")  -- GTK settings for XWayland apps (~/.config/xsettingsd/xsettingsd.conf)
     hl.exec_cmd("quickshell")
