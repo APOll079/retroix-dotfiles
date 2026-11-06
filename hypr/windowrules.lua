@@ -191,6 +191,19 @@ hl.window_rule({
     persistent_size = true
 })
 
+-- Quickshell's Find window (popups/FindWindow.qml, a FloatingWindow titled "Find: Files or Folders"): float, centred,
+-- MenuStyle.windowWidth x windowHeight; field names as in the task-manager rule above, not seen running here
+hl.window_rule({
+    name  = "find-window",
+    match = {
+        initial_title = "^Find: Files or Folders$"
+    },
+    float    = true,
+    center   = true,
+    size     = { 760, 560 },
+    min_size = { 480, 320 }
+})
+
 -- Quickshell's Lyrics window (popups/LyricsWindow.qml, a FloatingWindow titled "Lyrics"): float, pinned (stays on
 -- every workspace), bottom-right above the 32px bar. Size = MenuStyle.lyricsWindow*; field names as in the
 -- task-manager rule above; `pin` and the `move` expressions are from the wiki, not seen running here

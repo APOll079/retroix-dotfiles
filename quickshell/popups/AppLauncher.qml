@@ -23,6 +23,10 @@ import "." as Popups
 //   "End anyway" for core processes), the pids are read again at the confirm
 // - history: "=" alone (or "hist") lists the last 10 calculator / conversion results that were copied (CalcHistory)
 // - emoji: ":" and a word searches the built-in emoji table (Emoji); Enter copies the emoji
+// - files: "/" and part of a name ("/report", "/ report") searches file and folder NAMES under the home folder
+//   (FileSearch -> scripts/filesearch.sh, 250 ms after the last key); Enter opens the file (xdg-open), Shift+Enter its
+//   folder; the last row opens the same search in the Find window (FindWindowState)
+// - currency: "100 eur in sek" -> a top row with the converted amount (Utils.Currency, cached ECB rates); Enter copies the number
 // Tabs along the top switch between Apps, Games (cover grid, GamesView.qml, shared with the
 // standalone Games menu) and Clipboard; Ctrl+Tab cycles them.
 // Right-click an app (or Shift+Enter) for its options in the shared PopupMenu: launch, pin/unpin, move pinned up/down, hide
@@ -48,6 +52,18 @@ PanelWindow {
     readonly property int hiddenCount: Array.from(Utils.AppSearch.list).filter(e => LauncherState.isHidden(e.id)).length
 
     property var clipLines: []
+
+    // files: "/" and part of a name
+    readonly property bool fileMode: root.mode === "apps" && searchInput.text.trim().startsWith("/")
+    readonly property string fileName: root.fileMode ? searchInput.text.trim().slice(1).trim() : ""
+    readonly property int fileRows: root.fileMode ? Math.max(0, root.results.length - 1) : 0    // the last row is "Open in Find window"
+    readonly property bool fileEmpty: root.fileMode && root.fileRows === 0
+    readonly property string fileEmptyText: FileSearch.error === "notool" ? "fd, plocate or find not available"
+        : root.fileName === "" ? "Type part of a file or folder name"
+        : FileSearch.error === "badquery" ? "That name cannot be searched (no leading dash, at most 100 characters)"
+        : FileSearch.error === "badfolder" ? "The home folder cannot be searched"
+        : FileSearch.searching ? "Searching..." : "No files found"
+    property var openLog: []              // paths handed to xdg-open under QS_NO_APPLY (tests)
 
     // kill by name
     readonly property bool live: !Quickshell.env("QS_NO_APPLY")
@@ -271,14 +287,18 @@ PanelWindow {
 
                                     EmptyState {
                                         anchors.fill: parent
-                                        visible: root.results.length === 0
-                                        glyph: root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
-                                        text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
+                                        visible: root.results.length === 0 || root.fileEmpty
+                                        glyph: root.fileMode ? "\ue2c7" : root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
+                                        text: root.fileMode ? root.fileEmptyText : root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
                                     }
 
                                     ListView {
                                         id: appsView
-                                        anchors.fill: parent
+                                        // (with no file found only the "Open in Find window" row is left: it sits at the bottom)
+                                        x: 0
+                                        width: parent.width
+                                        height: root.fileEmpty ? MenuStyle.rowHeight : parent.height
+                                        y: parent.height - height
                                         model: root.results
                                         currentIndex: 0
                                         onCurrentIndexChanged: {
@@ -433,6 +453,8 @@ PanelWindow {
                 killBar.accept();
             else if (games)
                 gamesView.activateKey(event);
+            else if (root.fileMode && (event.modifiers & Qt.ShiftModifier))
+                root.activateFolder(appsView.currentIndex);
             else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier))
                 root.openOptionsAt(appsView.currentIndex);
             else
@@ -507,6 +529,11 @@ PanelWindow {
         if (root.mode === "clipboard")
             return root.setResults(root.clipItems(q), keep ? appsView.currentIndex : 0);
 
+        if (q.startsWith("/"))
+            return root.setResults(root.fileItems(q.slice(1).trim()), keep ? appsView.currentIndex : 0);
+        if (FileSearch.requested !== "")
+            FileSearch.stop();
+
         const needle = root.killQuery(q);
         if (needle !== null) {
             root.loadKill();
@@ -532,6 +559,10 @@ PanelWindow {
             items.push({ title: zone.title, sub: zone.sub, glyph: "\ue8b5", run: () => root.copy(zone.time) });
         if (calc !== "")
             items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, ""), q) });
+        // currency: only when the calculator and the unit conversion have no answer
+        const money = (unit || calc !== "") ? null : root.currencyAnswer(q);
+        if (money)
+            items.push({ title: money.title, sub: money.sub, glyph: "\uea5f", run: money.number === "" ? undefined : () => root.copy(money.number, q) });
         for (const s of root.sessionItems(q))
             items.push(s);
         root.setResults(items.concat(root.appItems(q)), 0);
@@ -801,6 +832,63 @@ PanelWindow {
             r.run();
     }
 
+    // Currency (utils/Currency.qml). Through try / catch so a utils/qmldir without the Currency line costs the currency row only,
+    // not every keystroke in the launcher (check.py fails on the missing line)
+    function currencyAnswer(q) {
+        try {
+            return Utils.Currency.answer(q);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function refreshRates() {
+        try {
+            Utils.Currency.refreshIfStale();
+        } catch (e) {
+        }
+    }
+
+    // Shift+Enter in the file search: the row's folder; any other row does what Enter does
+    function activateFolder(i) {
+        const r = root.results[i];
+        if (r && r.runFolder)
+            r.runFolder();
+        else
+            root.activate(i);
+    }
+
+    // --- files ("/" and part of a name) ---
+    function openPath(path) {
+        if (root.live)
+            Quickshell.execDetached(["xdg-open", path]);
+        else
+            root.openLog = root.openLog.concat([path]);
+        root.closeCallback();
+    }
+
+    // The rows for what FileSearch has found for `name` (it starts the search itself, 250 ms after the last key), then the
+    // "Open in Find window" row
+    function fileItems(name) {
+        FileSearch.search(name);
+        const rows = [];
+        if (FileSearch.query === name) {
+            for (const f of FileSearch.results) {
+                rows.push({
+                    title: f.name,
+                    sub: f.dir,
+                    glyph: f.isDir ? "\ue2c7" : "\ue873",
+                    key: "file:" + f.path,
+                    run: () => root.openPath(f.path),
+                    runFolder: () => root.openPath(f.dirFull)
+                });
+            }
+        }
+        const open = () => { FindWindowState.open(name); root.closeCallback(); };
+        rows.push({ title: "Open in Find window", glyph: "\ue8b6", key: "files:find", run: open, runFolder: open });
+        return rows;
+    }
+
     // query: the calculator / conversion that made `text`; given, the result goes into the history first
     function copy(text, query) {
         if (query !== undefined)
@@ -973,6 +1061,18 @@ PanelWindow {
         }
     }
 
+    // The file search answers a moment after the key: the list follows it
+    Connections {
+        target: FileSearch
+        function onResultsChanged() { root.fileRefresh(); }
+        function onSearchingChanged() { root.fileRefresh(); }
+        function onErrorChanged() { root.fileRefresh(); }
+    }
+    function fileRefresh() {
+        if (root.visible && root.fileMode)
+            root.rebuild();
+    }
+
     // Desktop entries load asynchronously: refresh the list when they arrive
     Connections {
         target: Utils.AppSearch
@@ -1080,6 +1180,8 @@ PanelWindow {
         root.killAsk = null;
         root.visible = true;
         searchInput.text = "";
+        FileSearch.reset();
+        root.refreshRates();                          // at most one fetch per open, and only when the cache is older than 12 h
         if (mode === "clipboard") {
             root.clipLines = [];
             clipProc.running = true;

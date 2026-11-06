@@ -55,6 +55,13 @@ Scope {
         function open(): void { LyricsWindowState.open(); }
         function close(): void { LyricsWindowState.close(); }
     }
+    // Find window (popups/FindWindow.qml): `qs ipc call find toggle`
+    IpcHandler {
+        target: "find"
+        function toggle(): void { FindWindowState.toggle(); }
+        function open(): void { FindWindowState.open(""); }
+        function close(): void { FindWindowState.close(); }
+    }
     Variants {
         model: Quickshell.screens
         IdleDim {}

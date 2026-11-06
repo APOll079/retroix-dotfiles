@@ -84,6 +84,7 @@ var SCHEMA = [
     e("Watchers", "securityAudit.enabled", "bool", "Security audit", "Toast on a new vulnerability (arch-audit)"),
     e("Watchers", "securityAudit.intervalHours", "int", "Audit every", "Hours", { min: 1, max: 168 }),
 
+    e("Watchers", "networkPage.speedTestUrl", "string", "Speed test file", "The file the Network page's Speed test downloads (only when you press the button)"),
     e("Weather", "weather.location", "string", "Location", "Empty = guessed from your IP"),
     e("Weather", "weather.metric", "bool", "Metric units", "Off shows Fahrenheit and mph"),
 

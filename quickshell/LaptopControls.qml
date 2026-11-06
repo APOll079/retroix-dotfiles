@@ -17,6 +17,8 @@ Row {
     property var sysMonMenuRef: null
     // Bar.qml: opens the side panel on its Phone tab (the phone battery button)
     property var openPhoneTab: function(item) {}
+    // Bar.qml: opens the Network page (the ETH button)
+    property var openNetwork: function() {}
     // Bar.qml turns the GPU part of the sysmon button off when the centre text needs the room
     property bool showGpu: true
 
@@ -190,8 +192,9 @@ Row {
         iconFontValue: root.netIconVal
         toggledIconFontValue: ""
         label: root.netText
-        interactive: false
-        dim: true
+        isToggled: root.currentPopup === Config.SystemPopup.Network
+        tooltip: "Network: addresses, ping, LAN devices, speed test"
+        onClicked: root.openNetwork()
     }
 
     // Bluetooth: a normal bar button next to the ETH label

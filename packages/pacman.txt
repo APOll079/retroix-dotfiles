@@ -33,6 +33,9 @@ tesseract                   # text from a region (overlay Text mode)
 tesseract-data-swe
 tesseract-data-eng
 arch-audit                  # security audit toasts (new CVEs for installed packages)
+fd                          # file search (launcher "/" and the Find window); falls back to find
+plocate                     # optional faster file search
+iproute2                    # ip, ss (Network page, Ports)
 solaar                      # Logitech mouse battery in the bar
 ffmpeg                      # Save as GIF on a recording
 gpu-screen-recorder         # screen recording and the replay buffer (overlay Record mode)

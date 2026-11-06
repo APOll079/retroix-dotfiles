@@ -13,6 +13,7 @@ PopupWindow {
     property var closeCallback: function () {}
     property var openPowerMenuCallback: function () {}
     property var openServicesCallback: function () {}
+    property var openNetworkCallback: function () {}
     property var openKeysCallback: function () {}
     property var openSettingsCallback: function () {}
     property var openUpdatesCallback: function () {}
@@ -163,6 +164,15 @@ PopupWindow {
                         onClicked: {
                             root.closeCallback();
                             root.openServicesCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Network"
+                        glyph: "\ue63d"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openNetworkCallback();
                         }
                     }
                     BevelButton {

@@ -255,3 +255,18 @@ quickshell/popups/LoginReportPanel.qml	No login timestamps yet	Login report: emp
 quickshell/SecurityAudit.qml	function decide	Security audit: first run only records, later runs toast new pairs
 quickshell/popups/StartMenu.qml	text: "Troubleshoot"	Start menu: Troubleshoot opens the Fix my desktop panel
 hypr/autostart.lua	mark\("session-start"\)	Login timestamps for the login report
+quickshell/popups/AppLauncher.qml	q\.startsWith\("/"\)	A query starting with / searches file and folder names
+quickshell/popups/AppLauncher.qml	activateFolder	Shift+Enter on a file row opens its folder
+quickshell/popups/AppLauncher.qml	Open in Find window	The last / row opens the Find window with the typed name
+quickshell/popups/AppLauncher.qml	currencyAnswer	Currency row only when Calc and Units have no answer
+quickshell/popups/FindWindow.qml	title: "Find: Files or Folders"	Window title the hypr rule matches
+quickshell/popups/FindWindow.qml	isDefault: true	Find Now is the default button
+quickshell/popups/FindWindow.qml	onDoubleClicked: root\.openCurrent	Double-click opens the file
+quickshell/popups/NetworkPage.qml	root\.net\.speedTest	The speed test runs only from its button
+quickshell/FileSearch.qml	debounceMs: 250	File search: 250 ms debounce, one search at a time
+quickshell/scripts/filesearch.sh	--max-results	fd search is capped at 50
+hypr/restore.lua	"silent"	Restore launches silently on the entry's workspace
+quickshell/LaptopControls.qml	onClicked: root\.openNetwork\(\)	The ETH button opens the Network page
+quickshell/popups/StartMenu.qml	text: "Network"	Start menu: Network opens the Network page
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Find\ files\ \(toggle\)	Key: Desktop | Find files (toggle)
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Restore\ workspaces	Key: Desktop | Restore workspaces

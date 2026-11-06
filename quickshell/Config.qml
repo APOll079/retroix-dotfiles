@@ -118,6 +118,7 @@ ColorHistory,
 DefaultApps,
 Troubleshoot,
 LoginReport,
+Network,
 None
 }
 property alias settings: settingsJsonAdapter.settings
@@ -242,6 +243,10 @@ property bool enabled: true
 property JsonObject securityAudit: JsonObject {
 property bool enabled: true
 property int intervalHours: 12
+}
+// Network page: the file the Speed test button downloads (nothing runs until you press the button)
+property JsonObject networkPage: JsonObject {
+property string speedTestUrl: "https://speed.cloudflare.com/__down?bytes=25000000"
 }
 // Weather from wttr.in; location "" = guessed from your IP
 property JsonObject weather: JsonObject {

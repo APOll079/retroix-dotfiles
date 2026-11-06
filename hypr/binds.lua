@@ -105,6 +105,8 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
+hl.bind(mainMod .. " + CTRL" .. " + " .. "F", hl.dsp.exec_cmd("qs ipc call find toggle"))  -- help: Desktop | Find files (toggle)
+hl.bind(mainMod .. " + CTRL" .. " + " .. "W", function() require("restore").run() end)  -- help: Desktop | Restore workspaces
 -- SUPER + CTRL + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
 -- above; started the first time, then toggled. The "dropdown-terminal" rule in windowrules.lua floats and places it
 hl.bind(mainMod .. " + CTRL" .. " + " .. "T", function()  -- help: Desktop | Drop-down terminal

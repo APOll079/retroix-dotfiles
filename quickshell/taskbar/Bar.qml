@@ -111,6 +111,7 @@ openSettingsCallback: function() { taskbar.openLauncherMode("settings") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
 openColorHistoryCallback: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep") }
+openNetworkCallback: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") }
 openDefaultAppsCallback: function() { taskbar.toggleMenu(defaultAppsMenu, Config.SystemPopup.DefaultApps, null, "keep") }
 openFixCallback: function() { taskbar.toggleMenu(fixMenu, Config.SystemPopup.Troubleshoot, null, "keep") }
 openLoginReportCallback: function() { taskbar.toggleMenu(loginReportMenu, Config.SystemPopup.LoginReport, null, "keep") }
@@ -153,6 +154,7 @@ Popups.ServicesPanel { screen: root.modelData; bar: taskbar; id: servicesPanel; 
 Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ColorHistoryPanel { screen: root.modelData; bar: taskbar; id: colorHistoryMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.NetworkPage { screen: root.modelData; bar: taskbar; id: networkPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.DefaultAppsPanel { screen: root.modelData; bar: taskbar; id: defaultAppsMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.FixPanel { screen: root.modelData; bar: taskbar; id: fixMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.LoginReportPanel { screen: root.modelData; bar: taskbar; id: loginReportMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
@@ -161,7 +163,7 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -353,6 +355,13 @@ taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep");
 }
 
 IpcHandler {
+target: "network_" + root.modelData.name
+function toggle() {
+taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep");
+}
+}
+
+IpcHandler {
 target: "mic_" + root.modelData.name
 function toggle() {
 AudioState.toggleMic();
@@ -469,6 +478,7 @@ id: laptopControls
 currentPopup: root.currentPopup
 toggleMenu: taskbar.toggleMenu
 openPhoneTab: function(item) { taskbar.openSidePanel(2, item) }
+openNetwork: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") }
 bluetoothMenuRef: bluetoothMenu
 sysMonMenuRef: sysMonMenu
 showGpu: Media.text === "" || taskbar.centreRoom(taskbar.rightStartWithGpu) >= Math.min(MenuStyle.barMediaMinWidth, nowPlayingMetrics.advanceWidth)

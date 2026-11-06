@@ -76,6 +76,11 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, launcher and network (never looked at, fakes only)
+- [ ] `/ name` in the launcher on your real home (fd / plocate / find order, exclusions, real xdg-open); the Find window floats, centres and takes focus (`hyprctl reload` first; Super+Ctrl+F); the AppLauncher result area with the new rows next to the Settings tab (a merge point, never seen rendered)
+- [ ] The ETH button opens the Network page (ip, ping and curl real; the speed test only on the button); `100 eur in sek` with a real frankfurter answer (does api.frankfurter.app still answer or redirect?)
+- [ ] Restore workspaces (Super+Ctrl+W and 8 s after login): are Zen on 1 and VSCodium on 3 right (edit `hypr/restore.lua`), does `hl.exec_cmd(cmd, { workspace = "1 silent" })` work (the call shape is a guess; the fallback is one window rule per program)
+
 ### Round 4, tools (never looked at, fakes only)
 - [ ] Solaar: `dinitctl --user enable solaar` (copy `dinit.d/solaar` first, your sync does it), it stays running and the mouse battery shows; if it can't open a display the user dinit lacks the Wayland environment; the mic, screen-share, REPLAY and mouse-battery indicators are flat icons with no bevel, only clickable things look like buttons
 - [ ] Task Manager GPU / VRAM / Read / Write numbers against radeontop / iotop on the AMD card, and the extra columns fit at 760 px; Default apps: Make default really changes `xdg-settings get default-web-browser` and `xdg-mime query default image/png`
