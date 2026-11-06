@@ -153,7 +153,10 @@ RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: MenuStyle.gap / 2
             implicitHeight: MenuStyle.spotifyStatusHeight
-            color: MenuStyle.selectBar
+            // a quiet bar (the accent stays for the status bar's highlighted state)
+            color: Config.colors.base
+            border.width: 1
+            border.color: Config.colors.shadow
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: MenuStyle.gap
@@ -166,7 +169,7 @@ RowLayout {
                     elide: Text.ElideRight
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.selectText
+                    color: Config.colors.text
                     text: "Playing on " + panel.deviceName()
                 }
                 // a text link: an 18 px line has no room for a spotifyButton
@@ -177,8 +180,8 @@ RowLayout {
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     font.bold: true
-                    font.underline: playHereHover.hovered
-                    color: MenuStyle.selectText
+                    font.underline: true      // a link on a quiet bar needs the underline to read as one
+                    color: Config.colors.text
                     text: "Play here"
                     HoverHandler {
                         id: playHereHover
