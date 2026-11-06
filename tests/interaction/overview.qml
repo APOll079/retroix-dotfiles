@@ -43,6 +43,7 @@ ShellRoot {
         check("cards: a window of another monitor or a special workspace is on no card", cards.every(c => c.windows.every(w => w.address !== "a4" && w.address !== "a5")));
         check("cards: the active workspace is marked", cards[0].active === true && cards[1].active === false);
         check("cards: the other monitor has its own card", J(O.cardsFor("DP-1", ws, wins).map(c => c.id)) === "[5]" && O.cardsFor("DP-1", ws, wins)[0].windows[0].address === "a4");
+        check("cards: monitor * lists every monitor's workspaces (the panel's fallback)", O.cardsFor("*", ws, wins).length === O.cardsFor("DP-2", ws, wins).length + O.cardsFor("DP-1", ws, wins).length);
         check("cards: an unknown monitor or null lists give no cards", O.cardsFor("HDMI-9", ws, wins).length === 0 && O.cardsFor("DP-2", null, null).length === 0);
         check("cards: the input is not changed", ws[0].id === 3 && ws.length === 5);
 

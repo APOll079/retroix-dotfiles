@@ -25,7 +25,9 @@ PanelWindow {
     readonly property var os: OverviewState        // (through a var so the singleton's members are not lint errors)
     readonly property var workspaces: root.visible ? Hyprland.workspaces.values.map(w => root.os.wsOf(w)) : []
     readonly property var windows: root.visible ? Hyprland.toplevels.values.map(t => root.os.windowOf(t)).filter(w => w !== null) : []
-    readonly property var cards: root.os.cardsFor(root.scr ? root.scr.name : "", root.workspaces, root.windows)
+    readonly property var ownCards: root.os.cardsFor(root.scr ? root.scr.name : "", root.workspaces, root.windows)
+    // normally this monitor's workspaces; if none matches this screen's name, all of them (never an empty dim)
+    readonly property var cards: root.ownCards.length > 0 ? root.ownCards : root.os.cardsFor("*", root.workspaces, root.windows)
     // the card grid sits between the top edge and the bar, MenuStyle.space12 from the sides
     readonly property int areaW: root.width - 2 * MenuStyle.space12
     readonly property int areaH: root.screenHeight - 2 * MenuStyle.barHeight - 2 * MenuStyle.space12
@@ -102,6 +104,15 @@ PanelWindow {
         anchors.fill: parent
         focus: true
         Keys.onPressed: event => root.handleKey(event)
+    }
+
+    // Nothing to show: say so, with the numbers that explain it (what Hyprland gave, which screen this is)
+    EmptyState {
+        anchors.centerIn: parent
+        width: Math.min(parent.width, MenuStyle.windowWidth)
+        visible: root.cards.length === 0
+        glyph: "\ue8f5"
+        text: "No workspaces found\n" + root.workspaces.length + " from Hyprland, screen " + (root.scr ? root.scr.name : "?")
     }
 
     // The cards
@@ -248,6 +259,9 @@ PanelWindow {
     }
 
     function openMenu() {
+        Hyprland.refreshWorkspaces();
+        Hyprland.refreshToplevels();
+        Hyprland.refreshMonitors();
         root.visible = true;
         root.cursor = root.os.startIndex(root.cards);
         keys.forceActiveFocus();

@@ -26,9 +26,10 @@ Singleton {
     }
 
     // The cards for one monitor: its workspaces (id >= 1) sorted by id, each with its windows (in the order given).
-    // A window of a workspace that is not on this monitor appears nowhere.
+    // A window of a workspace that is not on this monitor appears nowhere. monitorName "*" = every monitor (the panel's
+    // fallback when no workspace matches its own screen name, so the overview is never an empty dim).
     function cardsFor(monitorName, workspaces, windows) {
-        const mine = (workspaces || []).filter(w => w.id >= 1 && w.monitor === monitorName).sort((a, b) => a.id - b.id);
+        const mine = (workspaces || []).filter(w => w.id >= 1 && (monitorName === "*" || w.monitor === monitorName)).sort((a, b) => a.id - b.id);
         return mine.map(w => ({
             id: w.id,
             name: String(w.name !== undefined && w.name !== "" ? w.name : w.id),
