@@ -99,35 +99,18 @@ ColumnLayout {
             onClicked: root.run(["--ping"], "Pinged")
         }
     }
-    // Inline confirm, same shape as the side panel's power row
-    RowLayout {
+    // Inline confirm: the verb is the default button
+    ConfirmBar {
         Layout.fillWidth: true
-        spacing: MenuStyle.gap
         visible: root.confirmUnpair
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
-            textFormat: Text.PlainText
-            Layout.fillWidth: true
-            elide: Text.ElideRight
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: Config.colors.text
-            text: root.current ? "Unpair " + root.current.name + "?" : ""
+        glyph: "\ue002"
+        message: root.current ? "Unpair " + root.current.name + "?" : ""
+        verb: "Unpair"
+        onAccepted: {
+            root.confirmUnpair = false;
+            root.run(["--unpair"], "Unpaired");
         }
-        BevelButton {
-            text: "Unpair"
-            focusPolicy: Qt.NoFocus
-            onClicked: {
-                root.confirmUnpair = false;
-                root.run(["--unpair"], "Unpaired");
-            }
-        }
-        BevelButton {
-            text: "Cancel"
-            focusPolicy: Qt.NoFocus
-            onClicked: root.confirmUnpair = false
-        }
+        onCanceled: root.confirmUnpair = false
     }
     BevelButton {
         Layout.fillWidth: true
