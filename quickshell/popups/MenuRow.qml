@@ -58,15 +58,13 @@ Button {
                 sourceSize: Qt.size(root.iconBox * 2, root.iconBox * 2)
                 visible: status === Image.Ready
             }
-            Text {
-                renderType: Text.NativeRendering
-                textFormat: Text.PlainText
-                font.hintingPreference: Font.PreferFullHinting
+            RetroText {
                 anchors.centerIn: parent
                 visible: !appIcon.visible
                 font.family: MenuStyle.iconFont
                 font.pixelSize: MenuStyle.iconSize
-                color: !root.enabled ? Config.colors.shadow : (root.lit ? MenuStyle.selectText : Config.colors.text)
+                color: root.lit ? MenuStyle.selectText : Config.colors.text
+                disabledLook: !root.enabled
                 text: root.glyph
             }
         }
@@ -96,24 +94,20 @@ Button {
                 text: root.subtext
             }
         }
-        Text {
-            renderType: Text.NativeRendering
-            textFormat: Text.PlainText
-            font.hintingPreference: Font.PreferFullHinting
+        RetroText {
             visible: root.trailing !== ""
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
-            color: !root.enabled ? Config.colors.shadow : (root.lit ? MenuStyle.selectText : (root.trailingDim ? Config.colors.shadow : Config.colors.text))
+            color: root.lit ? MenuStyle.selectText : (root.trailingDim ? Config.colors.shadow : Config.colors.text)
+            disabledLook: !root.enabled
             text: root.trailing
         }
-        Text {
-            renderType: Text.NativeRendering
-            textFormat: Text.PlainText
-            font.hintingPreference: Font.PreferFullHinting
+        RetroText {
             visible: root.marked
             font.family: MenuStyle.iconFont
             font.pixelSize: MenuStyle.iconSize
-            color: !root.enabled ? Config.colors.shadow : (root.lit ? MenuStyle.selectText : Config.colors.text)
+            color: root.lit ? MenuStyle.selectText : Config.colors.text
+            disabledLook: !root.enabled
             text: root.markGlyph
         }
     }

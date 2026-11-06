@@ -54,27 +54,24 @@ Button {
             anchors.horizontalCenterOffset: root.sunken ? 1 : 0
             anchors.verticalCenterOffset: root.sunken ? 1 : 0
             spacing: 4
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
+            RetroText {
                 visible: root.currentGlyph !== ""
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: MenuStyle.iconFont
                 font.pixelSize: MenuStyle.iconSize
                 color: root.contentColor
+                disabledLook: !root.enabled
                 text: root.currentGlyph
             }
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
+            RetroText {
                 visible: root.label !== ""
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: root.strong ? MenuStyle.barStrongFont : MenuStyle.bodyFont
                 font.pixelSize: root.strong ? MenuStyle.barStrongFontSize : (root.tucked ? MenuStyle.barStatusFontSize : Config.settings.bar.fontSize)
                 color: root.contentColor
+                disabledLook: !root.enabled
                 elide: Text.ElideRight
                 width: root.maxLabelWidth > 0 ? Math.min(implicitWidth, root.maxLabelWidth) : implicitWidth
-                textFormat: Text.PlainText
                 text: root.label
             }
         }
