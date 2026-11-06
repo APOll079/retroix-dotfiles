@@ -23,7 +23,7 @@ Button {
     property bool reserveIcon: false
     property bool accentTitle: false           // the title in the accent colour (the playing song)
     property bool trailingDim: false           // the trailing text dim (a duration column)
-    readonly property bool lit: hover.hovered || hovered || visualFocus || down || selected
+    readonly property bool lit: (root.enabled && (hover.hovered || hovered || down)) || visualFocus || selected
 
     implicitHeight: subtext !== "" ? MenuStyle.rowHeight * 3 / 2 : MenuStyle.rowHeight
     implicitWidth: 160
