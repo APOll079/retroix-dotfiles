@@ -55,6 +55,7 @@ spotifyd                    # Spotify panel without the app
 # --- fonts (the bar bundles its own; Monaco + Charcoal: see README) ---
 noto-fonts
 noto-fonts-emoji            # emoji picker / notifications
+noto-fonts-cjk              # Hangul / kana / Han in lyrics, notifications and song names (Monaco has none; fontconfig picks this)
 ttf-liberation              # ? bundled in quickshell/fonts already
 
 # --- apps I use (trim freely) ---
