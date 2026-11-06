@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """List installed games as one JSON array for the Games menu (popups/GamesMenu.qml).
 
-    python3 -I games.py [--steam-root DIR] [--custom FILE] [--cache FILE]
+    python3 -I games.py [--steam-root DIR] [--custom FILE] [--cache FILE] [--flatpak ID,ID,...]
 
 Sources:
   steam     installed games from every Steam library folder's appmanifest files
   shortcut  non-Steam games added through Steam (userdata/*/config/shortcuts.vdf)
+  flatpak   the Flatpak app ids named in --flatpak that `flatpak list --app --columns=application,name`
+            shows as installed (kind "flatpak", launched with `flatpak run <id>`); no flatpak = no entries
   custom    the user's own entries from the "custom" list in --custom (games.json in
             Quickshell's state dir, written by the menu's Add game form)
 
-Each item: {id, title, source, launch: [argv], cwd, dir, art, lastPlayed}.
+Each item: {id, title, source, launch: [argv], cwd, dir, art, lastPlayed} (flatpak items also have kind: "flatpak").
 Steam and shortcut games launch through `steam steam://rungameid/<id>`, so Steam (and Proton
 for shortcuts) does the work. Missing files are skipped quietly; this never raises on bad data,
 it just lists less. Each extra library folder is scanned in a child process that gets LIB_TIMEOUT seconds
@@ -334,6 +336,59 @@ def custom_games(path):
     return games
 
 
+FLATPAK_ID = re.compile(r"^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$")
+ICON_DIRS = [os.path.join(HOME, ".local/share/flatpak/exports/share/icons/hicolor"),
+             "/var/lib/flatpak/exports/share/icons/hicolor"]
+
+
+def flatpak_art(app_id):
+    """Biggest exported PNG icon of a Flatpak app, or ""."""
+    for base in ICON_DIRS:
+        try:
+            sizes = sorted(os.listdir(base), key=lambda s: int(s.split("x")[0]) if s.split("x")[0].isdigit() else 0, reverse=True)
+        except OSError:
+            continue
+        for size in sizes:
+            p = os.path.join(base, size, "apps", app_id + ".png")
+            if os.path.isfile(p):
+                return p
+    return ""
+
+
+def flatpak_games(wanted):
+    """Entries for the wanted Flatpak ids that are installed. Missing flatpak, a failure or a hang = no entries."""
+    ids = []
+    for w in (wanted or "").split(","):
+        w = w.strip()
+        if FLATPAK_ID.match(w) and w not in ids:
+            ids.append(w)
+    if not ids:
+        return []
+    try:
+        r = subprocess.run(["flatpak", "list", "--app", "--columns=application,name"], capture_output=True, text=True,
+                           timeout=LIB_TIMEOUT, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    if r.returncode != 0:
+        return []
+    names = {}
+    for line in r.stdout.splitlines():
+        app, _, name = line.partition("\t")
+        if app.strip() in ids:
+            names[app.strip()] = name.strip() or app.strip()
+    return [{
+        "id": "flatpak:%s" % i,
+        "title": names[i],
+        "source": "flatpak",
+        "kind": "flatpak",
+        "launch": ["flatpak", "run", i],
+        "cwd": "",
+        "dir": "",
+        "art": flatpak_art(i),
+        "lastPlayed": 0,
+    } for i in ids if i in names]
+
+
 def run(args):
     cache = {}
     if args.cache:
@@ -355,6 +410,10 @@ def run(args):
                 seen.add(g["id"])
                 games.append(g)
     try:
+        games += flatpak_games(args.flatpak)
+    except Exception as e:
+        print("games.py: flatpak: %s" % e, file=sys.stderr)
+    try:
         games += [g for g in custom_games(args.custom) if g["id"] not in seen]
     except Exception as e:
         print("games.py: custom: %s" % e, file=sys.stderr)
@@ -367,6 +426,7 @@ def main():
     ap.add_argument("--steam-root")
     ap.add_argument("--custom")
     ap.add_argument("--cache")
+    ap.add_argument("--flatpak", default="")   # comma-separated Flatpak app ids to look for
     ap.add_argument("--scan-library")   # internal: one library folder, run in a timed child
     ap.add_argument("--probe-file")     # internal: prints 1 when the path is a file, run in a timed child
     args, _ = ap.parse_known_args()

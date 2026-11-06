@@ -18,6 +18,9 @@ PopupWindow {
     property var openUpdatesCallback: function () {}
     property var openCleanupCallback: function () {}
     property var openColorHistoryCallback: function () {}
+    property var openDefaultAppsCallback: function () {}
+    property var openFixCallback: function () {}
+    property var openLoginReportCallback: function () {}
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -178,6 +181,40 @@ PopupWindow {
                         onClicked: {
                             root.closeCallback();
                             root.openColorHistoryCallback();
+                        }
+                    }
+                }
+
+                // System pages: default apps, troubleshooting (restart a stuck service), what slowed the last login
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: MenuStyle.pad
+
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Default apps"
+                        glyph: "\ue8f1"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openDefaultAppsCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Troubleshoot"
+                        glyph: "\ue869"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openFixCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Login report"
+                        glyph: "\ue8b5"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openLoginReportCallback();
                         }
                     }
                 }

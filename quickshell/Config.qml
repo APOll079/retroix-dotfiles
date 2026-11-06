@@ -115,6 +115,9 @@ Wallpapers,
 Updates,
 Cleanup,
 ColorHistory,
+DefaultApps,
+Troubleshoot,
+LoginReport,
 None
 }
 property alias settings: settingsJsonAdapter.settings

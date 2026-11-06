@@ -76,6 +76,13 @@ Item {
                 onClicked: root.setFilter("hidden")
             }
             Item { Layout.fillWidth: true }
+            // MangoHud overlay for games started from here (settings.games.mangohud; how each kind gets it: GamesState.launchCommand)
+            BevelButton {
+                text: "MangoHud"
+                checked: Config.settings.games.mangohud === true
+                focusPolicy: Qt.NoFocus
+                onClicked: Config.settings.games.mangohud = !(Config.settings.games.mangohud === true)
+            }
             BevelButton {
                 text: "Add game"
                 glyph: "\ue145"
@@ -392,7 +399,7 @@ Item {
     }
 
     function sourceName(g) {
-        return g.source === "steam" ? "Steam" : (g.source === "shortcut" ? "Steam shortcut" : "Local");
+        return g.source === "steam" ? "Steam" : (g.source === "shortcut" ? "Steam shortcut" : (g.source === "flatpak" ? "Flatpak" : "Local"));
     }
 
     function setFilter(f) {

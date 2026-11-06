@@ -46,7 +46,7 @@ FloatingWindow {
     readonly property bool live: !Quickshell.env("QS_NO_APPLY")
     property var killLog: []             // signals sent under QS_NO_APPLY: { signal, pids } (tests)
 
-    property string sortKey: "cpu"       // name | cpu | mem | count
+    property string sortKey: "cpu"       // name | cpu | mem | count | gpu | vram | read | write
     property bool sortDesc: true
     property bool mineOnly: true
     property string selectedName: ""     // process group, kept across refreshes
@@ -60,8 +60,14 @@ FloatingWindow {
         const q = filter.text.trim().toLowerCase();
         const list = root.sample.groups.filter(g => (!root.mineOnly || g.mine) && (q === "" || g.name.toLowerCase().includes(q)));
         const k = root.sortKey, dir = root.sortDesc ? -1 : 1;
-        return list.sort((a, b) => (k === "name" ? a.name.localeCompare(b.name) : a[k] - b[k]) * dir);
+        return list.sort((a, b) => root.compareGroups(a, b, k, dir));
     }
+    // The GPU / VRAM / Read / Write columns are narrower than the first three; below this window width they are
+    // hidden whole (the Program column keeps its room)
+    // (local sizes: MenuStyle is not mine to edit this round; suggested tokens taskExtraColumnWidth / taskExtraColumnsMinWidth)
+    readonly property int extraColumnWidth: 64
+    readonly property bool extraColumns: root.width >= 720
+    readonly property var extraKeys: ["gpu", "vram", "read", "write"]
     readonly property var selectedGroup: root.groups.find(g => g.name === root.selectedName) || null
     readonly property var apps: Hyprland.toplevels.values.filter(t => t.title !== "" && t.lastIpcObject && t.lastIpcObject.pid > 0)
     readonly property var selectedApp: root.apps[root.appIndex] || null
@@ -224,11 +230,16 @@ FloatingWindow {
                                     { key: "name", text: "Program", wide: true },
                                     { key: "cpu", text: "CPU", wide: false },
                                     { key: "mem", text: "Memory", wide: false },
-                                    { key: "count", text: "Procs", wide: false }
+                                    { key: "count", text: "Procs", wide: false },
+                                    { key: "gpu", text: "GPU", wide: false },
+                                    { key: "vram", text: "VRAM", wide: false },
+                                    { key: "read", text: "Read", wide: false },
+                                    { key: "write", text: "Write", wide: false }
                                 ]
                                 BevelButton {
+                                    visible: root.extraColumns || root.extraKeys.indexOf(modelData.key) < 0
                                     Layout.fillWidth: modelData.wide
-                                    Layout.preferredWidth: modelData.wide ? -1 : MenuStyle.taskColumnWidth
+                                    Layout.preferredWidth: modelData.wide ? -1 : (root.extraKeys.indexOf(modelData.key) >= 0 ? root.extraColumnWidth : MenuStyle.taskColumnWidth)
                                     text: modelData.text + (root.sortKey === modelData.key ? (root.sortDesc ? " ▾" : " ▴") : "")
                                     checked: root.sortKey === modelData.key
                                     focusPolicy: Qt.NoFocus
@@ -284,10 +295,11 @@ FloatingWindow {
                                         }
                                         Repeater {
                                             model: [procRow.modelData.cpu.toFixed(1) + "%", root.bytes(procRow.modelData.mem), String(procRow.modelData.count)]
+                                                .concat(root.extraColumns ? root.extraCells(procRow.modelData) : [])
                                             Text {
                                                 renderType: Text.NativeRendering
                                                 font.hintingPreference: Font.PreferFullHinting
-                                                Layout.preferredWidth: MenuStyle.taskColumnWidth
+                                                Layout.preferredWidth: index < 3 ? MenuStyle.taskColumnWidth : root.extraColumnWidth
                                                 horizontalAlignment: Text.AlignRight
                                                 font.family: MenuStyle.bodyFont
                                                 font.pixelSize: MenuStyle.fontSize
@@ -542,9 +554,48 @@ FloatingWindow {
             { text: "Only my processes", checked: root.mineOnly, enabled: inProcs, action: () => root.mineOnly = !root.mineOnly },
             { separator: true }
         ];
-        for (const c of [["name", "Sort by Program"], ["cpu", "Sort by CPU"], ["mem", "Sort by Memory"], ["count", "Sort by Procs"]])
+        for (const c of [["name", "Sort by Program"], ["cpu", "Sort by CPU"], ["mem", "Sort by Memory"], ["count", "Sort by Procs"], ["gpu", "Sort by GPU"], ["vram", "Sort by VRAM"], ["read", "Sort by Read"], ["write", "Sort by Write"]])
             out.push({ text: c[1], checked: root.sortKey === c[0], enabled: inProcs, action: () => root.sortBy(c[0]) });
         return out;
+    }
+
+    // Sort order of two groups for column `k` (dir -1 = descending). Groups with no value (null) always go last.
+    function compareGroups(a, b, k, dir) {
+        if (k === "name")
+            return a.name.localeCompare(b.name) * dir;
+        const x = a[k], y = b[k];
+        const nx = x === null || x === undefined, ny = y === null || y === undefined;
+        if (nx || ny)
+            return nx && ny ? 0 : (nx ? 1 : -1);
+        return (x - y) * dir;
+    }
+
+    // The four narrow cells of a row: GPU %, VRAM, Read, Write ("--" when the helper could not read them)
+    function extraCells(g) {
+        return [
+            g.gpu === null || g.gpu === undefined ? "--" : g.gpu.toFixed(0) + "%",
+            g.vram === null || g.vram === undefined ? "--" : root.bytesShort(g.vram),
+            root.rateShort(g.read),
+            root.rateShort(g.write)
+        ];
+    }
+
+    // 512K, 1.2G (fits the 64 px columns); "--" when unknown
+    function bytesShort(b) {
+        if (b === null || b === undefined || !(b >= 0))
+            return "--";
+        if (b >= 1073741824)
+            return (b / 1073741824).toFixed(1) + "G";
+        if (b >= 1048576)
+            return Math.round(b / 1048576) + "M";
+        return Math.round(b / 1024) + "K";
+    }
+
+    // 1.2M/s, 300K/s, 0 (for a rate in bytes per second); "--" when unknown
+    function rateShort(bps) {
+        if (bps === null || bps === undefined || !(bps >= 0))
+            return "--";
+        return bps < 1024 ? "0" : root.bytesShort(bps) + "/s";
     }
 
     // Click a column header, or pick Sort by: a new column starts in its natural order, the same one flips it

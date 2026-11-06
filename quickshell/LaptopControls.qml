@@ -52,10 +52,10 @@ Row {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
-        + (vpnBtn.visible ? vpnBtn.width : 0) + (nasBtn.visible ? nasBtn.width : 0) + (phoneBtn.visible ? phoneBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
+        + (vpnBtn.visible ? vpnBtn.width : 0) + (nasBtn.visible ? nasBtn.width : 0) + (phoneBtn.visible ? phoneBtn.width : 0) + (mouseBtn.visible ? mouseBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
         + caffeineBtn.width + ethLabel.width + btBtn.width
     // The gaps between the buttons that are shown (caffeine, sysmon, ETH and Bluetooth always are), plus one to the tray
-    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (nasBtn.visible ? 1 : 0) + (phoneBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
+    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (nasBtn.visible ? 1 : 0) + (phoneBtn.visible ? 1 : 0) + (mouseBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
     readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth + root.spacing * root.itemCount
 
     // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
@@ -168,6 +168,16 @@ Row {
         label: PhoneBattery.label
         tooltip: PhoneBattery.tooltip
         onClicked: root.openPhoneTab(phoneBtn)
+    }
+
+    // Logitech mouse battery (MouseState, Solaar): shown only while it reports one
+    BarButton {
+        id: mouseBtn
+        visible: MouseState.visibleInBar
+        interactive: false
+        iconFontValue: "\ue323"
+        label: MouseState.label
+        tooltip: MouseState.tooltip
     }
 
     // NAS (NasWatch): shown while a configured mount is up or stale; a click remounts the stale / unmounted one

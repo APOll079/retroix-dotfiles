@@ -76,6 +76,11 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, tools (never looked at, fakes only)
+- [ ] Task Manager GPU / VRAM / Read / Write numbers against radeontop / iotop on the AMD card, and the extra columns fit at 760 px; Default apps: Make default really changes `xdg-settings get default-web-browser` and `xdg-mime query default image/png`
+- [ ] Troubleshoot: each of the four restarts with the real dinit services (and the relaunch fallback for hyprpaper / EasyEffects); Login report after a real login (needs the new `autostart.lua` marks: `hyprctl reload` does not re-run them, log in again)
+- [ ] Solaar: `solaar show` on the real mouse parses and the bar button appears; Flatpak: Sober shows in Games and launches; MangoHud overlay for a Steam game (see the note in docs), a Flatpak game and an own entry; security audit: the first run is silent, a new CVE toasts
+
 ### Settings tab (never looked at)
 - [ ] Super+D, Settings tab (or Start > Settings, Super+Shift+comma): change one setting of each type (On/Off, number, text, list, choice) and check the bar and other menus follow; the label column and hints fit at 760 px with the real Monaco font; the search box filters rows from all categories, Down moves into the first control, Escape in an empty field returns to the search box; tab order across rows; "Open settings.json" opens your editor; which settings really need a restart (none is flagged yet)
 

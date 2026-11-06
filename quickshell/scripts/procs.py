@@ -8,7 +8,11 @@ Quickshell runs it only while the Task Manager is open. --once prints a single s
 { "cpu": %, "mem": {used, total}, "swap": {used, total},
   "gpu": {busy, vramUsed, vramTotal} or null, "count": processes, "self": this helper's pid,
   "net": {rx, tx, t}  (bytes received / sent since boot by every interface except lo, t = monotonic seconds),
-  "groups": [{ name, count, cpu, mem, mine, pids, core }] }      (bytes for memory, % of the whole CPU;
+  "groups": [{ name, count, cpu, mem, mine, pids, core, gpu, vram, read, write }] }      (bytes for memory, % of the whole CPU;
+  gpu = % of the busiest GPU engine used by the group's processes since the last sample, vram = bytes of VRAM they hold,
+  both from /proc/<pid>/fdinfo (drm-engine-* / drm-memory-vram, the AMD driver); read / write = disk bytes per second from
+  /proc/<pid>/io. Each is null when it cannot be read (not your process, no GPU client, first sample): never an error.
+  Only the current user's processes are read for these four.
   core = what happens if this program is ended ("" for an ordinary one): the one list of core processes,
   used by the Task Manager and by the launcher's "kill" rows)
 
@@ -18,6 +22,7 @@ bash, java, ...) are grouped by the script they run, wine by the Windows program
 or "wine64-preloader" do not swallow unrelated programs. Kernel threads are skipped.
 Memory is RSS summed per group, an estimate (shared pages are counted in every process).
 The GPU is the card with the most VRAM (amdgpu sysfs). Standard library only.
+Test hook: PROCS_ROOT=<dir> reads a fake /proc tree instead of /proc (tests/scripts-r4b.py).
 """
 import glob
 import json
@@ -26,13 +31,14 @@ import re
 import sys
 import time
 
+PROC = os.environ.get("PROCS_ROOT") or "/proc"
 PAGE = os.sysconf("SC_PAGE_SIZE")
 ME = os.getuid()
 PF_KTHREAD = 0x00200000
 
 
 def cpu_times():
-    with open("/proc/stat") as f:
+    with open(PROC + "/stat") as f:
         parts = [int(x) for x in f.readline().split()[1:]]
     idle = parts[3] + (parts[4] if len(parts) > 4 else 0)
     return sum(parts), idle
@@ -40,7 +46,7 @@ def cpu_times():
 
 def meminfo():
     kb = {}
-    with open("/proc/meminfo") as f:
+    with open(PROC + "/meminfo") as f:
         for line in f:
             k, v = line.split(":", 1)
             kb[k] = int(v.split()[0])
@@ -66,7 +72,7 @@ def net_totals(text):
 
 def net_sample():
     try:
-        with open("/proc/net/dev") as f:
+        with open(PROC + "/net/dev") as f:
             rx, tx = net_totals(f.read())
     except OSError:
         rx = tx = 0
@@ -167,7 +173,7 @@ def group_name(exe, cmdline):
 
 def read_cmdline(d):
     try:
-        with open(f"/proc/{d}/cmdline", "rb") as f:
+        with open(f"{PROC}/{d}/cmdline", "rb") as f:
             raw = f.read(4096)
     except OSError:
         return []
@@ -177,12 +183,12 @@ def read_cmdline(d):
 def processes():
     """pid -> (name, ticks, rss bytes, mine)"""
     out = {}
-    for d in os.listdir("/proc"):
+    for d in os.listdir(PROC):
         if not d.isdigit():
             continue
         pid = int(d)
         try:
-            with open(f"/proc/{d}/stat") as f:
+            with open(f"{PROC}/{d}/stat") as f:
                 stat = f.read()
             comm = stat[stat.index("(") + 1:stat.rindex(")")]
             fields = stat[stat.rindex(")") + 2:].split()
@@ -190,14 +196,14 @@ def processes():
             if int(fields[6]) & PF_KTHREAD:
                 continue
             ticks = int(fields[11]) + int(fields[12])
-            with open(f"/proc/{d}/statm") as f:
+            with open(f"{PROC}/{d}/statm") as f:
                 rss = int(f.read().split()[1]) * PAGE
-            mine = os.stat(f"/proc/{d}").st_uid == ME
+            mine = os.stat(f"{PROC}/{d}").st_uid == ME
         except (OSError, ValueError, IndexError):
             continue
         name = comm
         try:
-            name = os.path.basename(os.readlink(f"/proc/{d}/exe")).replace(" (deleted)", "") or comm
+            name = os.path.basename(os.readlink(f"{PROC}/{d}/exe")).replace(" (deleted)", "") or comm
             if INTERPRETER.match(name) or WINE.match(name):
                 name = group_name(name, read_cmdline(d))
         except OSError:
@@ -206,9 +212,111 @@ def processes():
     return out
 
 
+UNITS = {"": 1, "B": 1, "KiB": 1024, "MiB": 1024 ** 2, "GiB": 1024 ** 3}
+
+
+def fdinfo_drm(text):
+    """(client key or None, vram bytes or None, {engine: ns}) from the text of one /proc/<pid>/fdinfo/<fd>.
+    Keys (amdgpu, drm-usage-stats): drm-client-id, drm-pdev, drm-memory-vram: N KiB, drm-engine-gfx: N ns.
+    A line that does not parse is skipped."""
+    client = pdev = vram = None
+    engines = {}
+    for line in text.splitlines():
+        key, _, val = line.partition(":")
+        val = val.split()
+        if not val:
+            continue
+        try:
+            if key == "drm-client-id":
+                client = val[0]
+            elif key == "drm-pdev":
+                pdev = val[0]
+            elif key == "drm-memory-vram":
+                vram = int(val[0]) * UNITS.get(val[1] if len(val) > 1 else "", 1)
+            elif key.startswith("drm-engine-") and not key.startswith("drm-engine-capacity-"):
+                engines[key[len("drm-engine-"):]] = int(val[0])
+        except (ValueError, KeyError):
+            continue
+    if vram is None and not engines:
+        return None
+    return (pdev, client), vram, engines
+
+
+def pid_extras(pid, seen):
+    """GPU, VRAM and disk counters of one of your own processes, or None when nothing is readable.
+    {vram: bytes or None, eng: {engine: ns} or None, rd: bytes or None, wr: bytes or None}.
+    `seen` holds (pdev, client-id) already counted this sample, so a client shared by forks counts once."""
+    out = {"vram": None, "eng": None, "rd": None, "wr": None}
+    fd_dir = f"{PROC}/{pid}/fd"
+    try:
+        fds = os.listdir(fd_dir)
+    except OSError:
+        fds = []
+    for fd in fds:
+        try:
+            if not os.readlink(f"{fd_dir}/{fd}").startswith("/dev/dri/"):
+                continue
+            with open(f"{PROC}/{pid}/fdinfo/{fd}") as f:
+                got = fdinfo_drm(f.read())
+        except OSError:
+            continue
+        if got is None or (got[0][1] is not None and got[0] in seen):
+            continue
+        if got[0][1] is not None:
+            seen.add(got[0])
+        _, vram, engines = got
+        if vram is not None:
+            out["vram"] = (out["vram"] or 0) + vram
+        for name, ns in engines.items():
+            out["eng"] = out["eng"] or {}
+            out["eng"][name] = out["eng"].get(name, 0) + ns
+    try:
+        with open(f"{PROC}/{pid}/io") as f:
+            for line in f:
+                k, _, v = line.partition(":")
+                if k == "read_bytes":
+                    out["rd"] = int(v)
+                elif k == "write_bytes":
+                    out["wr"] = int(v)
+    except (OSError, ValueError):
+        pass
+    return out
+
+
+def group_rates(pids, now, prev, dt):
+    """(gpu %, vram bytes, read B/s, write B/s) of one group, each None when unknown.
+    now / prev: pid -> pid_extras() of this and the last sample; dt: seconds between them."""
+    vram = gpu = rd = wr = None
+    engines = None
+    for pid in pids:
+        e = now.get(pid)
+        if not e:
+            continue
+        if e["vram"] is not None:
+            vram = (vram or 0) + e["vram"]
+        p = prev.get(pid)
+        if not p or not (dt > 0):
+            continue
+        if e["eng"] is not None and p["eng"] is not None:
+            engines = engines or {}
+            for name, ns in e["eng"].items():
+                if name in p["eng"]:
+                    engines[name] = engines.get(name, 0) + max(0, ns - p["eng"][name])
+        if e["rd"] is not None and p["rd"] is not None:
+            rd = (rd or 0) + max(0, e["rd"] - p["rd"]) / dt
+        if e["wr"] is not None and p["wr"] is not None:
+            wr = (wr or 0) + max(0, e["wr"] - p["wr"]) / dt
+    if engines:
+        gpu = round(max(0.0, min(100.0, max(engines.values()) / (dt * 1e9) * 100)), 1)
+    return gpu, vram, None if rd is None else round(rd), None if wr is None else round(wr)
+
+
 def sample(prev, card):
     total, idle = cpu_times()
     procs = processes()
+    now_t = time.monotonic()
+    seen = set()
+    extras = {pid: pid_extras(pid, seen) for pid in sorted(procs) if procs[pid][3]}
     dt = max(1, total - prev["total"])
     cpu = 100.0 * (1 - (idle - prev["idle"]) / dt) if prev["total"] else 0.0
     groups = {}
@@ -222,13 +330,15 @@ def sample(prev, card):
         if before is not None and prev["total"]:
             g["cpu"] += 100.0 * max(0, ticks - before) / dt
     mem, swap = meminfo()
+    for g in groups.values():
+        g["gpu"], g["vram"], g["read"], g["write"] = group_rates(g["pids"], extras, prev.get("extras", {}), now_t - prev.get("t", 0))
     result = {
         "cpu": round(max(0.0, min(100.0, cpu)), 1),
         "mem": mem, "swap": swap, "gpu": gpu_info(card),
         "count": len(procs), "self": os.getpid(), "net": net_sample(),
         "groups": sorted(({**g, "cpu": round(g["cpu"], 1), "core": core_effect(g["name"])} for g in groups.values()), key=lambda g: (-g["cpu"], -g["mem"])),
     }
-    state = {"total": total, "idle": idle, "ticks": {pid: p[1] for pid, p in procs.items()}}
+    state = {"total": total, "idle": idle, "ticks": {pid: p[1] for pid, p in procs.items()}, "extras": extras, "t": now_t}
     return result, state
 
 
@@ -239,7 +349,7 @@ def main():
         interval = max(0.5, float(args[args.index("--interval") + 1]))
     once = "--once" in args
     card = gpu_card()
-    state = {"total": 0, "idle": 0, "ticks": {}}
+    state = {"total": 0, "idle": 0, "ticks": {}, "extras": {}, "t": 0}
     # First sample only primes the CPU counters
     _, state = sample(state, card)
     time.sleep(0.5 if once else min(interval, 1.0))

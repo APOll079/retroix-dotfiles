@@ -32,6 +32,8 @@ libnotify                   # notify-send (game-mode toggle)
 tesseract                   # text from a region (overlay Text mode)
 tesseract-data-swe
 tesseract-data-eng
+arch-audit                  # security audit toasts (new CVEs for installed packages)
+solaar                      # Logitech mouse battery in the bar
 ffmpeg                      # Save as GIF on a recording
 gpu-screen-recorder         # screen recording and the replay buffer (overlay Record mode)
 smartmontools               # smartctl, disk health warnings (needs root: see docs/desktop.md)

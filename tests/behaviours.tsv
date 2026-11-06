@@ -246,3 +246,13 @@ quickshell/popups/AppLauncher.qml	key: "settings", text: "Settings"	Launcher: th
 quickshell/popups/StartMenu.qml	text: "Settings"	Start menu: the Settings button opens the launcher on its Settings tab
 quickshell/taskbar/Bar.qml	openLauncherMode\("settings"\)	Bar: Settings opens the launcher on the Settings tab (Start button and the settings IPC)
 hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Settings	Key: Apps | Settings
+quickshell/popups/TaskManager.qml	compareGroups	Task Manager: GPU, VRAM, Read and Write columns sort, null last
+quickshell/popups/GamesView.qml	text: "MangoHud"	Games: MangoHud button flips settings.games.mangohud
+quickshell/GamesState.qml	function launchCommand	Games: MangoHud changes how each kind is launched
+quickshell/popups/FixPanel.qml	verb: "Restart"	Troubleshoot: every restart asks a ConfirmBar first
+quickshell/popups/FixPanel.qml	function run\(id\)	Troubleshoot: only ids of the fixed list run fixes.sh
+quickshell/popups/DefaultAppsPanel.qml	DefaultApps\.makeDefault	Default apps: Make default calls defaultapps.sh set
+quickshell/popups/LoginReportPanel.qml	No login timestamps yet	Login report: empty state when the timestamp file is missing
+quickshell/SecurityAudit.qml	function decide	Security audit: first run only records, later runs toast new pairs
+quickshell/popups/StartMenu.qml	text: "Troubleshoot"	Start menu: Troubleshoot opens the Fix my desktop panel
+hypr/autostart.lua	mark\("session-start"\)	Login timestamps for the login report
