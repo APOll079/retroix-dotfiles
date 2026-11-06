@@ -109,6 +109,7 @@ SunkenField {
     ListView {
         id: listView
         anchors.fill: parent
+        anchors.rightMargin: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0      // room for the scroll bar while it shows
         visible: !panel.lyricsMode && !panel.useGrid
         model: panel.items
         header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
@@ -200,6 +201,7 @@ SunkenField {
             MenuRow {
                 anchors.fill: parent
                 visible: !row.isHeading
+                reserveIcon: true
                 focusPolicy: Qt.NoFocus
                 rightPadding: row.showPlay ? MenuStyle.pad + playButton.width + MenuStyle.gap : MenuStyle.pad
                 selected: row.sel
@@ -243,8 +245,11 @@ SunkenField {
                 onClicked: panel.playItem(row.modelData)
             }
         }
-        ScrollIndicator.vertical: ScrollIndicator {
-            active: listView.moving
+        ScrollBar.vertical: RetroScrollBar {
+            parent: listView.parent
+            anchors.top: listView.top
+            anchors.bottom: listView.bottom
+            anchors.left: listView.right
         }
     }
 
@@ -252,6 +257,7 @@ SunkenField {
     ListView {
         id: grid
         anchors.fill: parent
+        anchors.rightMargin: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
         visible: !panel.lyricsMode && panel.useGrid
         model: panel.gridRows
         header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
@@ -313,8 +319,11 @@ SunkenField {
                 }
             }
         }
-        ScrollIndicator.vertical: ScrollIndicator {
-            active: grid.moving
+        ScrollBar.vertical: RetroScrollBar {
+            parent: grid.parent
+            anchors.top: grid.top
+            anchors.bottom: grid.bottom
+            anchors.left: grid.right
         }
     }
 }
