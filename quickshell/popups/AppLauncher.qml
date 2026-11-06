@@ -30,10 +30,6 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    // How app icons are drawn: "color" (as the theme ships them, today's look), "grey" (desaturated) or
-    // "tint" (toward the accent). Owner's pick pending; a settings key can replace this constant later.
-    readonly property string iconStyle: "color"
-
     property string mode: "apps"          // apps | windows | games | clipboard
     property string category: "all"
     property var results: []
@@ -274,10 +270,9 @@ PanelWindow {
                                             text: modelData.title
                                             subtext: modelData.sub || ""
                                             trailing: modelData.trailing || ""
-                                            glyph: root.iconStyle !== "color" && modelData.icon ? "" : (modelData.glyph || "")
+                                            glyph: modelData.glyph || ""
                                             reserveIcon: true      // the list has icons: labels line up on rows without one
-                                            // grey / tint: the icon is drawn by the effect image below instead
-                                            iconSource: root.iconStyle === "color" ? (modelData.icon || "") : ""
+                                            iconSource: modelData.icon || ""
                                             marked: !!modelData.pinned
                                             onClicked: root.activate(index)
                                             // Clipboard: the preview follows the pointer too
@@ -287,25 +282,6 @@ PanelWindow {
                                                 // The pointer leaving an armed row disarms it
                                                 else if (!hovered && modelData.key && modelData.key === root.confirmKey)
                                                     root.disarm();
-                                            }
-
-                                            // The icon with its colour treatment (iconStyle grey / tint)
-                                            Image {
-                                                visible: root.iconStyle !== "color" && !!modelData.icon && status === Image.Ready
-                                                x: MenuStyle.pad
-                                                y: Math.round((parent.height - MenuStyle.iconSize) / 2)
-                                                width: MenuStyle.iconSize
-                                                height: MenuStyle.iconSize
-                                                source: root.iconStyle === "color" ? "" : (modelData.icon || "")
-                                                sourceSize: Qt.size(MenuStyle.iconSize * 2, MenuStyle.iconSize * 2)
-                                                smooth: false
-                                                asynchronous: true
-                                                layer.enabled: visible
-                                                layer.effect: MultiEffect {
-                                                    saturation: root.iconStyle === "grey" ? -1 : -0.3
-                                                    colorization: root.iconStyle === "tint" ? 0.7 : 0
-                                                    colorizationColor: MenuStyle.selectBar
-                                                }
                                             }
 
                                             // Right-click: the app's options
