@@ -111,7 +111,7 @@ Item {
             elide: Text.ElideRight
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
-            color: Config.colors.shadow
+            color: MenuStyle.bevelDark   // the shell's quiet-text colour (shadow itself is only 1.5:1 on the base)
             text: root.entry.hint || ""
         }
     }
@@ -202,7 +202,7 @@ Item {
         elide: Text.ElideRight
         font.family: MenuStyle.bodyFont
         font.pixelSize: MenuStyle.fontSize
-        color: Config.colors.shadow
+        color: MenuStyle.bevelDark
         text: "Edit in settings.json"
     }
 }
