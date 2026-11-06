@@ -193,6 +193,12 @@ ShellRoot {
                     Popups.MenuRow { Layout.fillWidth: true; text: "HDMI / DisplayPort"; glyph: "\ue30c" }
                     Popups.RetroSlider { Layout.fillWidth: true; value: 0.6 }
                 }
+                Head { text: "EmptyState" }
+                Popups.SunkenField {
+                    Layout.fillWidth: true
+                    implicitHeight: MenuStyle.rowHeight * 3
+                    Popups.EmptyState { anchors.centerIn: parent; width: parent.width; glyph: "\ue7f6"; text: "No notifications" }
+                }
                 Head { text: "ContextMenuBody" }
                 Popups.ContextMenuBody {
                     currentIndex: 1

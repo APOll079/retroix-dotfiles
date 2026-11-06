@@ -11,6 +11,7 @@ Item {
     property alias elide: main.elide
     property alias verticalAlignment: main.verticalAlignment
     property alias wrapMode: main.wrapMode
+    property alias horizontalAlignment: main.horizontalAlignment
 
     implicitWidth: main.implicitWidth
     implicitHeight: main.implicitHeight
@@ -27,6 +28,7 @@ Item {
         elide: main.elide
         verticalAlignment: main.verticalAlignment
         wrapMode: main.wrapMode
+        horizontalAlignment: main.horizontalAlignment
         color: MenuStyle.bevelLight
         text: root.text
     }
