@@ -23,6 +23,22 @@ ColumnLayout {
         }
     }
 
+    // Today by the hour (Weather.hours, the API's 3-hourly slots): this many cells in one row, fixed so the tab
+    // The place's own clock now: its reading at fetch time plus what has passed since (minute precision)
+    SystemClock {
+        id: hourClock
+        precision: SystemClock.Minutes
+    }
+    readonly property real placeNowMs: Weather.hoursNow + (hourClock.date.getTime() - Weather.hoursAt)
+    // Always hourlySlots entries, null where the data ends, so the row never changes size
+    readonly property var hourlyModel: {
+        const next = Weather.nextHours(Weather.hours, root.placeNowMs, MenuStyle.weatherHourlySlots);
+        const m = [];
+        for (let i = 0; i < MenuStyle.weatherHourlySlots; i++)
+            m.push(i < next.length ? next[i] : null);
+        return m;
+    }
+
     // Weather (Weather.qml): now, then the next days; a plain line while it can't be fetched
     Text {
         renderType: Text.NativeRendering
@@ -103,6 +119,40 @@ ColumnLayout {
                             color: Config.colors.text
                             textFormat: Text.PlainText
                             text: modelData.name + " " + modelData.lo + "/" + modelData.hi + Weather.unit
+                        }
+                    }
+                }
+            }
+            // The next hours, in the day rows' style: glyph, then "15:00 12\u00b0C"
+            RowLayout {
+                objectName: "hourlyRow"
+                Layout.fillWidth: true
+                visible: Weather.hours.length > 0
+                spacing: MenuStyle.pad
+                Repeater {
+                    model: root.hourlyModel
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 1
+                        spacing: MenuStyle.gap
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            font.family: MenuStyle.iconFont
+                            font.pixelSize: MenuStyle.iconSize
+                            color: Config.colors.text
+                            text: modelData ? modelData.icon : ""
+                        }
+                        Text {
+                            renderType: Text.NativeRendering
+                            font.hintingPreference: Font.PreferFullHinting
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            font.family: MenuStyle.bodyFont
+                            font.pixelSize: MenuStyle.fontSize
+                            color: Config.colors.text
+                            textFormat: Text.PlainText
+                            text: modelData ? Weather.hourLabel(modelData.ms) + " " + modelData.temp + Weather.unit : ""
                         }
                     }
                 }

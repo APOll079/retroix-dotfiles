@@ -64,6 +64,18 @@ ColumnLayout {
         }
     }
 
+    // The history filter (the box under the header): matches app name, title and body, case-insensitive
+    property string query: ""
+    // Pure: the entries of `items` that match `query`, in their order. An empty query returns `items` itself.
+    function filterItems(items, query) {
+        const q = String(query || "").trim().toLowerCase();
+        if (q === "")
+            return items;
+        const has = v => String(v || "").toLowerCase().indexOf(q) >= 0;
+        return items.filter(e => has(e.appName) || has(e.summary) || has(e.body));
+    }
+    readonly property var shown: root.filterItems(NotificationStore.items, root.query)
+
     property var expanded: ({})          // entry key -> true while its whole body shows
     property var replyTo: null           // history entry whose reply box is open
 
@@ -77,6 +89,17 @@ ColumnLayout {
         if (e.image)
             return e.image;
         return e.appIcon ? Quickshell.iconPath(e.appIcon, true) : "";
+    }
+
+    SearchBox {
+        id: filterBox
+        objectName: "filterBox"
+        Layout.fillWidth: true
+        visible: NotificationStore.items.length > 0
+        placeholder: "Search notifications"
+        onTextChanged: root.query = text
+        // Escape clears the text (SearchBox); on an empty box it hands the keyboard back, as in the Calendar tab
+        onEscaped: filterBox.input.focus = false
     }
 
     EmptyState {
@@ -103,11 +126,19 @@ ColumnLayout {
             raised: false
         }
 
+        EmptyState {
+            objectName: "noMatches"
+            anchors.fill: parent
+            visible: root.shown.length === 0
+            glyph: "\ue8b6"
+            text: "No matches"
+        }
+
         ListView {
             id: list
             anchors.fill: parent
             anchors.margins: MenuStyle.frameInset
-            model: NotificationStore.items
+            model: root.shown
             clip: true
             spacing: MenuStyle.pad
             topMargin: MenuStyle.pad
@@ -116,7 +147,8 @@ ColumnLayout {
             // The quiet end of the history
             footer: Item {
                 width: list.width - list.barRoom
-                height: MenuStyle.rowHeight + MenuStyle.pad
+                visible: root.shown.length > 0
+                height: visible ? MenuStyle.rowHeight + MenuStyle.pad : 0
                 RetroText {
                     anchors.centerIn: parent
                     font.family: MenuStyle.bodyFont
