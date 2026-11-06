@@ -121,7 +121,7 @@ ColumnLayout {
             boundsBehavior: Flickable.StopAtBounds
             // The quiet end of the history
             footer: Item {
-                width: list.width
+                width: list.width - list.barRoom
                 height: MenuStyle.rowHeight + MenuStyle.pad
                 RetroText {
                     anchors.centerIn: parent
@@ -131,9 +131,9 @@ ColumnLayout {
                     text: "No older notifications"
                 }
             }
-            ScrollIndicator.vertical: ScrollIndicator {
-                active: list.moving
-            }
+            // Floats over the right edge: the cards give it room while it shows (content overflows)
+            ScrollBar.vertical: RetroScrollBar { id: listBar }
+            readonly property int barRoom: listBar.visible ? MenuStyle.scrollBarWidth : 0
             delegate: Item {
                 id: row
                 required property var modelData
@@ -144,7 +144,7 @@ ColumnLayout {
                 readonly property bool lit: rowMouse.containsMouse || expandButton.hovered || replyButton.hovered
                 readonly property color barInk: lit ? MenuStyle.selectText : Config.colors.text
                 x: MenuStyle.pad
-                width: list.width - 2 * MenuStyle.pad
+                width: list.width - 2 * MenuStyle.pad - list.barRoom
                 height: card.height
 
                 Rectangle {
