@@ -185,6 +185,14 @@ ShellRoot {
                         Popups.MenuRow { width: parent.width; text: "Muted title bar" }
                     }
                 }
+                Head { text: "GroupBox" }
+                Popups.GroupBox {
+                    Layout.fillWidth: true
+                    title: "Output"
+                    Popups.MenuRow { Layout.fillWidth: true; text: "DM15 Analog Stereo"; glyph: "\ue32d"; marked: true }
+                    Popups.MenuRow { Layout.fillWidth: true; text: "HDMI / DisplayPort"; glyph: "\ue30c" }
+                    Popups.RetroSlider { Layout.fillWidth: true; value: 0.6 }
+                }
                 Head { text: "ContextMenuBody" }
                 Popups.ContextMenuBody {
                     currentIndex: 1
