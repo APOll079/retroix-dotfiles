@@ -110,6 +110,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `shotFilterButtonWidth` | int | `56` |  |
 | `shotActionButtonWidth` | int | `88` |  |
 | `todoRows` | int | `5` |  |
+| `settingsCategoryWidth` | int | `150` |  |
 | `weatherHourlySlots` | int | `4` |  |
 | `lyricsWindowWidth` | int | `420` |  |
 | `lyricsWindowHeight` | int | `200` |  |

@@ -91,6 +91,8 @@ Singleton {
     readonly property int shotActionButtonWidth: 88
     // Calendar tab to-do list: rows shown (it scrolls beyond), fixed so the tab never changes height
     readonly property int todoRows: 5
+    // Settings tab: width of the category list on the left
+    readonly property int settingsCategoryWidth: 150
     // Calendar tab: how many 3-hourly forecast slots the weather box shows (fixed, so the tab keeps its height)
     readonly property int weatherHourlySlots: 4
     // Lyrics window (a real window: hypr/windowrules.lua "lyrics-window" uses the same width / height / minimum)

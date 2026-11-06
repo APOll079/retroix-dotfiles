@@ -65,3 +65,5 @@ LyricsWindow 1.0 LyricsWindow.qml
 UpdatesPanel 1.0 UpdatesPanel.qml
 CleanupPanel 1.0 CleanupPanel.qml
 ColorHistoryPanel 1.0 ColorHistoryPanel.qml
+SettingRow 1.0 SettingRow.qml
+SettingsView 1.0 SettingsView.qml

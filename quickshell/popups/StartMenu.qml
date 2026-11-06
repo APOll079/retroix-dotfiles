@@ -14,6 +14,7 @@ PopupWindow {
     property var openPowerMenuCallback: function () {}
     property var openServicesCallback: function () {}
     property var openKeysCallback: function () {}
+    property var openSettingsCallback: function () {}
     property var openUpdatesCallback: function () {}
     property var openCleanupCallback: function () {}
     property var openColorHistoryCallback: function () {}
@@ -117,6 +118,15 @@ PopupWindow {
                         onClicked: {
                             Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files]);
                             root.closeCallback();
+                        }
+                    }
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Settings"
+                        glyph: "\ue8b8"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openSettingsCallback();
                         }
                     }
                     BevelButton {

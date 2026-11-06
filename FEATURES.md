@@ -76,6 +76,9 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Settings tab (never looked at)
+- [ ] Super+D, Settings tab (or Start > Settings, Super+Shift+comma): change one setting of each type (On/Off, number, text, list, choice) and check the bar and other menus follow; the label column and hints fit at 760 px with the real Monaco font; the search box filters rows from all categories, Down moves into the first control, Escape in an empty field returns to the search box; tab order across rows; "Open settings.json" opens your editor; which settings really need a restart (none is flagged yet)
+
 ### Round 4, desktop / notifications / audio / phone (never looked at, fakes only)
 - [ ] A fullscreen video past the dim time keeps the screen on; right-click a toast opens the menu (closes on Esc / click outside), mute and priority work, "Muted apps (n)" unmutes
 - [ ] Phone battery on the bar with a real phone (are the KDE Connect D-Bus names right?), Send to phone with a file and a link

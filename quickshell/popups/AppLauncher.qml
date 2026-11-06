@@ -36,7 +36,7 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    property string mode: "apps"          // apps | windows | games | clipboard
+    property string mode: "apps"          // apps | windows | games | clipboard | settings
     // Super+V: the clipboard on its own, without the Apps / Games / Clipboard tabs (those belong to Super+D)
     property bool standalone: false
     property string category: "all"
@@ -108,8 +108,8 @@ PanelWindow {
         }
 
         PopupWindowFrame {
-            windowTitle: root.mode === "windows" ? "Windows" : root.mode === "clipboard" ? "Clipboard" : root.mode === "games" ? "Games" : "Search"
-            windowTitleIcon: root.mode === "windows" ? "\ue8f9" : root.mode === "clipboard" ? "\ue14f" : "\ue8b6"
+            windowTitle: root.mode === "windows" ? "Windows" : root.mode === "clipboard" ? "Clipboard" : root.mode === "games" ? "Games" : root.mode === "settings" ? "Settings" : "Search"
+            windowTitleIcon: root.mode === "windows" ? "\ue8f9" : root.mode === "clipboard" ? "\ue14f" : root.mode === "settings" ? "\ue8b8" : "\ue8b6"
 
             RowLayout {
                 anchors.fill: parent
@@ -198,11 +198,21 @@ PanelWindow {
                                 onFocusSearch: searchInput.focusInput()
                             }
 
+                            // Settings tab: the search box filters the settings themselves; Down moves into the first control
+                            SettingsView {
+                                id: settingsView
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                visible: root.mode === "settings"
+                                query: root.mode === "settings" ? searchInput.text.trim() : ""
+                                onFocusSearch: searchInput.focusInput()
+                            }
+
                             // Results; in clipboard mode a preview pane sits on the left of the list
                             RowLayout {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                visible: root.mode !== "games"
+                                visible: root.mode !== "games" && root.mode !== "settings"
                                 spacing: MenuStyle.pad
 
                                 SunkenField {
@@ -396,7 +406,10 @@ PanelWindow {
                 handled = false;
             break;
         case Qt.Key_Down:
-            games ? gamesView.move(MenuStyle.gamesGridColumns) : root.step(1);
+            if (root.mode === "settings")
+                settingsView.handleKey(event);
+            else
+                games ? gamesView.move(MenuStyle.gamesGridColumns) : root.step(1);
             break;
         case Qt.Key_Up:
             games ? gamesView.move(-MenuStyle.gamesGridColumns) : root.step(-1);
@@ -442,7 +455,8 @@ PanelWindow {
     readonly property var tabs: [
         { key: "apps", text: "Apps" },
         { key: "games", text: "Games" },
-        { key: "clipboard", text: "Clipboard" }
+        { key: "clipboard", text: "Clipboard" },
+        { key: "settings", text: "Settings" }
     ]
 
     // "windows" (the "," search) lives on the Apps tab
@@ -485,7 +499,7 @@ PanelWindow {
 
     // keep: stay on the current row (clamped) instead of jumping back to the first
     function rebuild(keep) {
-        if (root.mode === "games")
+        if (root.mode === "games" || root.mode === "settings")
             return;
         const q = searchInput.text.trim();
         if (root.mode === "windows" || q.startsWith(","))

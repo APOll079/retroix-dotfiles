@@ -107,6 +107,7 @@ closeCallback: taskbar.closeAllPopups
 openPowerMenuCallback: function() { taskbar.toggleMenu(sessionPanel, Config.SystemPopup.SessionPanel, startmenuButton, "left") }
 openServicesCallback: function() { taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep") }
 openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
+openSettingsCallback: function() { taskbar.openLauncherMode("settings") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
 openColorHistoryCallback: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep") }
@@ -281,6 +282,10 @@ IpcHandler {
 target: "appLauncher_" + taskbar.screen.name
 function toggleAppLauncher() {
 taskbar.toggleMenu(appLauncher, Config.SystemPopup.AppLauncher, null, "keep");
+}
+// Super+Shift+comma: the launcher on its Settings tab
+function settings() {
+taskbar.openLauncherMode("settings");
 }
 // Super+V: clipboard history in the launcher
 function clipboard() {

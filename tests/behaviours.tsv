@@ -236,3 +236,13 @@ quickshell/Media.qml	function likeMenu	Like / Unlike and Add to playlist for the
 quickshell/popups/PhoneTab.qml	Send to phone	Phone tab: Send to phone sends a file or a link (kdeshare.sh)
 quickshell/LaptopControls.qml	onClicked: root\.openPhoneTab\(phoneBtn\)	The bar's phone battery button opens the Phone tab
 quickshell/taskbar/Bar.qml	Media\.likeMenu\(	Bar: right-click on the now-playing text opens Like / Add to playlist
+quickshell/popups/SettingRow.qml	onAccepted: root\.commit	Settings tab: Enter in a field saves it (only if it changed and is in range)
+quickshell/popups/SettingRow.qml	key !== Qt\.Key_Escape	Settings tab: Escape in a field reverts the text; with nothing to revert it gives the keys back to the launcher search
+quickshell/popups/SettingRow.qml	onActiveFocusChanged: if \(!activeFocus\) root\.commit\(true\)	Settings tab: a field saves when it loses focus
+quickshell/popups/SettingRow.qml	onClicked: root\.write\(!\(root\.current === true\)\)	Settings tab: an On/Off button flips the setting
+quickshell/popups/SettingsView.qml	Qt\.Key_Down && !root\.searching	Settings tab: Up/Down on the category list switch category
+quickshell/popups/SettingsView.qml	xdg-open	Settings tab: Open settings.json opens the file with xdg-open
+quickshell/popups/AppLauncher.qml	key: "settings", text: "Settings"	Launcher: the fourth tab is Settings
+quickshell/popups/StartMenu.qml	text: "Settings"	Start menu: the Settings button opens the launcher on its Settings tab
+quickshell/taskbar/Bar.qml	openLauncherMode\("settings"\)	Bar: Settings opens the launcher on the Settings tab (Start button and the settings IPC)
+hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Settings	Key: Apps | Settings
