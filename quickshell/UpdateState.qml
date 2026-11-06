@@ -3,9 +3,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Pending updates (pacman, AUR, flatpak) and the newest Arch news, for the Start menu's "Updates (N)" row, the dot
-// on the Start button and the Updates panel. scripts/updates.sh does the looking (read-only; a missing tool gives
-// null); runUpdate() opens the configured terminal on `yay -Syu` (the same shape as ServicesPanel.dialogCommand).
+// Pending updates (pacman, AUR, flatpak) and the newest Arch news, for the Start menu's "Updates (N)" button
+// and the Updates panel. scripts/updates.sh does the looking (read-only; a missing tool gives
+// null); runUpdate(kind) opens the configured terminal on `yay -Syu`, `flatpak update` or both (the same shape as ServicesPanel.dialogCommand).
 // Checks once 60 s after start and then hourly. Not started when QS_NO_APPLY is set (the test harness), so tests never
 // run a real tool. Nothing here installs anything: the update itself happens in the terminal, by hand.
 Singleton {

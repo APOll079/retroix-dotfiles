@@ -177,3 +177,5 @@ quickshell/popups/NotificationList.qml	No matches	Notification history: an empty
 quickshell/popups/NotificationList.qml	onEscaped: filterBox\.input\.focus = false	Notification history: a second Escape in the search box hands the keyboard back
 quickshell/Weather.qml	function nextHours\(	Weather: the hourly forecast picks the running slot and the next ones
 quickshell/popups/CalendarTab.qml	hourlyRow	Calendar tab: the hourly forecast row
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Drop\-down\ terminal	Key: Desktop | Drop-down terminal
+hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Zoom\ around\ the\ cursor	Key: Desktop | Zoom around the cursor (toggle)

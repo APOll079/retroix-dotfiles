@@ -58,7 +58,7 @@ Singleton {
     readonly property int tabPagePad: space4
     // Status bar at the bottom of a window (StatusBar): one 12px line
     readonly property int statusHeight: 18
-    readonly property int barStatusFontSize: 11
+    readonly property int barStatusFontSize: 12
     // Lyrics / now-playing line in the bar centre: Monaco 12 like the rest of the bar (B4; it was
     // Liberation Sans 14, the only sans on the bar; Monaco looked wavy at 14, it hints cleanly at 12).
     // Liberation Sans stays bundled in fonts/ (OFL) but nothing uses it now.
@@ -163,7 +163,7 @@ Singleton {
     readonly property real lyricsAnchor: 0.38     // where the current lyric sits (0 top, 0.5 middle)
     readonly property int cheatKeyWidth: 140     // key chip column in the cheat sheet
     readonly property int searchHeight: 32
-    readonly property int searchFontSize: 14
+    readonly property int searchFontSize: 16
     readonly property int avatarSize: 150
     readonly property int cardWidth: 84
     readonly property int cardHeight: 68

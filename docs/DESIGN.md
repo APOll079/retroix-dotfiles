@@ -51,13 +51,13 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `fontSize` | int | `12` |  |
 | `iconSize` | int | `16` |  |
 | `iconSizeLarge` | int | `20` |  |
-| `barStatusFontSize` | int | `11` |  |
+| `barStatusFontSize` | int | `12` |  |
 | `barStrongFont` | string | `bodyFont` |  |
 | `barStrongFontSize` | int | `fontSize` |  |
 | `shareIconSize` | int | `32` |  |
 | `spotifyButtonGlyph` | int | `iconSizeLarge` | the icon on those buttons |
 | `lyricsFontSize` | int | `16` | Monaco hints cleanly at 12 and 16 |
-| `searchFontSize` | int | `14` |  |
+| `searchFontSize` | int | `16` |  |
 | `notificationIconSize` | int | `32` |  |
 | `barOnGlyph` | color | `Qt.darker(selectBar, 1.8)` |  |
 

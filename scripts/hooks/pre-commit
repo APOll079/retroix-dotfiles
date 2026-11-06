@@ -1,0 +1,5 @@
+#!/bin/sh
+# Runs scripts/check.py before every commit and stops the commit on a FAIL (WARNs don't stop it).
+# Turn it on once with: bash scripts/install-hooks.sh   (turn it off: git config --unset core.hooksPath)
+cd "$(git rev-parse --show-toplevel)" || exit 1
+python3 scripts/check.py || { echo "pre-commit: scripts/check.py reported a FAIL, commit stopped" >&2; exit 1; }

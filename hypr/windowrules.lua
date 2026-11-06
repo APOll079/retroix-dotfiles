@@ -53,14 +53,50 @@ hl.window_rule({
     float = true
 })
 
--- Make GNOME Image Viewer (Loupe) float
+-- Make GNOME Image Viewer (Loupe) float: matched on the class only (the title changes with the open file)
 hl.window_rule({
     name = "windowrule-loupe",
     match = {
-        initial_class = [[^(org\.gnome\.Loupe)$]],
-        initial_title = [[^(Image Viewer)$]]
+        initial_class = [[^(org\.gnome\.Loupe)$]]
     },
     float = true
+})
+
+-- Zen's Picture-in-Picture: floats, pinned (follows you across workspaces), small, in the bottom-right corner.
+-- Field names as in the lyrics-window rule below; the title "Picture-in-Picture" is Firefox's, not seen running here
+hl.window_rule({
+    name  = "zen-picture-in-picture",
+    match = {
+        class = "^(zen|zen-browser)$",
+        title = "^Picture-in-Picture$"
+    },
+    float = true,
+    pin   = true,
+    size  = { 480, 270 },
+    move  = { "monitor_w-window_w-16", "monitor_h-window_h-48" }
+})
+
+-- Dialogs (file pickers, save / open, properties) float and centre instead of tiling over your layout.
+-- Matched by title because Hyprland has no "modal" match; not seen running here
+hl.window_rule({
+    name  = "dialogs-float",
+    match = {
+        title = "^(Open File|Open Files|Open Folder|Save File|Save As|Select .*|Choose .*|File Upload|Properties)$"
+    },
+    float  = true,
+    center = true
+})
+
+-- The drop-down terminal (SUPER + ALT + T in binds.lua): its own special workspace, floating along the top edge
+hl.window_rule({
+    name  = "dropdown-terminal",
+    match = {
+        class = "^dropterm$"
+    },
+    workspace = "special:dropterm silent",
+    float     = true,
+    size      = { "monitor_w*0.8", "monitor_h*0.45" },
+    move      = { "(monitor_w-window_w)/2", "32" }
 })
 
 hl.window_rule({

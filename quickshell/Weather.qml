@@ -28,14 +28,14 @@ Singleton {
     // wttr.in weather codes -> Material Symbols glyphs
     function glyph(code) {
         const c = Number(code);
-        if (c === 113) return "";                                  // wb_sunny
-        if (c === 116) return "";                                  // partly_cloudy_day
-        if (c === 119 || c === 122) return "";                     // cloud
-        if ([143, 248, 260].includes(c)) return "";                // foggy
-        if ([200, 386, 389, 392, 395].includes(c)) return "";      // thunderstorm
+        if (c === 113) return "\ue430";                                  // wb_sunny
+        if (c === 116) return "\uf172";                                  // partly_cloudy_day
+        if (c === 119 || c === 122) return "\ue2bd";                     // cloud
+        if ([143, 248, 260].includes(c)) return "\ue818";                // foggy
+        if ([200, 386, 389, 392, 395].includes(c)) return "\uebdb";      // thunderstorm
         if ([179, 182, 185, 227, 230, 317, 320, 323, 326, 329, 332, 335, 338, 350, 362, 365, 368, 371, 374, 377].includes(c))
-            return "";                                             // weather_snowy
-        return "";                                                 // rainy (drizzle, rain, showers)
+            return "\ue2cd";                                             // weather_snowy
+        return "\uf176";                                                 // rainy (drizzle, rain, showers)
     }
 
     // ---- hourly forecast (pure; the fixture test is tests/interaction/hourly.qml) ----

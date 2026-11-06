@@ -103,6 +103,27 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
+-- SUPER + ALT + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
+-- above; started the first time, then toggled. The "dropdown-terminal" rule in windowrules.lua floats and places it
+hl.bind(mainMod .. " + ALT" .. " + " .. "T", function()  -- help: Desktop | Drop-down terminal
+    local running = false
+    for _, w in ipairs(hl.get_windows()) do
+        if w.class == "dropterm" then running = true end
+    end
+    if not running then
+        hl.dispatch(hl.dsp.exec_cmd("kitty --class dropterm"))
+    end
+    hl.dispatch(hl.dsp.workspace.toggle_special("dropterm"))
+end)
+
+-- SUPER + ALT + Z: magnify around the cursor (Hyprland's cursor zoom), again to go back. Option name from the
+-- reference stubs (cursor.zoom_factor); the Lua call shape is a guess, not seen running here
+local zoomed = false
+hl.bind(mainMod .. " + ALT" .. " + " .. "Z", function()  -- help: Desktop | Zoom around the cursor (toggle)
+    zoomed = not zoomed
+    hl.config({ cursor = { zoom_factor = zoomed and 2.5 or 1.0 } })
+end)
+
 -- Named <focused window class>_YYYY-MM-DD_HH-MM by quickshell/scripts/shot-name.sh (screenshot_... if
 -- that script is missing); a taken name gets -2, -3
 local screenshotCmd = [[bash -c 'dir=$HOME/screenshots; mkdir -p "$dir"; n=$(sh "$HOME/.config/quickshell/scripts/shot-name.sh" 2>/dev/null); [ -n "$n" ] || n=screenshot_$(date +%Y-%m-%d_%H-%M); b="$dir/$n"; f="$b.png"; i=2; while [ -e "$f" ]; do f="$b-$i.png"; i=$((i+1)); done; grim "$f" && wl-copy < "$f"']]

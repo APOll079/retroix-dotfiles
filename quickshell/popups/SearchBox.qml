@@ -38,7 +38,7 @@ SunkenField {
             font.family: MenuStyle.iconFont
             font.pixelSize: MenuStyle.iconSize
             color: Config.colors.text
-            text: ""
+            text: "\ue8b6"
         }
         TextField {
             id: input
@@ -52,6 +52,7 @@ SunkenField {
             font.pixelSize: root.fontSize
             color: Config.colors.text
             selectionColor: Config.colors.shadow
+            selectedTextColor: Config.colors.text
             selectByMouse: true
             padding: 0
             verticalAlignment: Text.AlignVCenter

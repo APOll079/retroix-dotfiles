@@ -62,6 +62,11 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Notification history search: filters live while the panel keeps its keys (Super+N toggles), Escape twice (clear, then release the keyboard), right-click removes the right entry on a filtered list
 - [ ] Hourly forecast in the Calendar tab: times match the place's local time (checked only against a fixture), four cells fit at 480 px (long values like "-12°C" may elide)
 
+### Round 3, my share (never looked at)
+- [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Alt+T drops the terminal down and hides it again; Super+Alt+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
+- [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed
+- [ ] `bash scripts/install-hooks.sh` once, then a commit runs `check.py`; `bash uninstall.sh` (dry run) lists the newest backup
+
 ### Bar, updates and trash changes (never looked at)
 - [ ] CPU button: a left click shows the Task Manager (Performance tab), the next click hides it, and the button looks pushed in while the window is open; Ctrl+Shift+Esc still opens / focuses it
 - [ ] Bar: Start and Themes are labelled and wider; no Wallpapers / Services buttons (Wallpapers is in the Themes menu, Services in the Start menu); the right side (caffeine, CPU, ETH, Bluetooth, bell + clock) is raised boxed buttons with gaps, no sunken frame: nothing clipped at 1920 and 1280, the centre text still gets its room (the width bookkeeping now counts the gaps); no stripe down the left of the Start menu and launcher, no dot on the Start button

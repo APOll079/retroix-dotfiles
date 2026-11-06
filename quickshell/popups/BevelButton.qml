@@ -57,8 +57,9 @@ Button {
         RowLayout {
             id: row
             anchors.fill: parent
-            anchors.topMargin: (root.down || root.checked) ? 1 : 0
-            anchors.leftMargin: (root.down || root.checked) ? 1 : 0
+            // a pushed-in button moves its content 1 px down and right: a margin of 2 on a centred layout shifts it by 1
+            anchors.topMargin: (root.down || root.checked) ? 2 : 0
+            anchors.leftMargin: (root.down || root.checked) ? 2 : 0
             spacing: MenuStyle.gap
             Item { Layout.fillWidth: true }
             RetroText {
