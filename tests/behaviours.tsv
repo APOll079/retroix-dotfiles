@@ -74,3 +74,4 @@ hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode\ \(side\ buttons\)	Key: Des
 quickshell/popups/ContextMenuBody.qml	event\.key === Qt\.Key_Escape	Context menus: Escape closes
 quickshell/popups/ContextMenu.qml	grabFocus: true	Context menus: a click outside closes them
 quickshell/popups/RetroScrollBar.qml	root\.decrease\(\)	Scrollbars: arrow buttons scroll
+quickshell/popups/ConfirmBar.qml	function accept\(	Confirms: one template, the verb accepts and Cancel cancels

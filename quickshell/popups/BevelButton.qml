@@ -14,6 +14,8 @@ Button {
     // Optional colour for the glyph (e.g. the green liked heart); transparent = normal text colour
     property color glyphColor: "transparent"
     property int glyphSize: MenuStyle.iconSize
+    // The default button of a confirm (what Enter does): Win95's extra outline ring outside the bevel
+    property bool isDefault: false
     hoverEnabled: true
 
     implicitHeight: MenuStyle.rowHeight + MenuStyle.gap
@@ -26,6 +28,8 @@ Button {
 
     background: Rectangle {
         color: Config.colors.base
+        border.width: root.isDefault ? 1 : 0
+        border.color: Config.colors.outline
         Dither {
             anchors.fill: parent
             anchors.margins: 2
@@ -35,6 +39,7 @@ Button {
         }
         Bevel {
             anchors.fill: parent
+            anchors.margins: root.isDefault ? 1 : 0
             button: true
             raised: !(root.down || root.checked)
         }

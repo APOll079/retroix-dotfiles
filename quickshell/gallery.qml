@@ -142,6 +142,7 @@ ShellRoot {
                 Line { cap: "glyph + text"; Popups.BevelButton { text: "Reboot"; glyph: "\ue5d5" } }
                 Line { cap: "icon only"; Popups.BevelButton { glyph: "\ue037" } Popups.BevelButton { glyph: "\ue034" } }
                 Line { cap: "pressed"; Popups.BevelButton { text: "Cancel"; down: true } }
+                Line { cap: "default"; Popups.BevelButton { text: "Reboot"; isDefault: true } Popups.BevelButton { text: "Reboot"; isDefault: true; down: true } }
                 Line { cap: "checked"; Popups.BevelButton { text: "Mute"; checkable: true; checked: true } }
                 Line { cap: "disabled"; Popups.BevelButton { text: "Forget"; enabled: false } Popups.BevelButton { glyph: "\ue037"; enabled: false } }
                 Line {
@@ -245,6 +246,9 @@ ShellRoot {
                         ScrollBar.vertical: Popups.RetroScrollBar {}
                     }
                 }
+                Head { text: "ConfirmBar" }
+                Popups.ConfirmBar { Layout.fillWidth: true; message: "Reboot now?"; verb: "Reboot" }
+                Popups.ConfirmBar { Layout.fillWidth: true; message: "End pipewire? It is a core process."; verb: "End anyway"; glyph: "\ue002" }
                 Head { text: "MenuSeparator / Gripper / FocusRect" }
                 Popups.MenuSeparator { Layout.fillWidth: true }
                 Row {

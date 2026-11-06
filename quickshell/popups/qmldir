@@ -54,3 +54,4 @@ SpotifyHeading 1.0 SpotifyHeading.qml
 RetroScrollBar 1.0 RetroScrollBar.qml
 ContextMenuBody 1.0 ContextMenuBody.qml
 ContextMenu 1.0 ContextMenu.qml
+ConfirmBar 1.0 ConfirmBar.qml
