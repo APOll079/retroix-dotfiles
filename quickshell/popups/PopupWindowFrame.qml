@@ -79,36 +79,32 @@ Rectangle {
             anchors.fill: parent
             anchors.leftMargin: 2
             anchors.rightMargin: 2
-            spacing: MenuStyle.titleSpacing
+            spacing: MenuStyle.titleIconGap
 
-            Item { Layout.fillWidth: true }
-
-            Row {
-                spacing: MenuStyle.titleIconGap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    visible: root.windowTitleIcon !== ""
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.family: MenuStyle.iconFont
-                    font.pixelSize: MenuStyle.iconSize
-                    color: root.titleTextColor
-                    text: root.windowTitleIcon
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    anchors.verticalCenter: parent.verticalCenter
-                    font.family: MenuStyle.titleFont
-                    font.pixelSize: MenuStyle.fontSize
-                    font.bold: true
-                    color: root.titleTextColor
-                    textFormat: Text.PlainText
-                    text: root.windowTitle
-                }
+            // Win95: icon + title on the left, the rest of the bar empty; a long title is cut with "..."
+            Text {
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                visible: root.windowTitleIcon !== ""
+                Layout.leftMargin: MenuStyle.space2
+                font.family: MenuStyle.iconFont
+                font.pixelSize: MenuStyle.iconSize
+                color: root.titleTextColor
+                text: root.windowTitleIcon
             }
-
-            Item { Layout.fillWidth: true }
+            Text {
+                renderType: Text.NativeRendering
+                font.hintingPreference: Font.PreferFullHinting
+                Layout.fillWidth: true
+                Layout.leftMargin: root.windowTitleIcon === "" ? MenuStyle.space2 : 0
+                elide: Text.ElideRight
+                font.family: MenuStyle.titleFont
+                font.pixelSize: MenuStyle.fontSize
+                font.bold: true
+                color: root.titleTextColor
+                textFormat: Text.PlainText
+                text: root.windowTitle
+            }
         }
     }
 
