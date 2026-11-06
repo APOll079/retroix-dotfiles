@@ -12,7 +12,9 @@ import ".."
 // - Apps: open windows (Hyprland). Switch to, End task (SIGTERM to the window's process), Kill (SIGKILL).
 // - Processes: grouped by program (scripts/procs.py), sortable columns, filter, Mine / All, End task / Kill
 //   for your own processes (others are listed only).
-// - Performance: CPU, RAM, GPU and VRAM history graphs plus temperatures (SysMon.qml).
+// - Ports: listening TCP / UDP ports with the program that owns each (scripts/ports.sh, ss -ltunp); End task / Kill
+//   for your own processes, through the same confirm and safety rules.
+// - Performance: CPU, RAM, GPU, VRAM and network (up / down rate) history graphs plus temperatures (SysMon.qml).
 // Ending things always goes through a confirm row, and only ever signals the pids of the row you picked.
 // The data helper runs only while the window is open.
 FloatingWindow {
@@ -29,12 +31,20 @@ FloatingWindow {
     // Closed by Hyprland (Super+Q, the close dispatcher): reset like closeMenu()
     onClosed: root.visible = false
 
-    property string tab: "processes"     // apps | processes | performance
+    property string tab: "processes"     // apps | processes | ports | performance
     property var sample: null            // the last procs.py line
     property var cpuHist: []
     property var memHist: []
     property var gpuHist: []
     property var vramHist: []
+    property var netRaw: []              // bytes per second (down + up), one per sample
+    property var netRate: null           // { down, up } of the last sample, bytes per second
+    property var prevNet: null
+    property var ports: []               // ports.sh rows { proto, port, addr, pid, name }
+    property bool portsLoaded: false
+    property int portIndex: 0
+    readonly property bool live: !Quickshell.env("QS_NO_APPLY")
+    property var killLog: []             // signals sent under QS_NO_APPLY: { signal, pids } (tests)
 
     property string sortKey: "cpu"       // name | cpu | mem | count
     property bool sortDesc: true
@@ -55,6 +65,9 @@ FloatingWindow {
     readonly property var selectedGroup: root.groups.find(g => g.name === root.selectedName) || null
     readonly property var apps: Hyprland.toplevels.values.filter(t => t.title !== "" && t.lastIpcObject && t.lastIpcObject.pid > 0)
     readonly property var selectedApp: root.apps[root.appIndex] || null
+    readonly property var selectedPort: root.ports[root.portIndex] || null
+    // The selected port's owner when it is your own process (its group in the live sample), else null
+    readonly property var selectedPortGroup: root.selectedPort && root.validPid(root.selectedPort.pid) ? root.ownGroupOfPid(root.selectedPort.pid) : null
 
     Item {
         id: frame
@@ -66,8 +79,10 @@ FloatingWindow {
             id: keys
             focus: true
             Keys.onEscapePressed: root.cancelOrClose()
-            Keys.onUpPressed: root.appIndex = Math.max(0, root.appIndex - 1)
-            Keys.onDownPressed: root.appIndex = Math.min(root.apps.length - 1, root.appIndex + 1)
+            Keys.onUpPressed: root.moveRow(-1)
+            Keys.onDownPressed: root.moveRow(1)
+            // Delete = End task, with the same confirm as the button (Apps and Ports; Processes has it in its filter box)
+            Keys.onDeletePressed: root.askEnd(false)
             Keys.onReturnPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
             Keys.onEnterPressed: root.confirm ? confirmBar.accept() : root.switchToApp()
             Keys.onTabPressed: event => {
@@ -97,7 +112,7 @@ FloatingWindow {
                 TabPage {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    tabs: [{ key: "apps", text: "Apps" }, { key: "processes", text: "Processes" }, { key: "performance", text: "Performance" }]
+                    tabs: root.tabList
                     current: root.tab
                     onTabClicked: key => root.showTab(key)
 
@@ -129,6 +144,7 @@ FloatingWindow {
                                 onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
                                 ScrollBar.vertical: RetroScrollBar {}
                                 delegate: MenuRow {
+                                    hoverLit: false
                                     required property int index
                                     required property var modelData
                                     width: appList.width - appList.gutter
@@ -140,6 +156,14 @@ FloatingWindow {
                                     subtext: (modelData.lastIpcObject.class || "") + "  ·  pid " + modelData.lastIpcObject.pid
                                     trailing: modelData.workspace ? modelData.workspace.name.replace("special:", "*") : ""
                                     onClicked: root.appIndex = index
+                                    // One lit row: the pointer moves the selection (real pointer movement only)
+                                    HoverHandler {
+                                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                                        onPointChanged: {
+                                            if (root.pointerMoved(point.scenePosition))
+                                                root.appIndex = index;
+                                        }
+                                    }
                                     onDoubleClicked: {
                                         root.appIndex = index;
                                         root.switchToApp();
@@ -240,7 +264,7 @@ FloatingWindow {
                                     readonly property bool sel: modelData.name === root.selectedName
                                     width: procList.width - procList.gutter
                                     height: MenuStyle.rowHeight
-                                    color: sel ? MenuStyle.selectBar : (rowMouse.containsMouse ? Config.colors.highlight : "transparent")
+                                    color: sel ? MenuStyle.selectBar : "transparent"
                                     readonly property color ink: sel ? MenuStyle.selectText : (modelData.mine ? Config.colors.text : Config.colors.shadow)
                                     RowLayout {
                                         anchors.fill: parent
@@ -276,7 +300,59 @@ FloatingWindow {
                                         id: rowMouse
                                         anchors.fill: parent
                                         hoverEnabled: true
+                                        // One lit row: the pointer moves the selection (real pointer movement only)
+                                        onPositionChanged: mouse => {
+                                            const g = rowMouse.mapToGlobal(mouse.x, mouse.y);
+                                            if (root.pointerMoved(Qt.point(g.x, g.y)))
+                                                root.selectedName = procRow.modelData.name;
+                                        }
                                         onClicked: root.selectedName = procRow.modelData.name
+                                    }
+                                }
+                            }
+                        }
+
+                        // --- Ports ---
+                        SunkenField {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.tab === "ports"
+                            padding: 2
+                            clip: true
+                            EmptyState {
+                                anchors.fill: parent
+                                visible: root.ports.length === 0
+                                glyph: root.portsLoaded ? "\ue8b6" : "\ue88b"
+                                text: root.portsLoaded ? "No listening ports" : "Reading ports..."
+                            }
+                            ListView {
+                                id: portList
+                                anchors.fill: parent
+                                model: root.ports
+                                currentIndex: root.portIndex
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+                                readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                                ScrollBar.vertical: RetroScrollBar {}
+                                delegate: MenuRow {
+                                    hoverLit: false
+                                    required property int index
+                                    required property var modelData
+                                    width: portList.width - portList.gutter
+                                    reserveIcon: true
+                                    selected: index === root.portIndex
+                                    glyph: "\ue8be"
+                                    text: ":" + modelData.port + "   " + modelData.proto + "   " + modelData.addr
+                                    trailing: root.portOwnerText(modelData)
+                                    onClicked: root.portIndex = index
+                                    // One lit row: the pointer moves the selection (real pointer movement only)
+                                    HoverHandler {
+                                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                                        onPointChanged: {
+                                            if (root.pointerMoved(point.scenePosition))
+                                                root.portIndex = index;
+                                        }
                                     }
                                 }
                             }
@@ -310,6 +386,13 @@ FloatingWindow {
                                 value: root.sample && root.sample.gpu ? root.bytes(root.sample.gpu.vramUsed) + " / " + root.bytes(root.sample.gpu.vramTotal) : "no data"
                                 history: root.vramHist
                             }
+                            // Network: down + up, scaled to the busiest second in the window (at least 1 MB/s so a quiet line stays flat)
+                            Graph {
+                                Layout.columnSpan: 2
+                                title: "NET"
+                                value: root.netRate ? root.netText(root.netRate) : "no data"
+                                history: root.netBars(root.netRaw)
+                            }
                         }
 
                         // --- Confirm: replaces the action row while a question is open ---
@@ -342,14 +425,14 @@ FloatingWindow {
                             BevelButton {
                                 visible: root.tab !== "performance"
                                 text: "End task"
-                                enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
+                                enabled: root.canEndNow
                                 focusPolicy: Qt.NoFocus
                                 onClicked: root.askEnd(false)
                             }
                             BevelButton {
                                 visible: root.tab !== "performance"
                                 text: "Kill"
-                                enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
+                                enabled: root.canEndNow
                                 focusPolicy: Qt.NoFocus
                                 onClicked: root.askEnd(true)
                             }
@@ -361,7 +444,8 @@ FloatingWindow {
                     text: root.notice !== "" ? root.notice : root.statusText()
                     kind: root.notice !== "" ? "message" : "state"
                     trailing: root.tab === "apps" ? root.apps.length + (root.apps.length === 1 ? " window" : " windows")
-                        : root.tab === "processes" ? root.groups.length + (root.groups.length === 1 ? " program" : " programs") : ""
+                        : root.tab === "processes" ? root.groups.length + (root.groups.length === 1 ? " program" : " programs")
+                        : root.tab === "ports" ? root.ports.length + (root.ports.length === 1 ? " port" : " ports") : ""
                 }
             }
         }
@@ -430,7 +514,12 @@ FloatingWindow {
 
     // --- menu bar models (only actions the window already has: its buttons, tabs, sort and filter) ---
 
-    readonly property bool canEnd: root.confirm === null && (root.tab === "apps" ? root.selectedApp !== null : (root.tab === "processes" && root.selectedGroup !== null && root.selectedGroup.mine))
+    // Something is selected that End task / Kill may act on (your own process; the Ports tab needs a pid in your own group)
+    readonly property bool canEndNow: root.tab === "apps" ? root.selectedApp !== null
+        : root.tab === "ports" ? root.selectedPortGroup !== null
+        : (root.tab === "processes" && root.selectedGroup !== null && root.selectedGroup.mine)
+    readonly property bool canEnd: root.confirm === null && root.canEndNow
+    readonly property var tabList: [{ key: "apps", text: "Apps" }, { key: "processes", text: "Processes" }, { key: "ports", text: "Ports" }, { key: "performance", text: "Performance" }]
 
     function fileModel() {
         return [
@@ -447,6 +536,7 @@ FloatingWindow {
         const out = [
             { text: "Apps", checked: root.tab === "apps", action: () => root.showTab("apps") },
             { text: "Processes", checked: root.tab === "processes", action: () => root.showTab("processes") },
+            { text: "Ports", checked: root.tab === "ports", action: () => root.showTab("ports") },
             { text: "Performance", checked: root.tab === "performance", action: () => root.showTab("performance") },
             { separator: true },
             { text: "Only my processes", checked: root.mineOnly, enabled: inProcs, action: () => root.mineOnly = !root.mineOnly },
@@ -499,6 +589,12 @@ FloatingWindow {
         root.memHist = push(root.memHist, s.mem.total > 0 ? s.mem.used / s.mem.total : 0);
         root.gpuHist = push(root.gpuHist, s.gpu ? s.gpu.busy / 100 : 0);
         root.vramHist = push(root.vramHist, s.gpu && s.gpu.vramTotal > 0 ? s.gpu.vramUsed / s.gpu.vramTotal : 0);
+        const rate = root.rateBetween(root.prevNet, s.net);
+        root.prevNet = s.net || null;
+        if (rate) {
+            root.netRate = rate;
+            root.netRaw = push(root.netRaw, rate.down + rate.up);
+        }
         if (root.selectedName === "" && root.groups.length > 0)
             root.selectedName = root.groups[0].name;
     }
@@ -535,20 +631,121 @@ FloatingWindow {
         Hyprland.dispatch("hl.dsp.focus({ window = \"address:0x" + t.address + "\" })");
     }
 
-    // What happens if a core process is ended; "" = an ordinary program
+    // What happens if a core process is ended; "" = an ordinary program. The list lives in procs.py (core_effect),
+    // every group in the sample carries its answer.
     function coreEffect(name) {
-        const n = name.toLowerCase();
-        if (n === "quickshell" || n === "qs")
-            return "the bar and every menu go away until it is restarted";
-        if (n === "hyprland" || n === "start-hyprland")
-            return "your session ends and every window closes";
-        if (n.startsWith("pipewire") || n === "wireplumber")
-            return "all sound stops";
-        if (n.startsWith("dinit"))
-            return "your user services go down";
-        if (n === "dbus-daemon" || n === "dbus-broker")
-            return "desktop apps lose their connection";
-        return "";
+        const g = root.sample ? root.sample.groups.find(x => x.name === name) : null;
+        return g && typeof g.core === "string" ? g.core : "";
+    }
+
+    // --- network rate (pure) ---
+
+    // Two procs.py `net` samples { rx, tx, t } -> { down, up } in bytes per second; null without a usable pair
+    // (no earlier sample, time not moving). A counter that went down (an interface vanished) counts as 0.
+    function rateBetween(prev, cur) {
+        if (!prev || !cur || typeof prev.t !== "number" || typeof cur.t !== "number")
+            return null;
+        const dt = cur.t - prev.t;
+        if (!(dt > 0))
+            return null;
+        return { down: Math.max(0, cur.rx - prev.rx) / dt, up: Math.max(0, cur.tx - prev.tx) / dt };
+    }
+
+    // 1.2 MB/s, 300 KB/s, 12 B/s (the same 1024 steps as bytes())
+    function rateText(bps) {
+        if (!(bps >= 0))
+            return "0 B/s";
+        if (bps >= 1073741824)
+            return (bps / 1073741824).toFixed(1) + " GB/s";
+        if (bps >= 1048576)
+            return (bps / 1048576).toFixed(1) + " MB/s";
+        if (bps >= 1024)
+            return Math.round(bps / 1024) + " KB/s";
+        return Math.round(bps) + " B/s";
+    }
+
+    // "1.2 MB/s down 300 KB/s up"; the label on the Performance tab is "NET " + this
+    function netText(r) {
+        return root.rateText(r.down) + " down " + root.rateText(r.up) + " up";
+    }
+
+    // Raw bytes per second -> 0..1 bars, scaled to the busiest sample but never below 1 MB/s
+    function netBars(raw) {
+        const max = Math.max(1048576, ...raw);
+        return raw.map(v => v / max);
+    }
+
+    // --- ports ---
+
+    // The right-hand text of a port row: "firefox (1234)", or why there is no owner
+    function portOwnerText(r) {
+        if (!root.validPid(r.pid))
+            return "owner not visible";
+        return (r.name !== "" ? r.name : "?") + " (" + r.pid + ")";
+    }
+
+    // The group of a pid in the live sample when that group is yours, else null
+    function ownGroupOfPid(pid) {
+        const g = root.groupOfPid(pid);
+        return g && g.mine ? g : null;
+    }
+
+    function moveRow(d) {
+        if (root.tab === "ports")
+            root.portIndex = Math.max(0, Math.min(root.ports.length - 1, root.portIndex + d));
+        else
+            root.appIndex = Math.max(0, Math.min(root.apps.length - 1, root.appIndex + d));
+    }
+
+    // True when the pointer really moved since the last call (a row sliding under a still pointer is not a move)
+    property point lastPointer: Qt.point(-1, -1)
+    function pointerMoved(p) {
+        if (p.x === root.lastPointer.x && p.y === root.lastPointer.y)
+            return false;
+        root.lastPointer = p;
+        return true;
+    }
+
+    // ports.sh output -> rows, [] for anything else
+    function parsePorts(text) {
+        try {
+            const d = JSON.parse(text);
+            if (!Array.isArray(d))
+                return [];
+            return d.filter(r => r && typeof r.port === "number" && typeof r.proto === "string" && typeof r.addr === "string")
+                .map(r => ({ proto: r.proto, port: r.port, addr: r.addr, pid: Number.isInteger(r.pid) ? r.pid : null, name: typeof r.name === "string" ? r.name : "" }));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function refreshPorts() {
+        if (root.live && !portsProc.running)
+            portsProc.running = true;
+    }
+
+    Process {
+        id: portsProc
+        command: ["sh", Quickshell.shellDir + "/scripts/ports.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const sel = root.selectedPort;
+                root.ports = root.parsePorts(text);
+                root.portsLoaded = true;
+                // keep the same row selected across refreshes
+                if (sel) {
+                    const i = root.ports.findIndex(r => r.port === sel.port && r.proto === sel.proto && r.addr === sel.addr);
+                    root.portIndex = i >= 0 ? i : Math.min(root.portIndex, Math.max(0, root.ports.length - 1));
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 5000
+        running: root.visible && root.tab === "ports"
+        repeat: true
+        onTriggered: root.refreshPorts()
     }
 
     function groupOfPid(pid) {
@@ -591,6 +788,21 @@ FloatingWindow {
                 root.say("This is the Task Manager's own helper: ending it would freeze this window");
                 return;
             }
+        } else if (root.tab === "ports") {
+            const r = root.selectedPort;
+            if (!r || !root.validPid(r.pid))
+                return;
+            pid = r.pid;
+            const g = root.ownGroupOfPid(pid);
+            if (!g) {
+                root.say("Not your process: it can't be ended from here");
+                return;
+            }
+            if (root.ownHelper(g)) {
+                root.say("This is the Task Manager's own helper: ending it would freeze this window");
+                return;
+            }
+            name = g.name;
         } else if (root.tab === "processes") {
             const g = root.selectedGroup;
             if (!g || !g.mine)
@@ -608,7 +820,10 @@ FloatingWindow {
             root.confirm = { text: name + " is a core process: " + effect + ". " + (force ? "Kill" : "End") + " anyway?", verb: verb + " anyway", signal: force ? "KILL" : "TERM", name: name, pid: pid };
         else {
             const g = root.tab === "processes" ? root.selectedGroup : null;
-            root.confirm = { text: (force ? "Kill " : "End ") + (root.tab === "apps" ? root.selectedApp.title : name + (g && g.count > 1 ? " (" + g.count + " processes)" : "")) + "?", verb: verb, signal: force ? "KILL" : "TERM", name: name, pid: pid };
+            const what = root.tab === "apps" ? root.selectedApp.title
+                : root.tab === "ports" ? name + " (pid " + pid + ", port " + root.selectedPort.port + ")"
+                : name + (g && g.count > 1 ? " (" + g.count + " processes)" : "");
+            root.confirm = { text: (force ? "Kill " : "End ") + what + "?", verb: verb, signal: force ? "KILL" : "TERM", name: name, pid: pid };
         }
     }
 
@@ -621,7 +836,7 @@ FloatingWindow {
         let pids = [];
         if (c.pid > 0) {
             const g = root.groupOfPid(c.pid);
-            if (g && !root.ownHelper(g))
+            if (g && g.mine && !root.ownHelper(g))
                 pids = [c.pid];
         } else {
             const g = root.sample ? root.sample.groups.find(x => x.name === c.name && x.mine) : null;
@@ -633,7 +848,15 @@ FloatingWindow {
             root.say(c.name + " is already gone");
             return;
         }
-        Quickshell.execDetached(["kill", "-" + c.signal].concat(pids.map(p => String(p))));
+        root.sendSignal(c.signal, pids);
+    }
+
+    // The one place a signal leaves: `kill -TERM|-KILL <pids>`; under QS_NO_APPLY (tests) it is only recorded
+    function sendSignal(signal, pids) {
+        if (!root.live)
+            root.killLog = root.killLog.concat([{ signal: signal, pids: pids }]);
+        else
+            Quickshell.execDetached(["kill", "-" + signal].concat(pids.map(p => String(p))));
     }
 
     function cancelOrClose() {
@@ -646,6 +869,8 @@ FloatingWindow {
     function showTab(key) {
         root.tab = key;
         root.confirm = null;
+        if (key === "ports")
+            root.refreshPorts();
         if (key === "processes")
             filter.focusInput();
         else
@@ -653,7 +878,7 @@ FloatingWindow {
     }
 
     function cycleTab(d) {
-        const tabs = ["apps", "processes", "performance"];
+        const tabs = root.tabList.map(t => t.key);
         root.showTab(tabs[(tabs.indexOf(root.tab) + d + tabs.length) % tabs.length]);
     }
 
@@ -665,6 +890,12 @@ FloatingWindow {
             root.memHist = [];
             root.gpuHist = [];
             root.vramHist = [];
+            root.netRaw = [];
+            root.netRate = null;
+            root.prevNet = null;
+            root.ports = [];
+            root.portsLoaded = false;
+            root.portIndex = 0;
         }
     }
 

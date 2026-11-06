@@ -50,10 +50,10 @@ Row {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
-        + (vpnBtn.visible ? vpnBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
+        + (vpnBtn.visible ? vpnBtn.width : 0) + (nasBtn.visible ? nasBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
         + caffeineBtn.width + ethLabel.width + btBtn.width
     // The gaps between the buttons that are shown (caffeine, sysmon, ETH and Bluetooth always are), plus one to the tray
-    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
+    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (nasBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
     readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth + root.spacing * root.itemCount
 
     // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
@@ -156,6 +156,17 @@ Row {
         maxLabelWidth: MenuStyle.barLabelButtonWidth * 2
         tooltip: VpnState.tooltip(VpnState.names)
         onClicked: VpnState.disconnect()
+    }
+
+    // NAS (NasWatch): shown while a configured mount is up or stale; a click remounts the stale / unmounted one
+    BarButton {
+        id: nasBtn
+        visible: NasWatch.anyMounted || NasWatch.anyStale
+        iconFontValue: "\ue1db"
+        urgent: NasWatch.anyStale
+        label: NasWatch.anyStale ? "NAS stale" : "NAS"
+        tooltip: NasWatch.summary + (NasWatch.remountError !== "" ? " - " + NasWatch.remountError : "")
+        onClicked: NasWatch.remountStale()
     }
 
     // Network: a status indicator (the desktop is wired), not a button

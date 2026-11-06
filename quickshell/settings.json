@@ -53,8 +53,17 @@
             ],
             "percent": 90
         },
-        "cleanup": {
-            "shotDays": 30
+        "nas": {
+            "enabled": true,
+            "intervalSeconds": 30,
+            "mounts": [
+                "/mnt/disk1",
+                "/mnt/disk2"
+            ]
+        },
+        "downloads": {
+            "enabled": true,
+            "intervalSeconds": 5
         },
         "networkWatch": {
             "cooldownSeconds": 60,

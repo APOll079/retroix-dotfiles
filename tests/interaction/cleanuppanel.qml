@@ -38,7 +38,6 @@ ShellRoot {
         { id: "pacman-cache", label: "Old package cache", bytes: 1.5e6, count: 7, needsRoot: true, note: "" },
         { id: "orphans", label: "Orphaned packages", bytes: 0, count: 0, needsRoot: true, note: "" },
         { id: "flatpak-unused", label: "Unused Flatpak runtimes", bytes: null, count: 2, needsRoot: false, note: "size unknown" },
-        { id: "shots", label: "Screenshots older than 30 days", bytes: 3000, count: 30, needsRoot: false, note: "" },
         { id: "trash", label: "Trash", bytes: 1.2e9, count: null, needsRoot: false, note: "" }
     ]
 
@@ -83,8 +82,8 @@ ShellRoot {
             panel.openMenu();
             CleanupState.rows = shell.rows;
             tc.wait(200);
-            shell.check("rows with nothing to clean (and the Trash) are hidden (3 shown)", panel.shown.length === 3);
-            shell.check("one Clean button per row", shell.buttons(panel, "Clean").length === 3);
+            shell.check("rows with nothing to clean (and the Trash) are hidden (2 shown)", panel.shown.length === 2);
+            shell.check("one Clean button per row", shell.buttons(panel, "Clean").length === 2);
 
             // 1. Clean -> confirm bar, nothing ran
             tc.mouseClick(shell.buttons(panel, "Clean")[0]);
@@ -110,12 +109,12 @@ ShellRoot {
             shell.check("the Cancel button cancels, nothing ran", panel.confirmId === "" && CleanupState.runLog.length === 0);
 
             // 4. Enter confirms
-            tc.mouseClick(shell.buttons(panel, "Clean")[2]);
+            tc.mouseClick(shell.buttons(panel, "Clean")[1]);
             tc.wait(100);
-            shell.check("the shots row asks for its own confirm", panel.confirmId === "shots");
+            shell.check("the flatpak row asks for its own confirm", panel.confirmId === "flatpak-unused");
             tc.keyClick(Qt.Key_Return);
             tc.wait(100);
-            shell.check("Enter confirms: run called once with the id", JSON.stringify(CleanupState.runLog) === JSON.stringify(["shots"]));
+            shell.check("Enter confirms: run called once with the id", JSON.stringify(CleanupState.runLog) === JSON.stringify(["flatpak-unused"]));
             shell.check("the confirm is gone after accepting", panel.confirmId === "");
 
             // 6. keys: Down moves, Enter asks, Esc, Esc closes

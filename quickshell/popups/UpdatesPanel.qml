@@ -21,6 +21,7 @@ PanelWindow {
         { key: "aur", label: "AUR", count: UpdateState.aur },
         { key: "flatpak", label: "Flatpak", count: UpdateState.flatpak }
     ]
+    readonly property int newsRows: 5          // updates.sh lists at most 5 headlines: room for them from the start
     readonly property bool checkedOnce: UpdateState.lastChecked !== null
 
     // An Overlay-layer panel, not a popup of the bar (see ServicesPanel)
@@ -80,34 +81,41 @@ PanelWindow {
                     }
                 }
 
+                // Both groups keep room for their full content from the start, so the panel does not resize
+                // when the counts or the news arrive
                 GroupFrame {
                     Layout.fillWidth: true
                     title: "Available"
 
-                    EmptyState {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        visible: root.checkedOnce && UpdateState.total === 0
-                        glyph: "\ue86c"
-                        text: "Up to date"
-                    }
-                    Repeater {
-                        model: root.sources
-                        RowLayout {
+                        Layout.preferredHeight: Math.max(implicitHeight, root.sources.length * MenuStyle.rowHeight)
+                        spacing: MenuStyle.gap
+                        EmptyState {
                             Layout.fillWidth: true
-                            visible: !(root.checkedOnce && UpdateState.total === 0)
-                            spacing: MenuStyle.gap
-                            RetroText {
+                            Layout.fillHeight: true
+                            visible: root.checkedOnce && UpdateState.total === 0
+                            glyph: "\ue86c"
+                            text: "Up to date"
+                        }
+                        Repeater {
+                            model: root.sources
+                            RowLayout {
                                 Layout.fillWidth: true
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                text: modelData.label
-                            }
-                            RetroText {
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                disabledLook: modelData.count === null
-                                text: modelData.count === null ? (root.checkedOnce ? "not installed" : "...") : String(modelData.count)
+                                visible: !(root.checkedOnce && UpdateState.total === 0)
+                                spacing: MenuStyle.gap
+                                RetroText {
+                                    Layout.fillWidth: true
+                                    font.family: MenuStyle.bodyFont
+                                    font.pixelSize: MenuStyle.fontSize
+                                    text: modelData.label
+                                }
+                                RetroText {
+                                    font.family: MenuStyle.bodyFont
+                                    font.pixelSize: MenuStyle.fontSize
+                                    disabledLook: modelData.count === null
+                                    text: modelData.count === null ? (root.checkedOnce ? "not installed" : "...") : String(modelData.count)
+                                }
                             }
                         }
                     }
@@ -117,33 +125,42 @@ PanelWindow {
                     Layout.fillWidth: true
                     title: "Arch news"
 
-                    EmptyState {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: implicitHeight
-                        visible: UpdateState.news.length === 0
-                        glyph: "\ue0be"
-                        text: root.checkedOnce ? "No news (or no network)" : "Checking..."
-                    }
-                    Repeater {
-                        model: UpdateState.news
-                        RowLayout {
+                        Layout.preferredHeight: Math.max(implicitHeight, root.newsRows * MenuStyle.rowHeight)
+                        spacing: MenuStyle.gap
+                        EmptyState {
                             Layout.fillWidth: true
-                            spacing: MenuStyle.gap
-                            RetroText {
-                                Layout.alignment: Qt.AlignTop
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                disabledLook: true
-                                text: modelData.date
-                            }
-                            // Headlines come from outside: plain text (RetroText is PlainText), wrapped, never cut
-                            RetroText {
+                            Layout.fillHeight: true
+                            visible: UpdateState.news.length === 0
+                            glyph: "\ue0be"
+                            text: root.checkedOnce ? "No news (or no network)" : "Checking..."
+                        }
+                        Repeater {
+                            model: UpdateState.news
+                            RowLayout {
                                 Layout.fillWidth: true
-                                wrapMode: Text.Wrap
-                                font.family: MenuStyle.bodyFont
-                                font.pixelSize: MenuStyle.fontSize
-                                text: modelData.title
+                                spacing: MenuStyle.gap
+                                RetroText {
+                                    Layout.alignment: Qt.AlignTop
+                                    font.family: MenuStyle.bodyFont
+                                    font.pixelSize: MenuStyle.fontSize
+                                    disabledLook: true
+                                    text: modelData.date
+                                }
+                                // Headlines come from outside: plain text (RetroText is PlainText), wrapped, never cut
+                                RetroText {
+                                    Layout.fillWidth: true
+                                    wrapMode: Text.Wrap
+                                    font.family: MenuStyle.bodyFont
+                                    font.pixelSize: MenuStyle.fontSize
+                                    text: modelData.title
+                                }
                             }
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                            visible: UpdateState.news.length > 0
                         }
                     }
                 }

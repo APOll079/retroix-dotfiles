@@ -19,6 +19,7 @@ ColumnLayout {
     property var devices: []               // { id, name, paired, reachable }
     property string selectedId: ""
     property string status: ""
+    property bool statusError: false       // the status is a failure: shown as an error line
 
     readonly property var current: root.devices.find(d => d.id === root.selectedId) || root.devices[0] || null
     readonly property bool busy: cmdProc.running || clipProc.running
@@ -29,6 +30,7 @@ ColumnLayout {
         root.confirmUnpair = false;
         if (active) {
             root.status = "";
+            root.statusError = false;
             root.refresh();
         }
     }
@@ -61,12 +63,21 @@ ColumnLayout {
             Repeater {
                 model: root.devices
                 MenuRow {
+                    hoverLit: false
                     Layout.fillWidth: true
                     selected: root.current && modelData.id === root.current.id
                     text: modelData.name
                     trailing: modelData.paired ? (modelData.reachable ? "paired" : "offline") : (modelData.reachable ? "not paired" : "offline")
                     glyph: "\ue324"
                     onClicked: root.selectedId = modelData.id
+                    // One lit row: the pointer moves the selection (real pointer movement only)
+                    HoverHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onPointChanged: {
+                            if (root.pointerMoved(point.scenePosition))
+                                root.selectedId = modelData.id;
+                        }
+                    }
                 }
             }
         }
@@ -154,20 +165,23 @@ ColumnLayout {
         onClicked: root.sendFile()
     }
 
-    Text {
-        renderType: Text.NativeRendering
-        font.hintingPreference: Font.PreferFullHinting
-        Layout.fillWidth: true
-        elide: Text.ElideRight
+    StatusBar {
         visible: root.devices.length > 0
-        font.family: MenuStyle.bodyFont
-        font.pixelSize: MenuStyle.fontSize
-        color: MenuStyle.bevelDark
+        kind: root.busy ? "state" : (root.statusError ? "error" : "state")
         text: root.busy ? "Working..." : root.status
     }
 
     // Paired and reachable: the actions that need the phone to answer
     readonly property bool usable: root.current !== null && root.current.paired && root.current.reachable
+
+    // True when the pointer really moved since the last call (a row sliding under a still pointer is not a move)
+    property point lastPointer: Qt.point(-1, -1)
+    function pointerMoved(p) {
+        if (p.x === root.lastPointer.x && p.y === root.lastPointer.y)
+            return false;
+        root.lastPointer = p;
+        return true;
+    }
 
     function parse(text) {
         const out = [];
@@ -209,7 +223,12 @@ ColumnLayout {
             onStreamFinished: root.devices = root.parse(text)
         }
         stderr: StdioCollector {
-            onStreamFinished: if (text.trim() !== "") root.status = text.trim()
+            onStreamFinished: {
+                if (text.trim() !== "") {
+                    root.status = text.trim();
+                    root.statusError = true;
+                }
+            }
         }
     }
 
@@ -220,6 +239,7 @@ ColumnLayout {
             id: cmdErr
         }
         onExited: code => {
+            root.statusError = code !== 0;
             root.status = code === 0 ? cmdProc.done : (cmdErr.text.trim() || "Failed (exit " + code + ")");
             root.refresh();
         }
@@ -231,6 +251,9 @@ ColumnLayout {
         id: clipProc
         property string deviceId: ""
         command: ["sh", "-c", "t=$(wl-paste -n --type text 2>/dev/null) && [ -n \"$t\" ] && kdeconnect-cli -d \"$1\" --share-text \"$t\"", "sh", clipProc.deviceId]
-        onExited: code => root.status = code === 0 ? "Clipboard sent" : "Could not send the clipboard (is it text?)"
+        onExited: code => {
+            root.statusError = code !== 0;
+            root.status = code === 0 ? "Clipboard sent" : "Could not send the clipboard (is it text?)";
+        }
     }
 }

@@ -188,6 +188,7 @@ PanelWindow {
                         readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
                         ScrollBar.vertical: RetroScrollBar {}
                         delegate: MenuRow {
+                            hoverLit: false
                             required property int index
                             required property var modelData
                             width: list.width - list.gutter
@@ -200,6 +201,14 @@ PanelWindow {
                             onClicked: {
                                 root.cursor = index;
                                 searchInput.focusInput();
+                            }
+                            // One lit row: the pointer moves the cursor (only on real pointer movement, so a list scrolled by the keys does not fight it)
+                            HoverHandler {
+                                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                                onPointChanged: {
+                                    if (root.pointerMoved(point.scenePosition))
+                                        root.cursor = index;
+                                }
                             }
                         }
                     }
@@ -228,35 +237,11 @@ PanelWindow {
                     }
                 }
 
-                // A failed Start / Stop / Restart: urgent icon, normal text, like the Bluetooth menu's
-                // status line. Stays until the next action or the menu opens again.
-                RowLayout {
-                    Layout.fillWidth: true
+                // A failed Start / Stop / Restart. Stays until the next action or the menu opens again.
+                StatusBar {
                     visible: root.actionError !== ""
-                    spacing: MenuStyle.gap
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        font.family: MenuStyle.iconFont
-                        font.pixelSize: MenuStyle.iconSize
-                        Layout.alignment: Qt.AlignTop
-                        color: Config.colors.urgent
-                        text: "error"
-                    }
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
-                        textFormat: Text.PlainText
-                        Layout.fillWidth: true
-                        // dinitctl's reason can be long: wrap rather than cut it off
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: Config.colors.text
-                        text: root.actionError
-                    }
+                    kind: "error"
+                    text: root.actionError
                 }
 
                 RowLayout {
@@ -319,6 +304,15 @@ PanelWindow {
     }
 
     // --- data ---
+
+    // True when the pointer really moved since the last call (a row sliding under a still pointer is not a move)
+    property point lastPointer: Qt.point(-1, -1)
+    function pointerMoved(p) {
+        if (p.x === root.lastPointer.x && p.y === root.lastPointer.y)
+            return false;
+        root.lastPointer = p;
+        return true;
+    }
 
     function move(d) {
         if (root.logOpen || root.shown.length === 0)

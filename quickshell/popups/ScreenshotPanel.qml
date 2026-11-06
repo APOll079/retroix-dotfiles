@@ -16,7 +16,7 @@ import ".."
 // - Viewer (double-click, Enter, Space): one shot fit to the panel (1:1 and crisp when it fits),
 //   Left/Right step through the filtered shots, Escape back to the grid.
 // - Actions work on the selection (or the shown shot): Copy (one = the image, several = files as
-//   text/uri-list), Open, Delete (to the trash, asks first), Folder. Ctrl+C / Ctrl+O = Copy / Open in the
+//   text/uri-list), Open, Trash (to the trash, asks first), Folder. Ctrl+C / Ctrl+O = Copy / Open in the
 //   grid, the viewer and the filter box (in the box Ctrl+C copies the typed text while some is selected).
 PanelWindow {
     id: root
@@ -119,8 +119,8 @@ PanelWindow {
                             root.quick = "all";
                             root.resetSelection();
                         }
-                        // Escape, Down and Enter hand the keys back to the grid; Ctrl+O / Ctrl+C act on the
-                        // shot (Ctrl+C copies the typed text instead while some of it is selected)
+                        // Escape clears the text first, then closes; Down and Enter hand the keys back to the grid;
+                        // Ctrl+O / Ctrl+C act on the shot (Ctrl+C copies the typed text instead while some of it is selected)
                         onKeyPressed: event => {
                             const ctrl = event.modifiers & Qt.ControlModifier;
                             if (ctrl && event.key === Qt.Key_O && !root.confirmDelete && root.targets.length > 0) {
@@ -129,7 +129,15 @@ PanelWindow {
                             } else if (ctrl && event.key === Qt.Key_C && !root.confirmDelete && root.targets.length > 0 && filterInput.input.selectedText === "") {
                                 root.copy(root.targets);
                                 event.accepted = true;
-                            } else if (event.key === Qt.Key_Escape || event.key === Qt.Key_Down || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            } else if (event.key === Qt.Key_Escape) {
+                                if (filterInput.text !== "") {
+                                    filterInput.text = "";
+                                    root.resetSelection();
+                                } else {
+                                    root.closeCallback();
+                                }
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 keys.forceActiveFocus();
                                 event.accepted = true;
                             }
@@ -262,6 +270,8 @@ PanelWindow {
                     BevelButton {
                         visible: root.page === 1
                         glyph: "\ue5cb"
+                        text: "Prev"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.viewIndex > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.step(-1)
@@ -269,6 +279,8 @@ PanelWindow {
                     BevelButton {
                         visible: root.page === 1
                         glyph: "\ue5cc"
+                        text: "Next"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.viewIndex < folderModel.count - 1
                         focusPolicy: Qt.NoFocus
                         onClicked: root.step(1)
@@ -294,7 +306,7 @@ PanelWindow {
                     }
                     BevelButton {
                         glyph: "\ue872"
-                        text: "Delete"
+                        text: "Trash"
                         Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus

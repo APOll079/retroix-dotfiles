@@ -142,20 +142,10 @@ with tempfile.TemporaryDirectory(prefix="wc-") as scratch:
         d.mkdir()
         env, log = make_env(tools, d)
         home = Path(env["HOME"])
-        shots = home / "screenshots"
-        shots.mkdir()
-        old = time.time() - 40 * 86400
-        names_old = ["old one.png", "-rf", "x'; touch pwned; '.png", "$(touch pwned2).png", "semi;colon.png"]
-        for nme in names_old:
-            p = shots / nme
-            p.write_bytes(b"x" * 100)
-            os.utime(p, (old, old))
-        for nme in ("new1.png", "new2.png"):
-            (shots / nme).write_bytes(b"y" * 50)
         trash = home / ".local/share/Trash/files"
         trash.mkdir(parents=True)
         (trash / "junk").write_bytes(b"z" * 5000)
-        return env, log, home, shots, names_old
+        return env, log, home
 
     tools = {
         "paccache": (PACCACHE, 0),
@@ -163,7 +153,7 @@ with tempfile.TemporaryDirectory(prefix="wc-") as scratch:
         "flatpak": ("", 0),
         "gio": ("", 0),
     }
-    env, log, home, shots, old_names = cleanup_env("c1", tools)
+    env, log, home = cleanup_env("c1", tools)
     # a pacman that answers per mode
     pm = Path(env["PATH"].split(":")[0]) / "pacman"
     pm.write_text(FAKE_LOGGER + """
@@ -176,45 +166,31 @@ elif sys.argv[1:2] == ["-Qi"]:
     fp.write_text(FAKE_LOGGER + """
 print("Info: runtimes\\n\\n        ID   Branch  Op\\n 1.     org.x.Platform  23.08   r\\n 2.     org.y.Platform  22.08   r\\n\\nNothing to do.")
 """)
-    rc, out, _ = sh(CLN, ["sizes", "30"], env)
+    rc, out, _ = sh(CLN, ["sizes"], env)
     rows = {r["id"]: r for r in json.loads(out)}
-    check("sizes: five rows in order", rc == 0 and list(rows) == ["pacman-cache", "orphans", "flatpak-unused", "shots", "trash"])
+    check("sizes: four rows in order", rc == 0 and list(rows) == ["pacman-cache", "orphans", "flatpak-unused", "trash"])
     check("sizes: paccache dry run parsed (bytes, count, root)", rows["pacman-cache"]["bytes"] == int(1.5 * 1024**2) and rows["pacman-cache"]["count"] == 7 and rows["pacman-cache"]["needsRoot"] is True)
     check("sizes: orphans counted and sizes summed", rows["orphans"]["count"] == 2 and rows["orphans"]["bytes"] == 2 * 1024**2 + 512 * 1024 and rows["orphans"]["needsRoot"] is True)
     check("sizes: flatpak unused counted, size null", rows["flatpak-unused"]["count"] == 2 and rows["flatpak-unused"]["bytes"] is None)
-    check("sizes: shots counts only the old files", rows["shots"]["count"] == len(old_names) and rows["shots"]["bytes"] == 100 * len(old_names))
     check("sizes: trash size comes from du", rows["trash"]["bytes"] >= 5000)
     c = calls(log)
     check("sizes: paccache only dry (-d)", [x for x in c if x[0] == "paccache"] == [["paccache", "-d", "-k2"]])
     check("sizes: flatpak only with --assumeno", [x for x in c if x[0] == "flatpak"] == [["flatpak", "uninstall", "--unused", "--assumeno"]])
     check("sizes: gio is never called", not any(x[0] == "gio" for x in c))
-    check("sizes: output has no file names", "old one" not in out and "semi" not in out)
-    check("sizes: nothing deleted", len(list(shots.iterdir())) == len(old_names) + 2)
-    rc, out, _ = sh(CLN, ["sizes", "x"], env)
-    check("sizes: shotDays must be an integer (exit 2)", rc == 2)
-    rc, out, _ = sh(CLN, ["sizes", "30; touch pwned"], env)
-    check("sizes: hostile shotDays exit 2", rc == 2 and not (home / "pwned").exists())
-
     # run
-    rc, out, _ = sh(CLN, ["run", "pacman-cache", "30"], env)
+    rc, out, _ = sh(CLN, ["run", "pacman-cache"], env)
     check("run: pacman-cache prints the doas command and runs nothing", rc == 0 and json.loads(out) == {"terminal": "doas paccache -r -k2"} and [x for x in calls(log) if x[0] == "paccache"] == [["paccache", "-d", "-k2"]])
-    rc, out, _ = sh(CLN, ["run", "orphans", "30"], env)
+    rc, out, _ = sh(CLN, ["run", "orphans"], env)
     check("run: orphans prints the doas command", rc == 0 and json.loads(out) == {"terminal": "doas pacman -Rns $(pacman -Qdtq)"} and not any(x[:2] == ["pacman", "-Rns"] for x in calls(log)))
     log.write_text("")
-    rc, out, _ = sh(CLN, ["run", "shots", "30"], env)
-    g = [x for x in calls(log) if x[0] == "gio"]
-    trashed = sorted(a for x in g for a in x[2:]) if g else []
-    check("run shots: gio trash called once with only the old files", rc == 0 and len(g) == 1 and g[0][1] == "trash" and trashed == sorted(str(shots / n) for n in old_names))
-    check("run shots: hostile names stayed single arguments, nothing executed", not (home / "pwned").exists() and not (shots / "pwned2").exists() and not (home / "pwned2").exists() and not Path("pwned").exists())
-    check("run shots: new files are not passed", not any("new" in a for a in trashed))
     log.write_text("")
-    rc, out, _ = sh(CLN, ["run", "trash", "30"], env)
+    rc, out, _ = sh(CLN, ["run", "trash"], env)
     check("run trash is refused: exit 2 and nothing is called", rc == 2 and calls(log) == [])
     log.write_text("")
-    rc, out, _ = sh(CLN, ["run", "flatpak-unused", "30"], env)
+    rc, out, _ = sh(CLN, ["run", "flatpak-unused"], env)
     check("run flatpak-unused: uninstall --unused -y", rc == 0 and calls(log) == [["flatpak", "uninstall", "--unused", "-y"]])
     log.write_text("")
-    for bad in (["run", "bogus", "30"], ["run", "shots", "abc"], ["run", "shots; touch pwned", "30"], ["run", "../x", "1"], ["run"], ["nope"], []):
+    for bad in (["run", "bogus"], ["run", "shots"], ["run", "shots; touch pwned"], ["run", "../x"], ["run"], ["nope"], []):
         rc, out, _ = sh(CLN, bad, env)
         check("run: bad arguments %r exit 2" % (bad,), rc == 2)
     check("run: bad arguments ran no tool", calls(log) == [] and not (home / "pwned").exists())
@@ -223,10 +199,10 @@ print("Info: runtimes\\n\\n        ID   Branch  Op\\n 1.     org.x.Platform  23.
     d = scratch / "c2"
     d.mkdir()
     env2, log2 = make_env({}, d)
-    rc, out, _ = sh(CLN, ["sizes", "30"], env2)
+    rc, out, _ = sh(CLN, ["sizes"], env2)
     rows = {r["id"]: r for r in json.loads(out)}
     check("sizes: missing tools give null bytes and 'not installed', no error",
-          rc == 0 and all(rows[i]["bytes"] is None and rows[i]["note"] == "not installed" for i in ("pacman-cache", "orphans", "flatpak-unused")) and rows["shots"]["bytes"] == 0 and rows["trash"]["bytes"] == 0)
+          rc == 0 and all(rows[i]["bytes"] is None and rows[i]["note"] == "not installed" for i in ("pacman-cache", "orphans", "flatpak-unused"))  and rows["trash"]["bytes"] == 0)
 
 print("TEST done failures=%d" % failures)
 sys.exit(1 if failures else 0)

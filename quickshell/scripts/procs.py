@@ -7,7 +7,10 @@ Quickshell runs it only while the Task Manager is open. --once prints a single s
 
 { "cpu": %, "mem": {used, total}, "swap": {used, total},
   "gpu": {busy, vramUsed, vramTotal} or null, "count": processes, "self": this helper's pid,
-  "groups": [{ name, count, cpu, mem, mine, pids }] }      (bytes for memory, % of the whole CPU)
+  "net": {rx, tx, t}  (bytes received / sent since boot by every interface except lo, t = monotonic seconds),
+  "groups": [{ name, count, cpu, mem, mine, pids, core }] }      (bytes for memory, % of the whole CPU;
+  core = what happens if this program is ended ("" for an ordinary one): the one list of core processes,
+  used by the Task Manager and by the launcher's "kill" rows)
 
 Processes are grouped by program: the executable's name when readable (so browser helper
 processes fold into their browser), else the kernel's short name. Interpreters (python, node,
@@ -44,6 +47,46 @@ def meminfo():
     total, avail = kb.get("MemTotal", 0), kb.get("MemAvailable", 0)
     st, sf = kb.get("SwapTotal", 0), kb.get("SwapFree", 0)
     return {"used": (total - avail) * 1024, "total": total * 1024}, {"used": (st - sf) * 1024, "total": st * 1024}
+
+
+def net_totals(text):
+    """(rx, tx) bytes summed over every interface except lo, from the text of /proc/net/dev"""
+    rx = tx = 0
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        name, data = line.split(":", 1)
+        fields = data.split()
+        if name.strip() == "lo" or len(fields) < 9 or not (fields[0].isdigit() and fields[8].isdigit()):
+            continue
+        rx += int(fields[0])
+        tx += int(fields[8])
+    return rx, tx
+
+
+def net_sample():
+    try:
+        with open("/proc/net/dev") as f:
+            rx, tx = net_totals(f.read())
+    except OSError:
+        rx = tx = 0
+    return {"rx": rx, "tx": tx, "t": round(time.monotonic(), 3)}
+
+
+def core_effect(name):
+    """What ending a core process does, "" for an ordinary program"""
+    n = name.lower()
+    if n in ("quickshell", "qs"):
+        return "the bar and every menu go away until it is restarted"
+    if n in ("hyprland", "start-hyprland"):
+        return "your session ends and every window closes"
+    if n.startswith("pipewire") or n == "wireplumber":
+        return "all sound stops"
+    if n.startswith("dinit"):
+        return "your user services go down"
+    if n in ("dbus-daemon", "dbus-broker"):
+        return "desktop apps lose their connection"
+    return ""
 
 
 def gpu_card():
@@ -182,8 +225,8 @@ def sample(prev, card):
     result = {
         "cpu": round(max(0.0, min(100.0, cpu)), 1),
         "mem": mem, "swap": swap, "gpu": gpu_info(card),
-        "count": len(procs), "self": os.getpid(),
-        "groups": sorted(({**g, "cpu": round(g["cpu"], 1)} for g in groups.values()), key=lambda g: (-g["cpu"], -g["mem"])),
+        "count": len(procs), "self": os.getpid(), "net": net_sample(),
+        "groups": sorted(({**g, "cpu": round(g["cpu"], 1), "core": core_effect(g["name"])} for g in groups.values()), key=lambda g: (-g["cpu"], -g["mem"])),
     }
     state = {"total": total, "idle": idle, "ticks": {pid: p[1] for pid, p in procs.items()}}
     return result, state

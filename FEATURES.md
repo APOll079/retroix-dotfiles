@@ -70,6 +70,12 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Spotify drawer in real focus: Escape / Enter on the "..." menu and both confirms
 - [ ] Failed-disk / network toasts no longer replace each other (distinct app names)
 
+### Round 3, launcher / Task Manager / NAS (never looked at, fakes only)
+- [ ] Launcher: hover and the key cursor never light two rows (the pointer-gating with `HoverHandler` + `scenePosition` is untested live: if the cursor stops following the mouse, that is it); `kill zen` lists programs, Enter asks, End task closes with SIGTERM, a core program shows End anyway; `=` lists copied results, `:heart` shows emoji (do they render in the real font?); right-click a Clipboard row, Delete removes it
+- [ ] Task Manager: the Ports tab shows real ports (`ss` output formats: unparsable lines are skipped), End task on your own listener asks first; the NET graph moves with a download
+- [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
+- [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
+
 ### Round 3, my share (never looked at)
 - [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Alt+T drops the terminal down and hides it again; Super+Alt+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
 - [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed
@@ -91,7 +97,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 
 ### Work pass, wave 2 (branch work-pass-w2, offscreen only, never looked at)
 - [ ] Updates (install pacman-contrib): the counts match `checkupdates` / `yay -Qua` / flatpak, the Arch news lines load, the dot on Start and the "Updates (N)" row appear, Update opens kitty on `yay -Syu`; neither panel nor the Start rows were ever looked at (glyph codepoints unchecked)
-- [ ] Clean up: real sizes per row (is `~/screenshots` the right folder?), Clean then the ConfirmBar then the doas terminal for pacman cache and orphans, old shots to the Trash, Empty Trash (Start row shows the size after the first Start open), Esc cancels a confirm first. `settings.cleanup.shotDays` is not read yet
+- [ ] Clean up: real sizes per row, Clean then the ConfirmBar then the doas terminal for pacman cache and orphans, Esc cancels a confirm first (the Trash is only a Start row that opens its folder)
 - [ ] Lyrics window (never looked at): Super+Alt+L during a synced song: floats pinned bottom-right (the rule's `pin` / `move` / `min_size` names are unverified, rule never reloaded), the line follows the music and wraps at 420 px, a second toggle closes it, Super+Q and Esc close it; the Spotify drawer's lyrics view still ticks fast after the window closes
 - [ ] USB drives (install udisks2): plug in a stick: toast with Open / Eject; Open mounts and opens the folder; the Start menu shows "Eject <name>" (never looked at); Eject with a file manager on it shows the busy error, then works after closing it; sticks plugged in before the shell starts don't toast; a stick with several partitions toasts once per partition
 - [ ] Calendar to-do list (never looked at): add with and without a date, click a day to set the due date, toggle, right click Delete, edit `todo.txt` in an editor and see it update, the due-day bars on today and a picked day, the checkbox glyphs show (codepoints unchecked), Escape in the add field, the tab keeps its height

@@ -14,8 +14,7 @@ Singleton {
 
     readonly property bool live: !Quickshell.env("QS_NO_APPLY")
     readonly property string script: Quickshell.shellDir + "/scripts/cleanup.sh"
-    readonly property int shotDays: 30            // screenshots older than this are offered for the Trash
-    readonly property var knownIds: ["pacman-cache", "orphans", "flatpak-unused", "shots"]   // the Trash is measured, never cleaned from here
+    readonly property var knownIds: ["pacman-cache", "orphans", "flatpak-unused"]   // the Trash is measured, never cleaned from here
 
     property var rows: []                 // [{ id, label, bytes, count, needsRoot, note }] from `sizes`
     property bool loading: false
@@ -95,8 +94,6 @@ Singleton {
     // The question, naming the size
     function confirmText(r) {
         const size = sizeText(r);
-        if (r.id === "shots")
-            return "Move " + size + " of old screenshots to the Trash?";
         if (r.needsRoot)
             return "Clean up " + r.label + " (" + size + ")? A terminal opens and asks for doas.";
         return "Clean up " + r.label + " (" + size + ")?";
@@ -164,13 +161,13 @@ Singleton {
         if (runProc.running)
             return;
         root.result = "";
-        runProc.command = ["sh", root.script, "run", id, String(root.shotDays)];
+        runProc.command = ["sh", root.script, "run", id];
         runProc.running = true;
     }
 
     Process {
         id: sizesProc
-        command: ["sh", root.script, "sizes", String(root.shotDays)]
+        command: ["sh", root.script, "sizes"]
         stdout: StdioCollector {
             onStreamFinished: root.rows = root.parseSizes(text)
         }

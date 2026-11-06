@@ -74,7 +74,7 @@ PanelWindow {
         }
 
         PopupWindowFrame {
-            windowTitle: "Keybinds"
+            windowTitle: "Keys"
             windowTitleIcon: "\ue312"
 
             ColumnLayout {

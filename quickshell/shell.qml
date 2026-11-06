@@ -23,6 +23,8 @@ Scope {
     property bool usbWatch: UsbState.active
     property bool networkWatch: NetworkWatch.active
     property bool vpnState: VpnState.active
+    property bool nasWatch: NasWatch.active
+    property bool downloadWatch: DownloadWatch.active
     property var updateState: UpdateState
     property var cleanupState: CleanupState
     // keeps the recorder state alive (picks up a recording that survived a reload)

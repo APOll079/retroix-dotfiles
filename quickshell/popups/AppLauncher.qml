@@ -17,7 +17,12 @@ import "." as Popups
 // - answers: "5 km in mi" (Units), "#c950bb" (ColorText), "time tokyo" (TimeZones) -> a top row, Enter copies the value
 // - session: type lock / logout / reboot / suspend / shutdown (or a custom action's name)
 // - windows: start with "," to search open windows
-// - clipboard: Super+V opens the cliphist history; Enter copies the entry back
+// - clipboard: Super+V opens the cliphist history; Enter copies the entry back; right-click a row for Delete
+// - kill: "kill zen" (or "kill" alone: the biggest) lists your process groups (scripts/procs.py --once, grouped like the
+//   Task Manager) with their memory; Enter asks (ConfirmBar, verb End task, SIGTERM only through scripts/endtask.sh,
+//   "End anyway" for core processes), the pids are read again at the confirm
+// - history: "=" alone (or "hist") lists the last 10 calculator / conversion results that were copied (CalcHistory)
+// - emoji: ":" and a word searches the built-in emoji table (Emoji); Enter copies the emoji
 // Tabs along the top switch between Apps, Games (cover grid, GamesView.qml, shared with the
 // standalone Games menu) and Clipboard; Ctrl+Tab cycles them.
 // Right-click an app (or Shift+Enter) for its options in the shared PopupMenu: launch, pin/unpin, move pinned up/down, hide
@@ -41,6 +46,15 @@ PanelWindow {
     readonly property int hiddenCount: Array.from(Utils.AppSearch.list).filter(e => LauncherState.isHidden(e.id)).length
 
     property var clipLines: []
+
+    // kill by name
+    readonly property bool live: !Quickshell.env("QS_NO_APPLY")
+    property var killGroups: []           // procs.py groups from the last read
+    property int killSelf: 0              // procs.py's own pid, never offered
+    property double killLoadedAt: 0       // ms of the last read; 0 = none yet
+    property var killAsk: null            // { name, count, mem, core }: End task waiting for its confirm
+    property var endLog: []               // pid lists handed to endtask.sh under QS_NO_APPLY (tests)
+    readonly property int killFreshMs: 3000
 
     // Category filter: glyph + freedesktop categories it matches
     readonly property var categories: [
@@ -131,6 +145,7 @@ PanelWindow {
                                 fontSize: MenuStyle.searchFontSize
                                 onTextChanged: {
                                     root.confirmKey = "";
+                                    root.killAsk = null;
                                     root.rebuild();
                                 }
                                 Component.onCompleted: searchInput.focusInput()
@@ -266,6 +281,7 @@ PanelWindow {
                                         clip: true
 
                                         delegate: MenuRow {
+                                            hoverLit: false
                                             width: appsView.width - (appsView.ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0)
                                             selected: index === appsView.currentIndex
                                             text: modelData.title
@@ -276,13 +292,19 @@ PanelWindow {
                                             iconSource: modelData.icon || ""
                                             marked: !!modelData.pinned
                                             onClicked: root.activate(index)
-                                            // Clipboard: the preview follows the pointer too
+                                            // The pointer leaving an armed row disarms it
                                             onHoveredChanged: {
-                                                if (hovered && root.mode === "clipboard")
-                                                    appsView.currentIndex = index;
-                                                // The pointer leaving an armed row disarms it
-                                                else if (!hovered && modelData.key && modelData.key === root.confirmKey)
+                                                if (!hovered && modelData.key && modelData.key === root.confirmKey)
                                                     root.disarm();
+                                            }
+                                            // One lit row: the pointer moves the cursor (Clipboard's preview follows it too). Only real
+                                            // pointer movement counts, so a list the keys scrolled under a still pointer keeps the cursor.
+                                            HoverHandler {
+                                                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                                                onPointChanged: {
+                                                    if (root.pointerMoved(point.scenePosition))
+                                                        appsView.currentIndex = index;
+                                                }
                                             }
 
                                             // Right-click: the app's options
@@ -312,6 +334,18 @@ PanelWindow {
                                 color: MenuStyle.bevelDark
                                 text: root.clipLines.length + (root.clipLines.length === 1 ? " entry" : " entries") + " · Enter copies · Del removes (Shift+Del while typing) · Down to the end for Clear all"
                             }
+
+                            // End task: asks in place of a hint line; Enter / Esc work from the search box
+                            ConfirmBar {
+                                id: killBar
+                                Layout.fillWidth: true
+                                visible: root.killAsk !== null
+                                glyph: "\ue002"
+                                message: root.killAsk ? root.killMessage(root.killAsk) : ""
+                                verb: root.killAsk && root.killAsk.core !== "" ? "End anyway" : "End task"
+                                onAccepted: root.confirmKill()
+                                onCanceled: root.killAsk = null
+                            }
                         }
                     }
                 }
@@ -332,6 +366,12 @@ PanelWindow {
         case Qt.Key_Escape:
             if (root.confirmKey !== "") {
                 root.disarm();
+            } else if (root.killAsk !== null) {
+                killBar.cancel();
+            } else if (root.mode === "apps" && root.category === "hidden") {
+                // the Hidden list is one step in: back to all apps first
+                root.category = "all";
+                root.rebuild();
             } else if (games) {
                 if (gamesView.goBack())
                     break;
@@ -373,7 +413,9 @@ PanelWindow {
             break;
         case Qt.Key_Return:
         case Qt.Key_Enter:
-            if (games)
+            if (root.killAsk !== null)
+                killBar.accept();
+            else if (games)
                 gamesView.activateKey(event);
             else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier))
                 root.openOptionsAt(appsView.currentIndex);
@@ -446,11 +488,23 @@ PanelWindow {
         if (root.mode === "clipboard")
             return root.setResults(root.clipItems(q), keep ? appsView.currentIndex : 0);
 
+        const needle = root.killQuery(q);
+        if (needle !== null) {
+            root.loadKill();
+            return root.setResults(root.killItems(needle), 0);
+        }
+        if (q.startsWith(":"))
+            return root.setResults(root.emojiItems(q.slice(1)), 0);
+        if (q === "=" || q.toLowerCase() === "hist") {
+            const hist = root.historyItems();
+            return root.setResults(q === "=" ? hist : hist.concat(root.appItems(q)), 0);
+        }
+
         const items = [];
         const unit = Utils.Units.answer(q);
         const calc = unit ? "" : Utils.Calc.evaluate(q);
         if (unit)
-            items.push({ title: unit.text, sub: "Enter copies " + unit.number, glyph: "\uea5f", run: () => root.copy(unit.number) });
+            items.push({ title: unit.text, sub: "Enter copies " + unit.number, glyph: "\uea5f", run: () => root.copy(unit.number, q) });
         const colour = Utils.ColorText.answer(q);
         if (colour)
             items.push({ title: colour.hex, sub: colour.sub, glyph: "\ue3b8", run: () => root.copy(colour.hex) });
@@ -458,7 +512,7 @@ PanelWindow {
         if (zone)
             items.push({ title: zone.title, sub: zone.sub, glyph: "\ue8b5", run: () => root.copy(zone.time) });
         if (calc !== "")
-            items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, "")) });
+            items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, ""), q) });
         for (const s of root.sessionItems(q))
             items.push(s);
         root.setResults(items.concat(root.appItems(q)), 0);
@@ -696,16 +750,23 @@ PanelWindow {
         optionsMenu.openAt(root.optionsAnchor, root.optionsPoint.x, root.optionsPoint.y);
     }
 
-    // item / x / y: the point the menu opens at; without them it opens under the cursor row
+    // item / x / y: the point the menu opens at; without them it opens under the cursor row.
+    // An app row gets the app's options, a Clipboard row a small menu with Delete.
     function openOptionsAt(i, item, x, y) {
         const r = root.results[i];
-        if (!r || !r.entry)
+        if (!r || (!r.entry && !r.clip))
             return;
         root.uninstallFor = null;
         // Anchored to the list itself (its rows are rebuilt when the list changes), at a point inside it
         const row = item || appsView.itemAtIndex(i);
         root.optionsAnchor = appsView;
         root.optionsPoint = row ? appsView.mapFromItem(row, item ? x : MenuStyle.pad * 4, item ? y : MenuStyle.rowHeight) : Qt.point(MenuStyle.pad * 4, MenuStyle.rowHeight);
+        if (r.clip) {
+            root.optionsFor = null;
+            optionsMenu.model = [{ text: "Delete", glyph: "\ue872", action: () => root.deleteClip(r.clip) }];
+            optionsMenu.openAt(root.optionsAnchor, root.optionsPoint.x, root.optionsPoint.y);
+            return;
+        }
         root.showOptions(r.entry);
     }
 
@@ -721,9 +782,176 @@ PanelWindow {
             r.run();
     }
 
-    function copy(text) {
+    // query: the calculator / conversion that made `text`; given, the result goes into the history first
+    function copy(text, query) {
+        if (query !== undefined)
+            CalcHistory.add(text, query);
         Quickshell.execDetached(["wl-copy", "--", text]);
         root.closeCallback();
+    }
+
+    // True when the pointer really moved since the last call (a row sliding under a still pointer is not a move)
+    property point lastPointer: Qt.point(-1, -1)
+    function pointerMoved(p) {
+        if (p.x === root.lastPointer.x && p.y === root.lastPointer.y)
+            return false;
+        root.lastPointer = p;
+        return true;
+    }
+
+    // --- history ("=" alone, or "hist") ---
+    function historyItems() {
+        const h = CalcHistory.entries;
+        if (!h || h.length === 0)
+            return [{ title: "No results yet", sub: "Copy a calculation or a conversion and it shows here", glyph: "\ue889" }];
+        return h.map(x => ({ title: x.value, sub: x.query, glyph: "\ue889", run: () => root.copy(x.value) }));
+    }
+
+    // --- emoji (":" and a word) ---
+    function emojiItems(q) {
+        return Emoji.search(q, 40).map(r => ({ title: r.char + "  " + r.name, sub: r.keywords, glyph: "", run: () => root.copy(r.char) }));
+    }
+
+    // --- kill by name ---
+
+    // "kill" / "kill zen" -> the part after the word ("" or "zen"); null for any other query ("killer" is not one)
+    function killQuery(q) {
+        const m = /^kill(?:\s+(.*))?$/i.exec(q);
+        return m ? (m[1] || "").trim() : null;
+    }
+
+    // procs.py --once output -> { groups, self }, null for anything else
+    function parseProcs(text) {
+        try {
+            const lines = String(text).split("\n").filter(l => l.trim() !== "");
+            const d = JSON.parse(lines[lines.length - 1]);
+            if (!d || !Array.isArray(d.groups))
+                return null;
+            return { groups: d.groups, self: Number.isInteger(d.self) ? d.self : 0 };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // A real pid: -1 would signal everything you own, 0 your process group, 1 is init
+    function validPid(p) {
+        return typeof p === "number" && Number.isInteger(p) && p > 1;
+    }
+
+    // Your own groups whose name contains `needle`, biggest memory first, without procs.py's own pid (a group left with no
+    // pid is dropped). An empty needle lists the biggest few.
+    function killMatches(groups, self, needle) {
+        const n = String(needle).toLowerCase();
+        const out = [];
+        for (const g of groups || []) {
+            if (!g || typeof g.name !== "string" || g.name === "" || g.mine !== true || !Array.isArray(g.pids))
+                continue;
+            if (n !== "" && !g.name.toLowerCase().includes(n))
+                continue;
+            const pids = g.pids.filter(p => root.validPid(p) && p !== self);
+            if (pids.length === 0)
+                continue;
+            out.push({ name: g.name, pids: pids, count: pids.length, mem: typeof g.mem === "number" ? g.mem : 0, core: typeof g.core === "string" ? g.core : "" });
+        }
+        out.sort((a, b) => b.mem - a.mem);
+        return out.slice(0, n === "" ? 8 : 12);
+    }
+
+    // The pids to signal NOW: the fresh read's own group of that exact name, valid pids only, never procs.py's own
+    function killPids(groups, self, name) {
+        const g = root.killMatches(groups, self, "").concat(root.killMatches(groups, self, name)).find(x => x.name === name);
+        return g ? g.pids : [];
+    }
+
+    function memText(b) {
+        if (b >= 1073741824)
+            return (b / 1073741824).toFixed(1) + " GB";
+        if (b >= 1048576)
+            return Math.round(b / 1048576) + " MB";
+        return Math.round(b / 1024) + " KB";
+    }
+
+    function killMessage(a) {
+        if (a.core !== "")
+            return a.name + " is a core process: " + a.core + ". End anyway?";
+        return "End " + a.name + (a.count > 1 ? " (" + a.count + " processes)" : "") + "? (SIGTERM, it can still save its work)";
+    }
+
+    function killItems(needle) {
+        if (root.killLoadedAt === 0)
+            return [{ title: "Reading processes...", glyph: "\ue88b" }];
+        const m = root.killMatches(root.killGroups, root.killSelf, needle);
+        return m.map(g => ({
+            title: g.name,
+            sub: g.count + (g.count === 1 ? " process" : " processes") + (g.core !== "" ? " - core" : "") + " - Enter ends it",
+            trailing: root.memText(g.mem),
+            glyph: "\ue5c9",
+            key: "kill:" + g.name,
+            run: () => { root.killAsk = { name: g.name, count: g.count, mem: g.mem, core: g.core }; }
+        }));
+    }
+
+    // Reads the process list (once per few seconds, never twice at the same time); the list refreshes when it arrives
+    function loadKill() {
+        if (!root.live || killProc.running)
+            return;
+        if (root.killLoadedAt !== 0 && Date.now() - root.killLoadedAt < root.killFreshMs)
+            return;
+        killProc.verify = "";
+        killProc.running = true;
+    }
+
+    // The ConfirmBar's verb: read the processes again, then signal the pids of that group as they are NOW
+    function confirmKill() {
+        const a = root.killAsk;
+        root.killAsk = null;
+        if (!a)
+            return;
+        if (!root.live) {
+            root.finishKill(a.name, root.testProcs);
+            return;
+        }
+        killProc.verify = a.name;
+        killProc.running = true;
+    }
+    property string testProcs: ""            // the fresh read a test hands to confirmKill (QS_NO_APPLY only)
+
+    function finishKill(name, text) {
+        const p = root.parseProcs(text);
+        const pids = p ? root.killPids(p.groups, p.self, name) : [];
+        if (pids.length === 0) {
+            root.rebuild();                  // already gone: the list shows what is there now
+            return;
+        }
+        if (!root.live)
+            root.endLog = root.endLog.concat([pids]);
+        else
+            Quickshell.execDetached(["sh", Quickshell.shellDir + "/scripts/endtask.sh"].concat(pids.map(x => String(x))));
+        root.closeCallback();
+    }
+
+    Process {
+        id: killProc
+        property string verify: ""
+        command: ["python3", "-I", Quickshell.shellDir + "/scripts/procs.py", "--once"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (killProc.verify !== "") {
+                    const n = killProc.verify;
+                    killProc.verify = "";
+                    root.finishKill(n, text);
+                    return;
+                }
+                const p = root.parseProcs(text);
+                if (p) {
+                    root.killGroups = p.groups;
+                    root.killSelf = p.self;
+                    root.killLoadedAt = Date.now();
+                }
+                if (root.visible && root.killQuery(searchInput.text.trim()) !== null)
+                    root.rebuild(true);
+            }
+        }
     }
 
     // Desktop entries load asynchronously: refresh the list when they arrive
@@ -829,6 +1057,7 @@ PanelWindow {
         root.category = "all";
         root.closeOptions();
         root.confirmKey = "";
+        root.killAsk = null;
         root.visible = true;
         searchInput.text = "";
         if (mode === "clipboard") {

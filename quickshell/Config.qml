@@ -181,9 +181,16 @@ property int percent: 90
 property int cooldownMinutes: 60
 property var mounts: ["/", "~", "/mnt/disk1", "/mnt/disk2"]
 }
-// Start > Clean up: screenshots older than shotDays are offered for the Trash
-property JsonObject cleanup: JsonObject {
-property int shotDays: 30
+// NAS mounts the bar watches: state every intervalSeconds (mounted / unmounted / stale); the bar button remounts (`mount <path>`, fstab lines need noauto,user)
+property JsonObject nas: JsonObject {
+property bool enabled: true
+property var mounts: ["/mnt/disk1", "/mnt/disk2"]
+property int intervalSeconds: 30
+}
+// Toast when a download in ~/Downloads has finished (Open / Show in folder)
+property JsonObject downloads: JsonObject {
+property bool enabled: true
+property int intervalSeconds: 5
 }
 // Network toasts (NetworkWatch): link up / down plus a ping list; hosts = names or IPs, empty = link only.
 // cooldownSeconds = minimum gap between two toasts of the same kind. vpn = poll VPN status for the bar button.

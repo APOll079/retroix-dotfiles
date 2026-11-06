@@ -102,7 +102,7 @@ tests/interaction/components.qml	MenuStrip: a second click closes it	Interaction
 quickshell/Idle.qml	qs-caffeine\.json	Caffeine is kept in XDG_RUNTIME_DIR (survives reload and restart, cleared at logout)
 quickshell/LaptopControls.qml	btBatteryText\(root\.btDevices\)	Bluetooth button shows the lowest connected device battery, else ON / OFF
 quickshell/LaptopControls.qml	tooltip: root\.btBatteryTooltip	Bluetooth button tooltip lists "name NN%" per connected device with a known battery
-quickshell/popups/MenuRow.qml	root\.enabled && \(hover\.hovered	A disabled row does not highlight on hover or press
+quickshell/popups/MenuRow.qml	root\.enabled && \(\(root\.hoverLit	A disabled row does not highlight on hover or press
 quickshell/popups/PopupMenuBody.qml	onClicked: root\.escaped\(\)	Clicking a menu's title strip closes it
 quickshell/popups/SpotifyRowMenu.qml	title: menu\.song \? menu\.song\.name	The song-name title bar on the Spotify row menu
 quickshell/popups/ServicesPanel.qml	function dialogCommand\(terminal, classFlag, verb, name\)	System Services actions use execCommands.terminal, terminalClassFlag names the window qs-dialog, verb and name stay separate arguments
@@ -110,7 +110,7 @@ quickshell/popups/ScreenshotPanel.qml	k === Qt\.Key_C \|\| k === Qt\.Key_O	Histo
 quickshell/popups/ScreenshotPanel.qml	event\.key === Qt\.Key_O && !root\.confirmDelete	History: Ctrl+O in the filter box opens the shot
 quickshell/popups/ScreenshotPanel.qml	event\.key === Qt\.Key_C && !root\.confirmDelete	History: Ctrl+C in the filter box copies the shot (the field copies selected text)
 quickshell/popups/ScreenshotPanel.qml	filterInput\.text \+= event\.text	History: typing in the grid starts a filter
-quickshell/popups/ScreenshotPanel.qml	text: "Folder"	History: labelled action buttons (Copy, Open, Delete, Folder)
+quickshell/popups/ScreenshotPanel.qml	text: "Folder"	History: labelled action buttons (Copy, Open, Trash, Folder)
 quickshell/popups/ScreenshotOverlay.qml	text: RecordState\.recording \? "Stop" : "Record"	Record button arms recording, reads Stop while recording
 quickshell/popups/ScreenshotOverlay.qml	text: "Mic"	Mic toggle shown while Record is armed
 quickshell/popups/ScreenshotOverlay.qml	RecordState\.start\(a\.mode	Armed picks start a recording instead of a shot
@@ -143,7 +143,6 @@ hypr/binds.lua	\-\-\ help:\ Media\ \|\ Lyrics\ window	Key: Media | Lyrics window
 quickshell/popups/CleanupPanel.qml	function accept\(\)	Clean up: the ConfirmBar's verb is the only thing that runs a clean-up
 quickshell/popups/CleanupPanel.qml	Qt\.Key_Escape	Clean up: Esc cancels the confirm first, then closes
 quickshell/popups/UpdatesPanel.qml	Qt\.Key_Return	Updates: Enter = Update (opens the terminal on yay -Syu, closes the panel)
-quickshell/scripts/cleanup.sh	xargs -0 -r gio trash	Old screenshots go to the Trash, never deleted outright
 quickshell/popups/StartMenu.qml	text: "Clean up"	Start menu: Clean up row
 quickshell/popups/StartMenu.qml	text: CleanupState\.trashLabel	Start menu: the Trash row shows its size
 quickshell/popups/StartMenu.qml	text: "Updates \("	Start menu: Updates (N) row while updates are waiting
@@ -200,3 +199,23 @@ quickshell/ColorHistory.qml	function withColor	Colour history keeps the last 20,
 quickshell/popups/StartMenu.qml	text: "Colours"	Start menu: Colours opens the colour history
 quickshell/taskbar/Bar.qml	target: "mic_"	IPC handler mic_<monitor> (used by the mic key)
 hypr/binds.lua	\-\-\ help:\ Audio\ \|\ Mute\ /\ unmute\ the\ microphone	Key: Audio | Mute / unmute the microphone
+quickshell/popups/AppLauncher.qml	killBar\.accept\(\)	Launcher: Enter on a kill row confirms through the ConfirmBar (End task / End anyway)
+quickshell/popups/AppLauncher.qml	function killPids\(	Launcher: kill re-reads the pids at the confirm, never procs.py's own, integers > 1
+quickshell/scripts/endtask.sh	env kill -s TERM	Launcher kill: SIGTERM only, never SIGKILL
+quickshell/popups/AppLauncher.qml	CalcHistory\.add\(text, query\)	Launcher: a copied calculator or unit result goes into the history
+quickshell/popups/AppLauncher.qml	q === "=" \|\| q\.toLowerCase\(\) === "hist"	Launcher: = alone or hist lists the history
+quickshell/popups/AppLauncher.qml	Emoji\.search\(q, 40\)	Launcher: a query starting with : searches the emoji table
+quickshell/popups/AppLauncher.qml	text: "Delete", glyph	Launcher: right-click on a Clipboard row opens a menu with Delete
+quickshell/popups/AppLauncher.qml	root\.category === "hidden"\) \{	Launcher: Escape leaves the Hidden list before it clears or closes
+quickshell/popups/AppLauncher.qml	pointerMoved\(point\.scenePosition\)	Launcher: the pointer moves the cursor (one lit row)
+quickshell/popups/GamesView.qml	verb: "Remove"	Games: Remove asks first (ConfirmBar)
+quickshell/popups/ScreenshotPanel.qml	if \(filterInput\.text !== ""\)	History: Escape in the filter box clears the text first, then closes
+quickshell/popups/ScreenshotPanel.qml	text: "Trash"	History: the Trash button (confirm verb Move to Trash)
+quickshell/popups/TaskManager.qml	Keys\.onDeletePressed	Task Manager: Delete = End task with the confirm (Apps, Ports)
+quickshell/popups/TaskManager.qml	key: "ports"	Task Manager: Ports tab
+quickshell/popups/TaskManager.qml	title: "NET"	Task Manager: NET graph with the live down / up rate
+quickshell/popups/CheatSheet.qml	windowTitle: "Keys"	Cheat sheet is titled Keys
+quickshell/NasWatch.qml	function canRemount	NAS: remount only for configured mounts
+quickshell/DownloadWatch.qml	-A default=Open -A folder="Show in folder"	Downloads: toast with Open and Show in folder
+quickshell/LaptopControls.qml	onClicked: NasWatch\.remountStale\(\)	The bar's NAS button remounts a stale or unmounted mount
+quickshell/popups/MenuRow.qml	property bool hoverLit	MenuRow: lists where the pointer moves the cursor turn the hover bar off (one lit row)

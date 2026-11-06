@@ -27,12 +27,12 @@ ShellRoot {
             { id: "pacman-cache", label: "Old package cache", bytes: 1.5e6, count: 7, needsRoot: true, note: "" },
             { id: "orphans", label: "Orphaned packages", bytes: 0, count: 0, needsRoot: true, note: "" },
             { id: "flatpak-unused", label: "Unused Flatpak runtimes", bytes: null, count: 2, needsRoot: false, note: "size unknown" },
-            { id: "shots", label: "Screenshots older than 30 days", bytes: 3000, count: 30, needsRoot: false, note: "" },
+            { id: "plain", label: "Plain item", bytes: 3000, count: 30, needsRoot: false, note: "" },
             { id: "trash", label: "Trash", bytes: 1.2e9, count: null, needsRoot: false, note: "" },
             { id: "x", label: "Missing", bytes: null, count: null, needsRoot: false, note: "not installed" }
         ];
         shell.check("total sums known sizes, null counts as 0", S.total(rows) === 1.5e6 + 3000 + 1.2e9);
-        shell.check("visibleRows drops empty, not-installed and Trash rows, keeps unknown-size ones", S.visibleRows(rows).map(r => r.id).join() === "pacman-cache,flatpak-unused,shots");
+        shell.check("visibleRows drops empty, not-installed and Trash rows, keeps unknown-size ones", S.visibleRows(rows).map(r => r.id).join() === "pacman-cache,flatpak-unused,plain");
         shell.check("sizeText: bytes", S.sizeText(rows[0]) === "1.5 MB" && S.sizeText(rows[4]) === "1.2 GB");
         shell.check("sizeText: unknown size shows the count", S.sizeText(rows[2]) === "2 items (size unknown)");
         shell.check("sizeText: not installed", S.sizeText(rows[5]) === "not installed");
@@ -44,7 +44,7 @@ ShellRoot {
         shell.check("confirmText: root item mentions doas", S.confirmText(rows[0]).indexOf("doas") >= 0 && S.confirmText(rows[3]).indexOf("doas") < 0);
 
         const parsed = S.parseSizes(J(rows.concat([{ id: "evil", label: "x" }, { id: "trash" }, 7, null])));
-        shell.check("parseSizes keeps only known ids with a label", parsed.map(r => r.id).join() === "pacman-cache,orphans,flatpak-unused,shots");
+        shell.check("parseSizes keeps only known ids with a label", parsed.map(r => r.id).join() === "pacman-cache,orphans,flatpak-unused");
         shell.check("parseSizes keeps null bytes as null", parsed[2].bytes === null && parsed[2].count === 2);
         shell.check("parseSizes of garbage is []", S.parseSizes("oops").length === 0 && S.parseSizes('{"a":1}').length === 0);
         shell.check("parseRun: terminal", J(S.parseRun('{"terminal": "doas paccache -r -k2"}')) === J({ terminal: "doas paccache -r -k2" }));
@@ -63,8 +63,8 @@ ShellRoot {
         shell.check("run ignores an unknown id", S.runLog.length === 0);
         S.run("trash");
         shell.check("run refuses the Trash: nothing is ever recorded or deleted", S.runLog.length === 0);
-        S.run("shots");
-        shell.check("run under QS_NO_APPLY only records the id", J(S.runLog) === J(["shots"]) && !S.loading);
+        S.run("flatpak-unused");
+        shell.check("run under QS_NO_APPLY only records the id", J(S.runLog) === J(["flatpak-unused"]) && !S.loading);
         S.load();
         shell.check("load starts nothing under QS_NO_APPLY", !S.loading);
         console.log("TEST done failures=" + shell.failures);

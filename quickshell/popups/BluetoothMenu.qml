@@ -173,9 +173,9 @@ PopupWindow {
                     onClicked: root.adapter.enabled = !root.adapter.enabled
                 }
                 BevelButton {
-                    implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
                     enabled: root.powered
                     glyph: "\ue1aa"
+                    text: "Scan"
                     checked: root.adapter !== null && root.adapter.discovering
                     onClicked: {
                         root.adapter.discovering = !root.adapter.discovering;
@@ -185,30 +185,11 @@ PopupWindow {
                 }
             }
 
-            // Status: no adapter, or the last pairing failure (urgent icon, normal text)
-            RowLayout {
-                Layout.fillWidth: true
+            // Status: no adapter, or the last pairing failure
+            StatusBar {
                 visible: root.statusText !== "" && root.prompt === null
-                spacing: MenuStyle.gap
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    font.family: MenuStyle.iconFont
-                    font.pixelSize: MenuStyle.iconSize
-                    color: Config.colors.urgent
-                    text: "error"
-                }
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
-                    textFormat: Text.PlainText
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: Config.colors.text
-                    text: root.statusText
-                }
+                kind: "error"
+                text: root.statusText
             }
 
             // Pairing request from the agent: title, the code or a field to type in, verb buttons
@@ -341,16 +322,14 @@ PopupWindow {
                         }
                         // Trust: sunken = BlueZ may auto-reconnect it
                         BevelButton {
-                            implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: "\ue8e8"
+                            text: "Trust"
                             checked: modelData.trusted
                             onClicked: modelData.trusted = !modelData.trusted
                         }
                         BevelButton {
-                            implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: "\ue872"
+                            text: "Forget"
                             onClicked: root.forgetting = modelData
                         }
                     }
@@ -360,7 +339,7 @@ PopupWindow {
             Text {
                 renderType: Text.NativeRendering
                 font.hintingPreference: Font.PreferFullHinting
-                visible: root.powered && (root.adapter.discovering || root.available.length > 0)
+                visible: root.powered
                 font.family: MenuStyle.titleFont
                 font.pixelSize: MenuStyle.fontSize
                 color: Config.colors.text
@@ -369,8 +348,9 @@ PopupWindow {
 
             SunkenField {
                 Layout.fillWidth: true
-                visible: root.powered && (root.adapter.discovering || root.available.length > 0)
-                Layout.preferredHeight: Math.max(1, Math.min(root.available.length, MenuStyle.bluetoothListRows)) * MenuStyle.rowHeight + 2 * padding
+                visible: root.powered
+                // Always the full height while on: the menu does not resize when a scan starts or finds devices
+                Layout.preferredHeight: MenuStyle.bluetoothListRows * MenuStyle.rowHeight + 2 * padding
                 padding: 2
                 clip: true
 
@@ -382,7 +362,7 @@ PopupWindow {
                     font.family: MenuStyle.bodyFont
                     font.pixelSize: MenuStyle.fontSize
                     color: MenuStyle.bevelDark
-                    text: "Looking for devices..."
+                    text: root.adapter && root.adapter.discovering ? "Looking for devices..." : "Press Scan to look for devices"
                 }
 
                 ListView {

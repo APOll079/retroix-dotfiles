@@ -1,27 +1,22 @@
 #!/bin/sh
 # Disk clean-up for CleanupState.qml.
-#   cleanup.sh sizes <shotDays>   READ-ONLY. JSON [{id, label, bytes, count, needsRoot, note}] for
-#                                 pacman-cache, orphans, flatpak-unused, shots (files in $HOME/screenshots older
-#                                 than shotDays days: count and bytes only, never names), trash. A missing tool
+#   cleanup.sh sizes              READ-ONLY. JSON [{id, label, bytes, count, needsRoot, note}] for
+#                                 pacman-cache, orphans, flatpak-unused, trash. A missing tool
 #                                 gives bytes null and note "not installed", never an error.
-#   cleanup.sh run <id> <shotDays>  the ONLY deleting path. pacman-cache / orphans need root and are NOT run
+#   cleanup.sh run <id>           the ONLY deleting path. pacman-cache / orphans need root and are NOT run
 #                                 here: prints {"terminal": "<command line>"} for the UI to run in a terminal.
-#                                 flatpak-unused: flatpak uninstall --unused -y; shots: old screenshots go to the
-#                                 Trash (gio trash). The Trash itself is only measured, never emptied here (it is opened in the file manager instead). Prints {"ok": bool, "message": ""}.
-#                                 Unknown id or a shotDays that is not an integer: exit 2, nothing runs.
-# Arguments are never put into script text; file names only travel NUL-separated through find | xargs.
+#                                 flatpak-unused: flatpak uninstall --unused -y. The Trash itself is only measured, never emptied here (it is opened in the file manager instead). Prints {"ok": bool, "message": ""}.
+#                                 Unknown id: exit 2, nothing runs.
+# Arguments are never put into script text.
 export LC_ALL=C
-SHOTS="${HOME}/screenshots"
 TRASH="${HOME}/.local/share/Trash"
 
-usage() { echo "usage: cleanup.sh sizes <shotDays> | run <id> <shotDays>" >&2; exit 2; }
-
-isint() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
+usage() { echo "usage: cleanup.sh sizes | run <id>" >&2; exit 2; }
 
 sizes() {
     exec python3 -I -c '
 import json, os, re, shutil, subprocess, sys
-days, shots, trash = sys.argv[1], sys.argv[2], sys.argv[3]
+trash = sys.argv[1]
 UNITS = {"B": 1, "KiB": 1024, "MiB": 1024**2, "GiB": 1024**3, "TiB": 1024**4}
 
 def run(cmd):
@@ -68,15 +63,6 @@ if shutil.which("flatpak"):
 else:
     out.append(missing("flatpak-unused", "Unused Flatpak runtimes", False))
 
-n = b = 0
-if os.path.isdir(shots) and shutil.which("find"):
-    rc, text = run(["find", shots, "-maxdepth", "1", "-type", "f", "-mtime", "+" + days, "-printf", "%s\\n"])
-    for l in text.split():
-        if l.isdigit():
-            n += 1
-            b += int(l)
-out.append(row("shots", "Screenshots older than " + days + " days", b, n, False))
-
 tb = 0
 if os.path.isdir(trash):
     rc, text = run(["du", "-sb", trash])
@@ -85,7 +71,7 @@ if os.path.isdir(trash):
 out.append(row("trash", "Trash", tb, None, False))
 
 print(json.dumps(out))
-' "$1" "$SHOTS" "$TRASH"
+' "$TRASH"
 }
 
 fail() { echo "{\"ok\": false, \"message\": \"$1\"}"; exit 1; }
@@ -93,7 +79,6 @@ ok() { echo "{\"ok\": true, \"message\": \"$1\"}"; exit 0; }
 
 run_one() {
     id=$1
-    days=$2
     case "$id" in
         pacman-cache) echo '{"terminal": "doas paccache -r -k2"}'; exit 0 ;;
         orphans) echo '{"terminal": "doas pacman -Rns $(pacman -Qdtq)"}'; exit 0 ;;
@@ -102,19 +87,12 @@ run_one() {
             flatpak uninstall --unused -y >/dev/null 2>&1 || fail "flatpak failed"
             ok "Removed unused Flatpak runtimes"
             ;;
-        shots)
-            isint "$days" || usage
-            command -v gio >/dev/null 2>&1 || fail "gio is not installed"
-            [ -d "$SHOTS" ] || ok "Nothing to move"
-            find "$SHOTS" -maxdepth 1 -type f -mtime "+$days" -print0 | xargs -0 -r gio trash >/dev/null 2>&1 || fail "gio trash failed"
-            ok "Old screenshots moved to the Trash"
-            ;;
         *) usage ;;
     esac
 }
 
 case "${1:-}" in
-    sizes) isint "${2:-}" || usage; sizes "$2" ;;
-    run) [ -n "${2:-}" ] || usage; run_one "$2" "${3:-}" ;;
+    sizes) sizes ;;
+    run) [ -n "${2:-}" ] || usage; run_one "$2" ;;
     *) usage ;;
 esac

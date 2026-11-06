@@ -20,6 +20,7 @@ Item {
     property string filter: "all"          // all | recent | steam | other | hidden
     property int cursor: 0
     property var optionsFor: null          // game whose buttons are showing
+    property bool confirmRemove: false     // Remove asked: the ConfirmBar replaces the buttons
     property bool addMode: false
     property var form: ({ name: "", command: "", dir: "", cover: "" })
     property real now: Math.floor(Date.now() / 1000)
@@ -40,6 +41,7 @@ Item {
     onQueryChanged: {
         root.cursor = 0;
         root.optionsFor = null;
+        root.confirmRemove = false;
     }
     onResultsChanged: {
         if (root.cursor >= root.results.length)
@@ -267,11 +269,13 @@ Item {
             Item { Layout.fillHeight: true }
         }
 
-        // The game's buttons
+        // The game's buttons. The row always keeps its height (only fades out) so the grid never changes size
         RowLayout {
             Layout.fillWidth: true
             spacing: MenuStyle.gap
-            visible: !root.addMode && root.optionsFor !== null
+            visible: !root.addMode && !root.confirmRemove
+            opacity: root.optionsFor !== null ? 1 : 0
+            enabled: root.optionsFor !== null
 
             Text {
                 renderType: Text.NativeRendering
@@ -317,19 +321,30 @@ Item {
                 glyph: "\ue872"
                 focusPolicy: Qt.NoFocus
                 onClicked: {
-                    GamesState.removeCustom(root.optionsFor.title);
-                    root.optionsFor = null;
+                    root.confirmRemove = true;
                     root.focusSearch();
                 }
             }
             BevelButton {
                 text: "Back"
+                glyph: "\ue5c4"
                 focusPolicy: Qt.NoFocus
                 onClicked: {
                     root.optionsFor = null;
                     root.focusSearch();
                 }
             }
+        }
+        // Remove asks first, in place of the buttons
+        ConfirmBar {
+            id: removeBar
+            Layout.fillWidth: true
+            visible: !root.addMode && root.confirmRemove && root.optionsFor !== null
+            glyph: "\ue002"
+            message: "Remove " + (root.optionsFor ? root.optionsFor.title : "") + " from the list?"
+            verb: "Remove"
+            onAccepted: root.doRemove()
+            onCanceled: root.confirmRemove = false
         }
         // Status: the highlighted game, else how many there are
         StatusBar {
@@ -400,11 +415,25 @@ Item {
         if (root.results.length === 0)
             return;
         root.optionsFor = null;
+        root.confirmRemove = false;
         root.cursor = Math.max(0, Math.min(root.results.length - 1, root.cursor + d));
         grid.positionViewAtIndex(root.cursor, GridView.Contain);
     }
 
+    function doRemove() {
+        const g = root.optionsFor;
+        root.confirmRemove = false;
+        root.optionsFor = null;
+        if (g && g.source === "custom")
+            GamesState.removeCustom(g.title);
+        root.focusSearch();
+    }
+
     function activateKey(event) {
+        if (root.confirmRemove && root.optionsFor !== null) {
+            removeBar.accept();
+            return;
+        }
         if (!root.current)
             return;
         if (event.modifiers & Qt.ShiftModifier)
@@ -418,6 +447,10 @@ Item {
         if (root.addMode) {
             root.addMode = false;
             root.focusSearch();
+            return true;
+        }
+        if (root.confirmRemove) {
+            root.confirmRemove = false;
             return true;
         }
         if (root.optionsFor !== null) {
@@ -453,6 +486,7 @@ Item {
         root.addMode = false;
         root.filter = "all";
         root.optionsFor = null;
+        root.confirmRemove = false;
         root.cursor = 0;
         root.now = Math.floor(Date.now() / 1000);
         GamesState.refresh();

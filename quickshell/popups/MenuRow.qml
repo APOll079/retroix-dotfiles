@@ -23,7 +23,10 @@ Button {
     property bool reserveIcon: false
     property bool accentTitle: false           // the title in the accent colour (the playing song)
     property bool trailingDim: false           // the trailing text dim (a duration column)
-    readonly property bool lit: (root.enabled && (hover.hovered || hovered || down)) || visualFocus || selected
+    // hoverLit: false for lists where the pointer moves the keyboard cursor (the `selected` row is the one lit row), so a resting
+    // pointer and the cursor can never light two rows at once
+    property bool hoverLit: true
+    readonly property bool lit: (root.enabled && ((root.hoverLit && (hover.hovered || hovered)) || down)) || visualFocus || selected
 
     implicitHeight: subtext !== "" ? MenuStyle.rowHeight * 3 / 2 : MenuStyle.rowHeight
     implicitWidth: 160
