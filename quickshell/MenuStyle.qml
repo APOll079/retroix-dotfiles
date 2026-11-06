@@ -64,9 +64,16 @@ Singleton {
     readonly property int barStrongFontSize: 14
 
     // Component sizes
+    // Window sizes: M for every big window (launcher and its tabs, Games, Wallpapers, Services, cheat sheet,
+    // Task Manager's default), L for the one that shows a big grid (screenshot History; clamp it to the
+    // screen). No S: nothing needs one.
+    readonly property int windowWidth: 760
+    readonly property int windowHeight: 560
+    readonly property int windowLargeWidth: 1120
+    readonly property int windowLargeHeight: 760
     // Launcher window: one size for every tab (Apps, Games, Clipboard) and the standalone Games menu
-    readonly property int launcherWidth: 760
-    readonly property int launcherHeight: 560
+    readonly property int launcherWidth: windowWidth
+    readonly property int launcherHeight: windowHeight
     // Clipboard picker: share of the width taken by the preview pane (left of the list)
     readonly property real clipPreviewFraction: 0.45
     // Screenshots: history label column, grid columns and thumbnail decode width, the pause
@@ -164,8 +171,8 @@ Singleton {
     // Task Manager window (a real window): default size (Hyprland keeps the last one, persistent_size)
     // and the smallest it can be made, where the 2 x 2 Performance graphs and the five action
     // buttons still fit without clipping
-    readonly property int taskWindowWidth: 760
-    readonly property int taskWindowHeight: 560
+    readonly property int taskWindowWidth: windowWidth
+    readonly property int taskWindowHeight: windowHeight
     readonly property int taskMinWidth: 600
     readonly property int taskMinHeight: 420
     readonly property int sysMonInterval: 2000      // CPU / RAM / temperature read interval

@@ -94,8 +94,12 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `contextMenuMinWidth` | int | `140` |  |
 | `tabHeight` | int | `28` |  |
 | `statusHeight` | int | `18` |  |
-| `launcherWidth` | int | `760` |  |
-| `launcherHeight` | int | `560` |  |
+| `windowWidth` | int | `760` |  |
+| `windowHeight` | int | `560` |  |
+| `windowLargeWidth` | int | `1120` |  |
+| `windowLargeHeight` | int | `760` |  |
+| `launcherWidth` | int | `windowWidth` |  |
+| `launcherHeight` | int | `windowHeight` |  |
 | `clipPreviewFraction` | real | `0.45` |  |
 | `shotGridColumns` | int | `4` |  |
 | `shotThumbWidth` | int | `320` |  |
@@ -164,8 +168,8 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `taskInterval` | int | `2000` | Task Manager refresh (ms) |
 | `taskHistory` | int | `60` | samples per Performance graph (2 min at 2 s) |
 | `taskColumnWidth` | int | `80` | CPU / Memory / Procs columns |
-| `taskWindowWidth` | int | `760` |  |
-| `taskWindowHeight` | int | `560` |  |
+| `taskWindowWidth` | int | `windowWidth` |  |
+| `taskWindowHeight` | int | `windowHeight` |  |
 | `taskMinWidth` | int | `600` |  |
 | `taskMinHeight` | int | `420` |  |
 | `sysMonInterval` | int | `2000` | CPU / RAM / temperature read interval |
