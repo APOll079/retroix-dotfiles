@@ -6,11 +6,11 @@ import QtQuick.Layouts
 
 import ".."
 
+// Plain raised BarButtons, no box around them; the active one is toggled (sunken, dithered face).
+// Bar.qml places it.
 RowLayout {
     id: workspaces
-    spacing: 4
-    anchors.left: parent.left
-    anchors.verticalCenter: parent.verticalCenter
+    spacing: MenuStyle.gap
 
      property bool usingHyprland: !!Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")
 
@@ -18,7 +18,7 @@ RowLayout {
     property var currentWorkspaces: usingHyprland ? Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor && w.monitor.name == taskbar.screen.name).sort((a, b) => a.id - b.id) : I3.workspaces.values.filter(w => w.monitor && w.monitor.name == taskbar.screen.name)
 
 
-    Repeater { 
+    Repeater {
         model: parent.currentWorkspaces
         //model: Hyprland.workspaces.values.filter(w => w.monitor.name == taskbar.screen.name)
         BarButton {

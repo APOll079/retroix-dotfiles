@@ -77,37 +77,24 @@ border.color: Config.colors.outline
 }
 }
 
-// Left section: gripper, workspaces box, etched divider before Start/Theme
+// Left section: gripper, workspaces (plain raised buttons, the active one sunken), etched divider before Start/Theme
 Gripper {
 id: leftGripper
 anchors.verticalCenter: parent.verticalCenter
 anchors.left: parent.left
 anchors.leftMargin: 8
 }
-Item {
-id: workspacesBox
+Workspaces {
+id: workspaces
 anchors.verticalCenter: parent.verticalCenter
 anchors.left: leftGripper.right
 anchors.leftMargin: MenuStyle.gap
-height: MenuStyle.barButtonHeight + 4
-width: workspaces.width + 6
-Rectangle {
-anchors.fill: parent
-color: Config.colors.base
-border.width: 1
-border.color: Config.colors.outline
-}
-Workspaces {
-id: workspaces
-anchors.leftMargin: 3
-anchors.rightMargin: 0
-}
 }
 Popups.MenuSeparator {
 id: leftDivider
 vertical: true
 anchors.verticalCenter: parent.verticalCenter
-anchors.left: workspacesBox.right
+anchors.left: workspaces.right
 anchors.leftMargin: MenuStyle.gap
 }
 
