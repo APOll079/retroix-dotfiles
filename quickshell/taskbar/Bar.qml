@@ -109,7 +109,6 @@ openServicesCallback: function() { taskbar.toggleMenu(servicesPanel, Config.Syst
 openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
-openTrashCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep"); if (cleanupMenu.visible) cleanupMenu.openTrash() }
 }
 Popups.ThemeMenu {
 id: themeMenu
@@ -213,60 +212,26 @@ taskbar.toggleMenu(sidePanel, Config.SystemPopup.SidePanel, item, "right");
 
 BarButton {
 id: startmenuButton
+toggledIconFontValue: ""
 isToggled: root.currentPopup == Config.SystemPopup.Startmenu
+label: "Start"
 anchors.left: leftDivider.right
 anchors.verticalCenter: parent.verticalCenter
 anchors.leftMargin: MenuStyle.gap
 onClicked: taskbar.toggleMenu(startMenu, Config.SystemPopup.Startmenu, startmenuButton, "left")
-// Updates waiting (UpdateState): a dot on the button, like the bell's unread dot
-Rectangle {
-visible: UpdateState.total > 0
-x: MenuStyle.unreadDotX
-y: MenuStyle.unreadDotY
-width: MenuStyle.unreadDotSize
-height: MenuStyle.unreadDotSize
-color: Config.colors.urgent
-border.width: 1
-border.color: Config.colors.outline
-}
 }
 BarButton {
 id: themeMenuButton
+toggledIconFontValue: ""
 isToggled: root.currentPopup == Config.SystemPopup.ThemePicker
 iconFontValue: "\ue3ae"
+label: "Themes"
 anchors.left: startmenuButton.right
 anchors.verticalCenter: parent.verticalCenter
 anchors.leftMargin: 4
 onClicked: taskbar.toggleMenu(themeMenu, Config.SystemPopup.ThemePicker, themeMenuButton, "left")
 }
-// Wallpapers and Services: labelled buttons next to Start / Theme (otherwise a few menus deep).
-// Their panels cover the bar strip while open, so a click on the bar (this button too) closes them.
-Popups.MenuSeparator {
-id: quickDivider
-vertical: true
-anchors.verticalCenter: parent.verticalCenter
-anchors.left: themeMenuButton.right
-anchors.leftMargin: MenuStyle.gap
-}
-Row {
-id: quickLaunch
-anchors.left: quickDivider.right
-anchors.leftMargin: MenuStyle.gap
-anchors.verticalCenter: parent.verticalCenter
-spacing: MenuStyle.gap
-BarButton {
-iconFontValue: "\ue1bc"
-label: "Wallpapers"
-isToggled: root.currentPopup == Config.SystemPopup.Wallpapers
-onClicked: taskbar.toggleMenu(wallpaperBrowser, Config.SystemPopup.Wallpapers, null, "keep")
-}
-BarButton {
-iconFontValue: "\ue8b8"
-label: "Services"
-isToggled: root.currentPopup == Config.SystemPopup.Services
-onClicked: taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep")
-}
-}
+// Wallpapers live in the Themes menu ("Wallpapers..."), Services in the Start menu (Services); neither has its own bar button.
 // Bar middle: the current Spotify lyric line (Lyrics.qml), else "Artist - Title"; dimmed while
 // paused; nothing at all when Spotify is closed or another player is active.
 BarButton {
@@ -368,10 +333,13 @@ RecordState.stop();
 return;
 }
 screenshotOverlay.open();
-screenshotOverlay.record = true;
+screenshotOverlay.setRecord(true);
 }
 function stopRecord() {
 RecordState.stop();
+}
+function pauseToggle() {
+RecordState.togglePause();
 }
 function replayToggle() {
 RecordState.replayToggle(root.modelData.name);
@@ -431,14 +399,14 @@ taskbar.openSidePanel(0, null);
 // Room for the centre text's label: it is centred, so twice the smaller distance from the middle
 // to either side, minus its own padding and a gap of clearance on each side. Never overlaps.
 function centreRoom(rightStart) {
-var leftEnd = quickLaunch.x + quickLaunch.width;
+var leftEnd = themeMenuButton.x + themeMenuButton.width;
 return 2 * Math.min(taskbar.width / 2 - leftEnd, rightStart - taskbar.width / 2) - 4 * MenuStyle.gap;
 }
 // The sysmon button's GPU part goes first when the centre text needs more room than is left
 // (up to barMediaMinWidth; a short title never costs the GPU part).
 // Worked out as if the GPU part were shown (so hiding it can't flip it back): where the right
 // section's gripper would start then.
-readonly property real rightStartWithGpu: taskbar.width - trayWell.anchors.rightMargin - laptopControls.widthWithGpu - trayRest.width - sysTray.width - 2 * MenuStyle.barWellPad - 2
+readonly property real rightStartWithGpu: taskbar.width - trayWell.anchors.rightMargin - laptopControls.widthWithGpu - trayRest.width - sysTray.width - 2 * MenuStyle.barWellPad - 2 - 2 * MenuStyle.gap
 TextMetrics {
 id: nowPlayingMetrics
 font.family: MenuStyle.barStrongFont
@@ -446,10 +414,12 @@ font.pixelSize: MenuStyle.barStrongFontSize
 text: nowPlaying.label
 }
 
-// Right section: one sunken well (BarWell) with flat items split by etched separators between groups:
-// [privacy, caffeine] | sysmon | [ETH, Bluetooth] | tray icons | bell + weather + clock
+// Right section: raised, boxed buttons with a gap between them (the BarWell is plain, no sunken frame):
+// [privacy, caffeine] [sysmon] [ETH] [Bluetooth] | tray icons | [bell + weather + clock]
 BarWell {
 id: trayWell
+plain: true
+spacing: MenuStyle.gap
 anchors.verticalCenter: parent.verticalCenter
 anchors.right: parent.right
 anchors.rightMargin: MenuStyle.gap

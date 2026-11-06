@@ -5,12 +5,11 @@ import Quickshell.Io
 import Quickshell.Bluetooth
 import "popups" as Popups
 
-// The status half of the bar's tray well (Bar.qml puts it inside the BarWell): a Row of flat
-// BarButtons, etched separators only between real groups: [mic, screen share, caffeine] | sysmon |
-// [ETH, Bluetooth].
+// The status half of the bar's right side (Bar.qml puts it inside the plain BarWell): a Row of raised,
+// boxed BarButtons with a gap between them: [mic, screen share, caffeine] [sysmon] [ETH] [Bluetooth].
 Row {
     id: root
-    spacing: 0
+    spacing: MenuStyle.gap
 
     property int currentPopup: Config.SystemPopup.None
     property var toggleMenu: function(menu, popup, item) {}
@@ -51,9 +50,11 @@ Row {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (micIcon.visible ? micIcon.width : 0) + (screenIcon.visible ? screenIcon.width : 0)
-        + (recBtn.visible ? recBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
-        + caffeineBtn.width + sep1.width + sep2.width + ethLabel.width + btBtn.width
-    readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth
+        + (vpnBtn.visible ? vpnBtn.width : 0) + (recBtn.visible ? recBtn.width : 0) + (pauseBtn.visible ? pauseBtn.width : 0) + (replayInd.visible ? replayInd.width : 0)
+        + caffeineBtn.width + ethLabel.width + btBtn.width
+    // The gaps between the buttons that are shown (caffeine, sysmon, ETH and Bluetooth always are), plus one to the tray
+    readonly property int itemCount: 4 + (micIcon.visible ? 1 : 0) + (screenIcon.visible ? 1 : 0) + (vpnBtn.visible ? 1 : 0) + (recBtn.visible ? 1 : 0) + (pauseBtn.visible ? 1 : 0) + (replayInd.visible ? 1 : 0)
+    readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth + root.spacing * root.itemCount
 
     // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
     // never changes width while it ticks and nothing next to it moves. Cells are sized to the widest
@@ -78,7 +79,6 @@ Row {
     BarButton {
         id: micIcon
         visible: Privacy.mic
-        flat: true
         interactive: false
         urgent: true
         iconFontValue: "\ue029"
@@ -86,7 +86,6 @@ Row {
     BarButton {
         id: screenIcon
         visible: Privacy.screen
-        flat: true
         interactive: false
         urgent: true
         iconFontValue: "\ue0e2"
@@ -96,18 +95,27 @@ Row {
     BarButton {
         id: recBtn
         visible: RecordState.recording
-        flat: true
         urgent: true
         iconFontValue: ""
-        label: "REC " + RecordState.label
+        // equal-width words (non-breaking spaces in a monospace font): pausing must not move the buttons beside it
+        label: (RecordState.paused ? "PAUSED\u00a0" : "REC\u00a0\u00a0\u00a0\u00a0") + RecordState.label
         tooltip: "Click to stop recording"
         onClicked: RecordState.stop()
+    }
+    // Pause / resume the recording (Super+Alt+P)
+    BarButton {
+        id: pauseBtn
+        visible: RecordState.recording
+        iconFontValue: ""
+        minWidth: MenuStyle.barLabelButtonWidth   // fits both words, so the button keeps its width
+        label: RecordState.paused ? "Resume" : "Pause"
+        tooltip: RecordState.paused ? "Resume the recording" : "Pause the recording"
+        onClicked: RecordState.togglePause()
     }
     // Replay buffer armed (Super+Alt+R toggles, Super+Alt+S saves the last seconds)
     BarButton {
         id: replayInd
         visible: RecordState.replaying
-        flat: true
         interactive: false
         dim: true
         iconFontValue: ""
@@ -117,7 +125,7 @@ Row {
     // Caffeine: sunken while on (idle dim/lock/screens-off paused)
     BarButton {
         id: caffeineBtn
-        flat: true
+        toggledIconFontValue: ""
         iconFontValue: "\uefef"
         isToggled: Idle.caffeine
         glyphOn: Idle.caffeine
@@ -125,28 +133,34 @@ Row {
         onClicked: Idle.caffeine = !Idle.caffeine
     }
 
-    Popups.MenuSeparator { id: sep1; vertical: true }
-
     // CPU load + temperature, GPU temperature, RAM use. Left click: the Task Manager on Performance;
     // right click: the sysmon popup (GPU hotspot / memory). Fixed width so it never jitters.
     BarButton {
         id: sysBtn
-        flat: true
+        toggledIconFontValue: ""   // pushed in (menu or Task Manager open) must not swap the icon: the button would grow
         // No icon: the CPU/RAM labels say what it is (BarButton defaults to the Start grid icon)
         iconFontValue: ""
         label: root.sysLabel(Math.round(SysMon.cpuLoad * 100), SysMon.cpuTemp, SysMon.gpuEdge, SysMon.memPercent, root.showGpu)
-        isToggled: root.currentPopup === Config.SystemPopup.SysMonMenu
-        tooltip: "Left click: Task Manager \u00b7 Right click: temperatures"
-        onClicked: TaskWindow.open("performance")
+        isToggled: root.currentPopup === Config.SystemPopup.SysMonMenu || TaskWindow.visible
+        tooltip: "Left click: show / hide the Task Manager \u00b7 Right click: temperatures"
+        onClicked: TaskWindow.toggle("performance")
         onRightClicked: root.toggleMenu(root.sysMonMenuRef, Config.SystemPopup.SysMonMenu, sysBtn)
     }
 
-    Popups.MenuSeparator { id: sep2; vertical: true }
+    // VPN (VpnState): shown only while a NetworkManager VPN / WireGuard connection is up; a click takes it down
+    BarButton {
+        id: vpnBtn
+        visible: VpnState.up
+        iconFontValue: "\ue897"
+        label: VpnState.label
+        maxLabelWidth: MenuStyle.barLabelButtonWidth * 2
+        tooltip: VpnState.tooltip(VpnState.names)
+        onClicked: VpnState.disconnect()
+    }
 
     // Network: a status indicator (the desktop is wired), not a button
     BarButton {
         id: ethLabel
-        flat: true
         iconFontValue: root.netIconVal
         toggledIconFontValue: ""
         label: root.netText
@@ -157,7 +171,6 @@ Row {
     // Bluetooth: a normal bar button next to the ETH label
     BarButton {
         id: btBtn
-        flat: true
         iconFontValue: root.btIconVal
         toggledIconFontValue: ""
         label: root.btText

@@ -148,7 +148,7 @@ property string gpu: "GPU Name"
 }
 property JsonObject bar: JsonObject {
 property int fontSize: 12
-property int trayIconSize: 16
+property int trayIconSize: 20
 property bool monochromeTrayIcons: true
 }
 // Toasts: position top-right | top-left | top | bottom-right | bottom-left | bottom;
@@ -181,6 +181,14 @@ property var mounts: ["/", "~", "/mnt/disk1", "/mnt/disk2"]
 // Start > Clean up: screenshots older than shotDays are offered for the Trash
 property JsonObject cleanup: JsonObject {
 property int shotDays: 30
+}
+// Network toasts (NetworkWatch): link up / down plus a ping list; hosts = names or IPs, empty = link only.
+// cooldownSeconds = minimum gap between two toasts of the same kind. vpn = poll VPN status for the bar button.
+property JsonObject networkWatch: JsonObject {
+property bool enabled: true
+property var hosts: []
+property int cooldownSeconds: 60
+property bool vpn: true
 }
 // Which OSDs show
 property JsonObject osd: JsonObject {

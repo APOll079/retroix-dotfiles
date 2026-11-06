@@ -135,7 +135,7 @@ hl.window_rule({
     },
     float  = true,
     center = true,
-    size   = { 720, 420 }
+    size   = { 960, 460 }
 })
 
 -- Quickshell's Task Manager (popups/TaskManager.qml, a FloatingWindow titled "Task Manager"): float,

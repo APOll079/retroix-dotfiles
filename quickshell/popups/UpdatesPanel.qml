@@ -5,8 +5,8 @@ import QtQuick.Layouts
 import ".."
 
 // Pending updates (Start > Updates (N)), centred like Services. Counts per source, then the newest Arch news
-// (read it BEFORE updating: pacman updates sometimes need a manual step), then Refresh and Update. Update opens
-// the configured terminal on `yay -Syu` (UpdateState.runUpdate) and closes the panel; nothing is installed here.
+// (read it BEFORE updating: pacman updates sometimes need a manual step), then Refresh and Update. Update all / System / Flatpak
+// open the configured terminal on `yay -Syu` and / or `flatpak update` (UpdateState.runUpdate) and close the panel; nothing is installed here.
 // Arch's news feed, not Artix's. Enter = Update, Escape / a click outside / the Start row again close.
 PanelWindow {
     id: root
@@ -171,12 +171,27 @@ PanelWindow {
                         onClicked: UpdateState.refresh()
                     }
                     BevelButton {
+                        text: "System"
+                        glyph: "\ue923"
+                        enabled: UpdateState.countFor("system") > 0
+                        focusPolicy: Qt.NoFocus
+                        onClicked: root.update("system")
+                    }
+                    BevelButton {
+                        text: "Flatpak"
+                        glyph: "\ue923"
+                        enabled: UpdateState.countFor("flatpak") > 0
+                        focusPolicy: Qt.NoFocus
+                        onClicked: root.update("flatpak")
+                    }
+                    BevelButton {
                         id: updateButton
-                        text: "Update"
+                        text: "Update all"
+                        glyph: "\ue923"
                         isDefault: true
                         enabled: UpdateState.total > 0
                         focusPolicy: Qt.NoFocus
-                        onClicked: root.update()
+                        onClicked: root.update("all")
                     }
                 }
 
@@ -191,11 +206,13 @@ PanelWindow {
         }
     }
 
-    // Opens the terminal on `yay -Syu` and closes the panel (an Exclusive-keyboard panel would sit over it)
-    function update() {
-        if (UpdateState.total <= 0)
+    // Opens the terminal on the update (kind: "system" = yay -Syu, "flatpak", "all" = both) and closes the panel
+    // (an Exclusive-keyboard panel would sit over it)
+    function update(kind) {
+        const k = kind || "all";
+        if (UpdateState.countFor(k) <= 0)
             return;
-        UpdateState.runUpdate();
+        UpdateState.runUpdate(k);
         root.closeCallback();
     }
 

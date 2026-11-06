@@ -12,21 +12,17 @@ Item {
     property var tabs: []
     property string current: ""
     property bool tabsShown: true
-    // flat: no raised page and no padding, the content fills the whole area (the launcher's Clipboard tab; the host draws its own tab buttons)
-    property bool flat: false
     property int tabHeight: MenuStyle.tabHeight
     property int pagePad: MenuStyle.tabPagePad
     signal tabClicked(string key)
 
     readonly property bool hasTabs: page.tabsShown && page.tabs.length > 0
     readonly property int frameTop: hasTabs ? tabHeight - 2 : 0
-    readonly property int inset: page.flat ? 0 : 3 + page.pagePad
     default property alias content: body.data
 
     // the page: outline + raised bevel
     Rectangle {
         id: frame
-        visible: !page.flat
         y: page.frameTop
         width: parent.width
         height: parent.height - y
@@ -85,9 +81,9 @@ Item {
 
     Item {
         id: body
-        x: page.inset
-        y: page.frameTop + page.inset
+        x: 3 + page.pagePad
+        y: page.frameTop + 3 + page.pagePad
         width: page.width - 2 * x
-        height: page.height - y - page.inset
+        height: page.height - y - 3 - page.pagePad
     }
 }

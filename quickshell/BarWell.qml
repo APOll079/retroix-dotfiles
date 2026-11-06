@@ -8,12 +8,15 @@ Rectangle {
 
     default property alias content: row.data
     property alias spacing: row.spacing
+    // plain: no sunken frame, just a row (the bar's right side now uses raised, boxed buttons)
+    property bool plain: false
 
     implicitWidth: row.implicitWidth + 2 * MenuStyle.barWellPad + 2
     implicitHeight: MenuStyle.barButtonHeight + 2 * MenuStyle.barWellPad
-    color: Config.colors.base
+    color: root.plain ? "transparent" : Config.colors.base
 
     Bevel {
+        visible: !root.plain
         anchors.fill: parent
         thickness: 1
         raised: false

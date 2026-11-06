@@ -87,12 +87,15 @@ Singleton {
     }
 
     function toastBody(failed) {
-        return failed ? "failed" : "stopped";
+        return failed ? "It failed. Details shows its log." : "It is not running any more.";
+    }
+    function toastTitle(name, failed) {
+        return name + (failed ? " failed" : " stopped");
     }
 
     // notify-send argument array (the service name only ever lands in the title, never in a script)
     function toastCommand(name, failed) {
-        return ["notify-send", "-a", "Services", "-A", "restart=Restart", "-A", "details=Details", name + " stopped", toastBody(failed)];
+        return ["notify-send", "-a", "Services", "-A", "restart=Restart", "-A", "details=Details", toastTitle(name, failed), toastBody(failed)];
     }
 
     // One poll: { fired: [{name, failed}], gates, expected }, no side effects.

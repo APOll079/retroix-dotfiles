@@ -71,7 +71,7 @@ ShellRoot {
             panel.closeCallback = function () { shell.closed++; };
             panel.openMenu();
             tc.wait(200);
-            shell.check("Update is off before any update is known", shell.buttons(panel, "Update").length === 1 && !shell.buttons(panel, "Update")[0].enabled);
+            shell.check("Update is off before any update is known", shell.buttons(panel, "Update all").length === 1 && !shell.buttons(panel, "Update all")[0].enabled);
             shell.check("the Read-the-news line shows", shell.texts(panel).indexOf("Read the news before updating") >= 0);
 
             UpdateState.pacman = 8;
@@ -80,11 +80,11 @@ ShellRoot {
             UpdateState.news = [{ title: "Manual intervention for <b>foo</b>", date: "2026-06-01" }];
             UpdateState.lastChecked = new Date();
             tc.wait(100);
-            shell.check("Update is on with updates", shell.buttons(panel, "Update")[0].enabled);
+            shell.check("Update is on with updates", shell.buttons(panel, "Update all")[0].enabled);
             shell.check("the headline shows as plain text", shell.texts(panel).indexOf("Manual intervention for <b>foo</b>") >= 0);
             shell.check("a missing tool reads not installed", shell.texts(panel).indexOf("not installed") >= 0);
             shell.check("the status line has the summary", shell.texts(panel).some(s => s.indexOf("11 updates: 8 pacman, 3 AUR") === 0));
-            tc.mouseClick(shell.buttons(panel, "Update")[0]);
+            tc.mouseClick(shell.buttons(panel, "Update all")[0]);
             tc.wait(100);
             shell.check("the Update button closes the panel", shell.closed === 1);
             tc.keyClick(Qt.Key_Return);
@@ -97,7 +97,7 @@ ShellRoot {
             UpdateState.pacman = 0;
             UpdateState.aur = 0;
             tc.wait(100);
-            shell.check("nothing to update: Up to date, Update off", shell.texts(panel).indexOf("Up to date") >= 0 && !shell.buttons(panel, "Update")[0].enabled);
+            shell.check("nothing to update: Up to date, Update off", shell.texts(panel).indexOf("Up to date") >= 0 && !shell.buttons(panel, "Update all")[0].enabled);
             tc.keyClick(Qt.Key_Return);
             tc.wait(100);
             shell.check("Enter with nothing to update does nothing", shell.closed === 3);

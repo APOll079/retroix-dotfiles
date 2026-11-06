@@ -83,8 +83,8 @@ ShellRoot {
             panel.openMenu();
             CleanupState.rows = shell.rows;
             tc.wait(200);
-            shell.check("rows with nothing to clean are hidden (4 shown)", panel.shown.length === 4);
-            shell.check("one Clean button per row", shell.buttons(panel, "Clean").length === 4);
+            shell.check("rows with nothing to clean (and the Trash) are hidden (3 shown)", panel.shown.length === 3);
+            shell.check("one Clean button per row", shell.buttons(panel, "Clean").length === 3);
 
             // 1. Clean -> confirm bar, nothing ran
             tc.mouseClick(shell.buttons(panel, "Clean")[0]);
@@ -118,14 +118,6 @@ ShellRoot {
             shell.check("Enter confirms: run called once with the id", JSON.stringify(CleanupState.runLog) === JSON.stringify(["shots"]));
             shell.check("the confirm is gone after accepting", panel.confirmId === "");
 
-            // 5. the verb button confirms the Trash, with its own verb
-            tc.mouseClick(shell.buttons(panel, "Clean")[3]);
-            tc.wait(100);
-            shell.check("the trash confirm says Empty Trash and the size", shell.confirmBars(panel)[0].verb === "Empty Trash" && shell.confirmBars(panel)[0].message.indexOf("1.2 GB") >= 0);
-            tc.mouseClick(shell.buttons(panel, "Empty Trash")[0]);
-            tc.wait(100);
-            shell.check("the Empty Trash button runs it once", JSON.stringify(CleanupState.runLog) === JSON.stringify(["shots", "trash"]));
-
             // 6. keys: Down moves, Enter asks, Esc, Esc closes
             panel.cursor = 0;
             tc.keyClick(Qt.Key_Down);
@@ -133,18 +125,12 @@ ShellRoot {
             shell.check("Down moves the selection", panel.cursor === 1);
             tc.keyClick(Qt.Key_Return);
             tc.wait(50);
-            shell.check("Enter on a row asks (nothing runs)", panel.confirmId === "flatpak-unused" && CleanupState.runLog.length === 2);
+            shell.check("Enter on a row asks (nothing runs)", panel.confirmId === "flatpak-unused" && CleanupState.runLog.length === 1);
             tc.keyClick(Qt.Key_Escape);
             tc.wait(50);
             tc.keyClick(Qt.Key_Escape);
             tc.wait(50);
             shell.check("a second Esc closes the panel", shell.closed === 1);
-
-            // 7. Empty Trash from the Start menu: confirm showing as soon as the sizes are in
-            panel.openTrash();
-            CleanupState.rows = shell.rows.slice();
-            tc.wait(100);
-            shell.check("openTrash shows the Trash confirm", panel.confirmId === "trash" && JSON.stringify(CleanupState.runLog) === JSON.stringify(["shots", "trash"]));
 
             // 8. nothing to clean
             panel.openMenu();

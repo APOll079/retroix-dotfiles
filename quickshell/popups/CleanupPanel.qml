@@ -5,9 +5,9 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// Disk clean-up (Start > Clean up, or Start > Empty Trash which opens it with the Trash confirm showing). One row
+// Disk clean-up (Start > Clean up; the Trash is only a Start row that opens its folder). One row
 // per thing that can be cleaned, with its size, measured BEFORE anything is deleted. "Clean" swaps the row for a
-// ConfirmBar that names the size (verb "Clean up", "Empty Trash" for the Trash); nothing runs without it.
+// ConfirmBar that names the size (verb "Clean up"); nothing runs without it.
 // Root items (package cache, orphans) open a terminal where doas asks for the password; the panel closes then.
 // Up / Down select, Enter = Clean the selected row (or accept the confirm), Escape cancels the confirm, then closes.
 PanelWindow {
@@ -20,7 +20,6 @@ PanelWindow {
 
     property string confirmId: ""          // the row waiting for its confirm, "" = none
     property int cursor: 0
-    property bool pendingTrash: false      // openTrash(): confirm the Trash row as soon as the sizes are in
 
     readonly property var shown: CleanupState.visibleRows(CleanupState.rows)
     readonly property var confirmRow: root.shown.find(r => r.id === root.confirmId) || null
@@ -54,14 +53,6 @@ PanelWindow {
 
     Connections {
         target: CleanupState
-        function onRowsChanged() {
-            if (!root.pendingTrash)
-                return;
-            root.pendingTrash = false;
-            const i = root.shown.findIndex(r => r.id === "trash");
-            if (i >= 0)
-                root.ask(i);
-        }
         function onTerminalOpened() {
             root.closeCallback();
         }
@@ -81,7 +72,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: "Clean up"
-            windowTitleIcon: "\ue872"
+            windowTitleIcon: "\ue16c"
 
             ColumnLayout {
                 id: content
@@ -135,7 +126,7 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     reserveIcon: true
                                     selected: entry.index === root.cursor
-                                    glyph: entry.modelData.id === "trash" ? "\ue872" : "\ue2c7"
+                                    glyph: "\ue2c7"
                                     text: entry.modelData.label
                                     subtext: CleanupState.detailText(entry.modelData)
                                     trailing: CleanupState.sizeText(entry.modelData)
@@ -220,17 +211,10 @@ PanelWindow {
 
     function openMenu() {
         root.confirmId = "";
-        root.pendingTrash = false;
         CleanupState.clearResult();
         CleanupState.load();
         root.visible = true;
         keys.forceActiveFocus();
-    }
-
-    // Start > Empty Trash (size): opens the panel with the Trash row's confirm showing once the sizes are in
-    function openTrash() {
-        root.openMenu();
-        root.pendingTrash = true;
     }
 
     function closeMenu() {

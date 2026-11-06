@@ -89,21 +89,43 @@ Singleton {
     function updateCommand(terminal, classFlag) {
         return terminalCommand(terminal, classFlag, "yay -Syu");
     }
+    function flatpakCommand(terminal, classFlag) {
+        return terminalCommand(terminal, classFlag, "flatpak update");
+    }
+    function allCommand(terminal, classFlag) {
+        return terminalCommand(terminal, classFlag, "yay -Syu; flatpak update");
+    }
+    // kind: "system" (pacman + AUR through yay), "flatpak", or "all" (both, one after the other)
+    function commandFor(kind, terminal, classFlag) {
+        return kind === "flatpak" ? flatpakCommand(terminal, classFlag) : kind === "all" ? allCommand(terminal, classFlag) : updateCommand(terminal, classFlag);
+    }
+    // How many updates a kind covers (the buttons are off when it is 0)
+    function countFor(kind) {
+        const n = v => typeof v === "number" ? v : 0;
+        return kind === "flatpak" ? n(root.flatpak) : kind === "system" ? n(root.pacman) + n(root.aur) : root.total;
+    }
 
     // ---- live part ----
 
+    // A refresh asked while one is running is not dropped (it would read the counts from before the update that
+    // just finished): it runs again as soon as the first one is done
+    property bool again: false
     function refresh() {
-        if (!root.active || root.checking)
+        if (!root.active)
             return;
+        if (root.checking) {
+            root.again = true;
+            return;
+        }
         root.checking = true;
         countsProc.running = true;
     }
 
-    // Opens the terminal on `yay -Syu`; the counts are re-read when it closes
-    function runUpdate() {
+    // Opens the terminal on an update (kind: "system" = yay -Syu, "flatpak", "all"); the counts are re-read when it closes
+    function runUpdate(kind) {
         if (!root.active || termProc.running)
             return;
-        termProc.command = root.updateCommand(Config.settings.execCommands.terminal, Config.settings.execCommands.terminalClassFlag);
+        termProc.command = root.commandFor(kind || "system", Config.settings.execCommands.terminal, Config.settings.execCommands.terminalClassFlag);
         termProc.running = true;
     }
 
@@ -135,12 +157,26 @@ Singleton {
         onExited: {
             root.checking = false;
             root.lastChecked = new Date();
+            if (root.again) {
+                root.again = false;
+                root.refresh();
+            }
         }
     }
 
     Process {
         id: termProc
-        onExited: root.refresh()
+        onExited: {
+            root.refresh();
+            settleTimer.restart();
+        }
+    }
+    // checkupdates / yay read their own package databases: once more a little after the terminal closed, in case the
+    // first read raced the last writes
+    Timer {
+        id: settleTimer
+        interval: 4000
+        onTriggered: root.refresh()
     }
 
     Timer {

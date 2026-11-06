@@ -12,7 +12,7 @@ quickshell/taskbar/Bar.qml	MenuState\.closeAll\(\)	Bar: a click outside closes m
 quickshell/taskbar/Bar.qml	function closeAny	Super+Q closes an open menu before the window
 quickshell/taskbar/Bar.qml	Qt\.MiddleButton	Bar now-playing: middle-click play / pause
 quickshell/shell.qml	target: "taskmanager"	Task Manager IPC (one window)
-quickshell/LaptopControls.qml	TaskWindow\.open\("performance"\)	CPU button: left-click opens Task Manager on Performance
+quickshell/LaptopControls.qml	TaskWindow\.toggle\("performance"\)	CPU button: left-click shows the Task Manager on Performance, the next click hides it
 quickshell/LaptopControls.qml	onRightClicked: root\.toggleMenu\(root\.sysMonMenuRef	CPU button: right-click opens the temperatures popup
 quickshell/LaptopControls.qml	Idle\.caffeine = !Idle\.caffeine	Caffeine button toggles
 quickshell/taskbar/ClockWidget.qml	onRightClicked:.*dnd	Clock: right-click toggles Do Not Disturb
@@ -142,10 +142,38 @@ quickshell/shell.qml	target: "lyrics"	IPC handler lyrics (used by the keybind)
 hypr/binds.lua	\-\-\ help:\ Media\ \|\ Lyrics\ window	Key: Media | Lyrics window
 quickshell/popups/CleanupPanel.qml	function accept\(\)	Clean up: the ConfirmBar's verb is the only thing that runs a clean-up
 quickshell/popups/CleanupPanel.qml	Qt\.Key_Escape	Clean up: Esc cancels the confirm first, then closes
-quickshell/popups/CleanupPanel.qml	function openTrash\(\)	Start > Empty Trash opens the panel with the Trash confirm showing
 quickshell/popups/UpdatesPanel.qml	Qt\.Key_Return	Updates: Enter = Update (opens the terminal on yay -Syu, closes the panel)
-quickshell/scripts/cleanup.sh	gio trash --empty	Empty Trash runs gio trash --empty
 quickshell/scripts/cleanup.sh	xargs -0 -r gio trash	Old screenshots go to the Trash, never deleted outright
 quickshell/popups/StartMenu.qml	text: "Clean up"	Start menu: Clean up row
-quickshell/popups/StartMenu.qml	text: CleanupState\.trashLabel	Start menu: Empty Trash row with its size
+quickshell/popups/StartMenu.qml	text: CleanupState\.trashLabel	Start menu: the Trash row shows its size
 quickshell/popups/StartMenu.qml	text: "Updates \("	Start menu: Updates (N) row while updates are waiting
+quickshell/LaptopControls.qml	onClicked: RecordState\.togglePause\(\)	The bar's Pause / Resume button toggles pause
+quickshell/taskbar/Bar.qml	function pauseToggle\(\)	IPC record_<monitor> pauseToggle (used by the pause key)
+hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Pause\ /\ resume\ the\ recording	Key: Screen | Pause / resume the recording
+quickshell/popups/ScreenshotOverlay.qml	text: "Shot"	Overlay: the Shot / Record switch (Shot button)
+quickshell/popups/ScreenshotOverlay.qml	text: "Start recording"	Overlay: Record on Screen / All waits for the Start recording button (or Enter)
+quickshell/popups/ScreenshotOverlay.qml	event\.text === "r"	Overlay: R switches between Shot and Record
+quickshell/scripts/record.sh	kill -USR2	Pause / resume signals gpu-screen-recorder
+quickshell/scripts/record.sh	No microphone found	Preflight: Record with Mic and no microphone is a problem
+quickshell/NetworkWatch.qml	function observe\(state, value, need\)	Network toasts: a link or host state must hold 2 polls before it toasts; the first steady value toasts nothing
+quickshell/NetworkWatch.qml	"Network is down"	Toast "Network is down" when the wired link drops
+quickshell/NetworkWatch.qml	"Network is back"	Toast "Network is back" when the wired link returns
+quickshell/NetworkWatch.qml	 is down	Toast "<host> is down" for each host in settings.networkWatch.hosts
+quickshell/NetworkWatch.qml	function rateOk	The same toast kind is sent at most once per networkWatch.cooldownSeconds
+quickshell/VpnState.qml	function downCommand	The bar VPN button runs nmcli connection down only for a name from the last status
+quickshell/LaptopControls.qml	onClicked: VpnState\.disconnect\(\)	The bar's VPN button disconnects the VPN
+quickshell/popups/StartMenu.qml	trash:///	Start menu: the Trash row only opens the Trash folder in the file manager, it never deletes
+quickshell/popups/UpdatesPanel.qml	text: "Flatpak"	Updates: the Flatpak button opens the terminal on flatpak update
+quickshell/popups/UpdatesPanel.qml	text: "Update all"	Updates: Update all opens the terminal on yay -Syu and flatpak update
+quickshell/utils/Units.qml	function answer\(	Launcher: "5 km in mi" / "72 f in c" shows a conversion row and Enter copies the number; unknown or mixed units give no row
+quickshell/popups/AppLauncher.qml	Utils\.Units\.answer\(q\)	Launcher: a unit conversion row goes before the calculator row and replaces the calculator's row for the same input
+quickshell/utils/ColorText.qml	function answer\(	Launcher: typing #c950bb, #abc or rgb(201,80,187) shows hex, rgb and hsl; Enter copies the hex
+quickshell/popups/AppLauncher.qml	Utils\.ColorText\.answer\(q\)	Launcher: a colour row is added for a typed colour
+quickshell/utils/TimeZones.qml	function answer\(	Launcher: "time tokyo" shows the city's time and date; Enter copies the time
+quickshell/popups/AppLauncher.qml	Utils\.TimeZones\.answer\(q\)	Launcher: a time zone row is added for "time <city>"
+quickshell/popups/NotificationList.qml	function filterItems\(	Notification history: the search box filters by app, title and body
+quickshell/popups/NotificationList.qml	Search notifications	Notification history: the search box placeholder
+quickshell/popups/NotificationList.qml	No matches	Notification history: an empty search result says No matches
+quickshell/popups/NotificationList.qml	onEscaped: filterBox\.input\.focus = false	Notification history: a second Escape in the search box hands the keyboard back
+quickshell/Weather.qml	function nextHours\(	Weather: the hourly forecast picks the running slot and the next ones
+quickshell/popups/CalendarTab.qml	hourlyRow	Calendar tab: the hourly forecast row

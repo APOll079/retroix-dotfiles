@@ -52,8 +52,29 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] The urgent colour (darker, rust-coloured in cherry): the privacy icons, error text, a critical toast's title bar
 - [ ] Window frames (`hypr/plugins.lua`, never run): install hyprbars and imgborders with `hyprpm`, `hyprctl reload`; do the option names, buttons and window-rule keys in `docs/theming.md` hold; do floating windows get the bar and tiled ones not; does the bevel draw around windows
 
+### Capture bar, pause and preflight (branch record-controls, never looked at)
+- [ ] Overlay (Super+Shift+S, then Record): the new bar `[Shot][Record] | targets | [Mic] | [History][X]` and the hint row look right at real DPI (it was never rendered), R switches, Screen / All wait for "Start recording" (Enter too), a plain shot still fires at once, Mic is dim in Shot mode and nothing jumps
+- [ ] Preflight: Mic with no microphone shows the problem in red and blocks the start; a full disk or a read-only folder blocks; under 2 GB free only warns
+- [ ] Pause: the bar's Pause / Resume and Super+Alt+P: does `SIGUSR2` really pause gpu-screen-recorder, does the clip skip the paused time, does `PAUSED 0:42` freeze and resume. If SIGUSR2 does nothing, the fix is the signal or the option in `record.sh pause`
+- [ ] A recorder that fails at once (wrong portal, no permission) toasts its own last line instead of nothing
+
+### History search and hourly forecast (never looked at)
+- [ ] Notification history search: filters live while the panel keeps its keys (Super+N toggles), Escape twice (clear, then release the keyboard), right-click removes the right entry on a filtered list
+- [ ] Hourly forecast in the Calendar tab: times match the place's local time (checked only against a fixture), four cells fit at 480 px (long values like "-12°C" may elide)
+
+### Bar, updates and trash changes (never looked at)
+- [ ] CPU button: a left click shows the Task Manager (Performance tab), the next click hides it, and the button looks pushed in while the window is open; Ctrl+Shift+Esc still opens / focuses it
+- [ ] Bar: Start and Themes are labelled and wider; no Wallpapers / Services buttons (Wallpapers is in the Themes menu, Services in the Start menu); the right side (caffeine, CPU, ETH, Bluetooth, bell + clock) is raised boxed buttons with gaps, no sunken frame: nothing clipped at 1920 and 1280, the centre text still gets its room (the width bookkeeping now counts the gaps); no stripe down the left of the Start menu and launcher, no dot on the Start button
+- [ ] Updates: System / Flatpak / Update all each open the wider terminal (960x460, the rule isn't reloaded until `hyprctl reload`); after closing the terminal the count drops (and the Start dot goes) within a few seconds
+- [ ] Start > Trash (size) opens the Trash folder in your file manager (`trash:///`); nothing in the shell empties it any more
+- [ ] Launcher answers: "5 km in mi", "#c950bb", "time tokyo" in Super+D (text, glyph, Enter copies and closes), plus one the calculator also knows ("1 mib to kib") and a time in a zone that is in daylight saving now (glyph codepoints unchecked)
+
+### Network and VPN watch (never looked at)
+- [ ] Pull the cable and plug it back: "Network is down" then "Network is back" once each, about 20 s after the change (a shorter flap toasts nothing); a host added to `networkWatch.hosts` toasts "is down" / "is back" once. Set `hosts` in settings.json to try it (empty by default)
+- [ ] Connect a NetworkManager VPN or WireGuard: the bar button appears within 15 s with its name (never looked at; glyph `\ue897` unchecked), a click drops it; a WireGuard interface NM doesn't manage should still show (fallback tested with fakes only)
+
 ### Clipboard layout (branch clipboard-layout, never looked at)
-- [ ] Launcher Clipboard tab (Super+V): no stripe and no raised page, tabs as a button row, the preview and list fill the width; switching to Apps / Games brings the stripe and joined tabs back, Ctrl+Tab and the tab buttons both work, and the dead space is gone (the preview pane is still 45 % wide: `MenuStyle.clipPreviewFraction`)
+- [ ] Launcher Clipboard tab (Super+V): the same small tabs as Apps and Games, no inner padding, the preview and list fill the width; Ctrl+Tab and the tabs both switch, and the dead space is gone (the preview pane is still 45 % wide: `MenuStyle.clipPreviewFraction`)
 
 ### Work pass, wave 2 (branch work-pass-w2, offscreen only, never looked at)
 - [ ] Updates (install pacman-contrib): the counts match `checkupdates` / `yay -Qua` / flatpak, the Arch news lines load, the dot on Start and the "Updates (N)" row appear, Update opens kitty on `yay -Syu`; neither panel nor the Start rows were ever looked at (glyph codepoints unchecked)

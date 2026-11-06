@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Disk clean-up state for the Clean up panel and the Start menu's "Empty Trash (size)" row. scripts/cleanup.sh
+// Disk clean-up state for the Clean up panel and the Start menu's "Trash (size)" row, which opens the Trash folder. scripts/cleanup.sh
 // measures (`sizes`, read-only) and is the only thing that deletes (`run <id>`). Root items (package cache,
 // orphans) are not run by the script: it prints the doas command line and this opens it in the configured terminal
 // (same shape as ServicesPanel.dialogCommand), so the password prompt is the real one.
@@ -15,7 +15,7 @@ Singleton {
     readonly property bool live: !Quickshell.env("QS_NO_APPLY")
     readonly property string script: Quickshell.shellDir + "/scripts/cleanup.sh"
     readonly property int shotDays: 30            // screenshots older than this are offered for the Trash
-    readonly property var knownIds: ["pacman-cache", "orphans", "flatpak-unused", "shots", "trash"]
+    readonly property var knownIds: ["pacman-cache", "orphans", "flatpak-unused", "shots"]   // the Trash is measured, never cleaned from here
 
     property var rows: []                 // [{ id, label, bytes, count, needsRoot, note }] from `sizes`
     property bool loading: false
@@ -25,7 +25,7 @@ Singleton {
 
     readonly property var trashRow: rows.find(r => r.id === "trash") || null
     readonly property real trashBytes: trashRow && typeof trashRow.bytes === "number" ? trashRow.bytes : 0
-    readonly property string trashLabel: trashBytes > 0 ? "Empty Trash (" + formatBytes(trashBytes) + ")" : "Empty Trash"
+    readonly property string trashLabel: trashBytes > 0 ? "Trash (" + formatBytes(trashBytes) + ")" : "Trash"
     readonly property real totalBytes: total(rows)
 
     signal terminalOpened()
@@ -64,7 +64,7 @@ Singleton {
     }
 
     function visibleRows(rows) {
-        return rows.filter(cleanable);
+        return rows.filter(r => r.id !== "trash" && cleanable(r));
     }
 
     // The size column: "1.2 GB", "3 items (size unknown)", "not installed"
@@ -89,14 +89,12 @@ Singleton {
     }
 
     function confirmVerb(r) {
-        return r.id === "trash" ? "Empty Trash" : "Clean up";
+        return "Clean up";
     }
 
     // The question, naming the size
     function confirmText(r) {
         const size = sizeText(r);
-        if (r.id === "trash")
-            return "Empty the Trash? " + size + " will be gone for good.";
         if (r.id === "shots")
             return "Move " + size + " of old screenshots to the Trash?";
         if (r.needsRoot)

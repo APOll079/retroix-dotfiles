@@ -120,9 +120,9 @@ ShellRoot {
         shell.check("step: pure (input untouched)", g.armed === true && g.last === 0);
 
         // toast text
-        shell.check("toast: stopped body", SW.toastBody(false) === "stopped" && SW.toastBody(true) === "failed");
+        shell.check("toast: body says what happened, title matches it", SW.toastBody(false) === "It is not running any more." && SW.toastBody(true) === "It failed. Details shows its log.");
         const cmd = SW.toastCommand("pipe wire; rm -rf ~", true);
-        shell.check("toast: argument array with both actions, name only in the title", J(cmd) === J(["notify-send", "-a", "Services", "-A", "restart=Restart", "-A", "details=Details", "pipe wire; rm -rf ~ stopped", "failed"]));
+        shell.check("toast: argument array with both actions, name only in the title", J(cmd) === J(["notify-send", "-a", "Services", "-A", "restart=Restart", "-A", "details=Details", "pipe wire; rm -rf ~ failed", "It failed. Details shows its log."]));
         shell.check("safeName: accepts real names, refuses odd ones", SW.safeName("pipewire-pulse") && SW.safeName("a@b.c_d") && !SW.safeName("-x") && !SW.safeName("a b") && !SW.safeName("a;b") && !SW.safeName(""));
 
         shell.check("harness: inactive under QS_NO_APPLY", SW.active === false);

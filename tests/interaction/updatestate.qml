@@ -44,6 +44,15 @@ ShellRoot {
         shell.check("updateCommand: empty flag leaves the window unnamed", J(U.updateCommand("foot", "")) === J(["foot", "fish", "-c", script]));
         shell.check("settings default to kitty --class", Config.settings.execCommands.terminal === "kitty" && Config.settings.execCommands.terminalClassFlag === "--class");
         U.refresh();
+        shell.check("commandFor: system is yay -Syu, flatpak is flatpak update, all is both in one terminal",
+            U.commandFor("system", "kitty", "--class").join("|").indexOf("yay -Syu;") > 0
+            && U.commandFor("flatpak", "kitty", "--class").join("|").indexOf("flatpak update;") > 0
+            && U.commandFor("all", "kitty", "--class").join("|").indexOf("yay -Syu; flatpak update;") > 0);
+        shell.check("commandFor: an unknown kind is the system update, the window is named qs-dialog", U.commandFor("x", "kitty", "--class").join("|") === U.updateCommand("kitty", "--class").join("|") && U.commandFor("all", "kitty", "--class")[2] === "qs-dialog");
+        U.pacman = 3; U.aur = 2; U.flatpak = 4;
+        shell.check("countFor: system is pacman + AUR, flatpak is flatpak, all is the total", U.countFor("system") === 5 && U.countFor("flatpak") === 4 && U.countFor("all") === U.total);
+        U.pacman = 2; U.aur = null; U.flatpak = null;
+        shell.check("countFor: unknown (null) counts as 0", U.countFor("system") === 2 && U.countFor("flatpak") === 0);
         U.runUpdate();
         shell.check("refresh and runUpdate start nothing under QS_NO_APPLY", !U.active && !U.checking);
         console.log("TEST done failures=" + shell.failures);

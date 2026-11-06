@@ -26,6 +26,7 @@ local function recordCmd(fn) return "bash -c 'qs ipc call record_$(hyprctl monit
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("toggle")))  -- help: Screen | Record the screen (stops a running recording)
 hl.bind(mainMod .. " + ALT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("replayToggle")))  -- help: Screen | Replay buffer on / off
 hl.bind(mainMod .. " + ALT" .. " + " .. "S", hl.dsp.exec_cmd(recordCmd("replaySave")))  -- help: Screen | Save the replay clip
+hl.bind(mainMod .. " + ALT" .. " + " .. "P", hl.dsp.exec_cmd(recordCmd("pauseToggle")))  -- help: Screen | Pause / resume the recording
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd("hyprpicker -a"))  -- help: Screen | Pick a colour

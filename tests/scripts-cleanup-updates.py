@@ -209,7 +209,7 @@ print("Info: runtimes\\n\\n        ID   Branch  Op\\n 1.     org.x.Platform  23.
     check("run shots: new files are not passed", not any("new" in a for a in trashed))
     log.write_text("")
     rc, out, _ = sh(CLN, ["run", "trash", "30"], env)
-    check("run trash: gio trash --empty", rc == 0 and calls(log) == [["gio", "trash", "--empty"]] and json.loads(out)["ok"] is True)
+    check("run trash is refused: exit 2 and nothing is called", rc == 2 and calls(log) == [])
     log.write_text("")
     rc, out, _ = sh(CLN, ["run", "flatpak-unused", "30"], env)
     check("run flatpak-unused: uninstall --unused -y", rc == 0 and calls(log) == [["flatpak", "uninstall", "--unused", "-y"]])

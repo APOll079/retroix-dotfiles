@@ -52,6 +52,12 @@
         "cleanup": {
             "shotDays": 30
         },
+        "networkWatch": {
+            "cooldownSeconds": 60,
+            "enabled": true,
+            "hosts": [],
+            "vpn": true
+        },
         "osd": {
             "bluetooth": true,
             "volume": true

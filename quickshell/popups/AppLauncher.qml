@@ -14,6 +14,7 @@ import "." as Popups
 // Launcher (Super+D). One result list fed by providers:
 // - apps: fuzzy search, usage-ranked, pinned first when empty, category filter row
 // - calculator: "2+2*3", "10 km to mi" -> top row, Enter copies the result
+// - answers: "5 km in mi" (Units), "#c950bb" (ColorText), "time tokyo" (TimeZones) -> a top row, Enter copies the value
 // - session: type lock / logout / reboot / suspend / shutdown (or a custom action's name)
 // - windows: start with "," to search open windows
 // - clipboard: Super+V opens the cliphist history; Enter copies the entry back
@@ -98,42 +99,19 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                // The accent stripe belongs to the framed tabs; the Clipboard tab uses the full width
-                StartBanner { visible: root.mode !== "clipboard" }
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: MenuStyle.pad
 
-                    // Clipboard: plain buttons for the tabs and no raised page, so the list and the preview use the whole width
-                    RowLayout {
-                        Layout.fillWidth: true
-                        visible: root.mode === "clipboard"
-                        spacing: MenuStyle.gap
-                        Repeater {
-                            model: root.tabs
-                            BevelButton {
-                                Layout.fillWidth: true
-                                text: modelData.text
-                                glyph: modelData.glyph
-                                checked: root.tabOf(root.mode) === modelData.key
-                                focusPolicy: Qt.NoFocus
-                                onClicked: {
-                                    if (root.tabOf(root.mode) !== modelData.key)
-                                        root.open(modelData.key);
-                                    searchInput.focusInput();
-                                }
-                            }
-                        }
-                    }
-
-                    // The other tabs: Win95 tabs joined to a raised page; the search box, filters and list live inside the page
+                    // Tabs joined to a raised page (the same three tabs for Apps, Games and Clipboard); the search box,
+                    // filters and list live inside the page. Clipboard has no padding inside the page, so the list and
+                    // the preview use the full width.
                     TabPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        flat: root.mode === "clipboard"
-                        tabsShown: root.mode !== "clipboard"
+                        pagePad: root.mode === "clipboard" ? 0 : MenuStyle.tabPagePad
                         tabs: root.tabs
                         current: root.tabOf(root.mode)
                         onTabClicked: key => {
@@ -397,7 +375,7 @@ PanelWindow {
         case Qt.Key_Enter:
             if (games)
                 gamesView.activateKey(event);
-            else if (event.key === Qt.Key_Return && (event.modifiers & Qt.ShiftModifier))
+            else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier))
                 root.openOptionsAt(appsView.currentIndex);
             else
                 root.activate(appsView.currentIndex);
@@ -417,9 +395,9 @@ PanelWindow {
     }
 
     readonly property var tabs: [
-        { key: "apps", text: "Apps", glyph: "\ue5c3" },
-        { key: "games", text: "Games", glyph: "\ue338" },
-        { key: "clipboard", text: "Clipboard", glyph: "\ue14f" }
+        { key: "apps", text: "Apps" },
+        { key: "games", text: "Games" },
+        { key: "clipboard", text: "Clipboard" }
     ]
 
     // "windows" (the "," search) lives on the Apps tab
@@ -469,7 +447,16 @@ PanelWindow {
             return root.setResults(root.clipItems(q), keep ? appsView.currentIndex : 0);
 
         const items = [];
-        const calc = Utils.Calc.evaluate(q);
+        const unit = Utils.Units.answer(q);
+        const calc = unit ? "" : Utils.Calc.evaluate(q);
+        if (unit)
+            items.push({ title: unit.text, sub: "Enter copies " + unit.number, glyph: "\uea5f", run: () => root.copy(unit.number) });
+        const colour = Utils.ColorText.answer(q);
+        if (colour)
+            items.push({ title: colour.hex, sub: colour.sub, glyph: "\ue3b8", run: () => root.copy(colour.hex) });
+        const zone = Utils.TimeZones.answer(q);
+        if (zone)
+            items.push({ title: zone.title, sub: zone.sub, glyph: "\ue8b5", run: () => root.copy(zone.time) });
         if (calc !== "")
             items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, "")) });
         for (const s of root.sessionItems(q))

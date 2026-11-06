@@ -108,6 +108,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `shotFilterButtonWidth` | int | `56` |  |
 | `shotActionButtonWidth` | int | `88` |  |
 | `todoRows` | int | `5` |  |
+| `weatherHourlySlots` | int | `4` |  |
 | `lyricsWindowWidth` | int | `420` |  |
 | `lyricsWindowHeight` | int | `200` |  |
 | `lyricsMinWidth` | int | `280` |  |
@@ -123,6 +124,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `shotSettle` | int | `250` |  |
 | `shotDimOpacity` | real | `0.45` |  |
 | `shotMinSize` | int | `4` |  |
+| `shotHintHeight` | int | `rowHeight + 3 * gap` |  |
 | `shareDimOpacity` | real | `0.35` |  |
 | `shareGridColumns` | int | `3` |  |
 | `shareLabelHeight` | int | `36` |  |

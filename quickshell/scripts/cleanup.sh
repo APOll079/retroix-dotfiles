@@ -7,7 +7,7 @@
 #   cleanup.sh run <id> <shotDays>  the ONLY deleting path. pacman-cache / orphans need root and are NOT run
 #                                 here: prints {"terminal": "<command line>"} for the UI to run in a terminal.
 #                                 flatpak-unused: flatpak uninstall --unused -y; shots: old screenshots go to the
-#                                 Trash (gio trash); trash: gio trash --empty. Prints {"ok": bool, "message": ""}.
+#                                 Trash (gio trash). The Trash itself is only measured, never emptied here (it is opened in the file manager instead). Prints {"ok": bool, "message": ""}.
 #                                 Unknown id or a shotDays that is not an integer: exit 2, nothing runs.
 # Arguments are never put into script text; file names only travel NUL-separated through find | xargs.
 export LC_ALL=C
@@ -108,11 +108,6 @@ run_one() {
             [ -d "$SHOTS" ] || ok "Nothing to move"
             find "$SHOTS" -maxdepth 1 -type f -mtime "+$days" -print0 | xargs -0 -r gio trash >/dev/null 2>&1 || fail "gio trash failed"
             ok "Old screenshots moved to the Trash"
-            ;;
-        trash)
-            command -v gio >/dev/null 2>&1 || fail "gio is not installed"
-            gio trash --empty >/dev/null 2>&1 || fail "gio trash failed"
-            ok "Trash emptied"
             ;;
         *) usage ;;
     esac

@@ -13,7 +13,7 @@ import ".."
 // QsMenuAnchor for that item, since PopupMenu has no submenus.
 Row {
     id: sysTrayRow
-    spacing: 0
+    spacing: MenuStyle.gap
     property bool clockToggled: false
     signal clockClicked(var item)
 

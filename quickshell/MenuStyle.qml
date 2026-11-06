@@ -91,6 +91,8 @@ Singleton {
     readonly property int shotActionButtonWidth: 88
     // Calendar tab to-do list: rows shown (it scrolls beyond), fixed so the tab never changes height
     readonly property int todoRows: 5
+    // Calendar tab: how many 3-hourly forecast slots the weather box shows (fixed, so the tab keeps its height)
+    readonly property int weatherHourlySlots: 4
     // Lyrics window (a real window: hypr/windowrules.lua "lyrics-window" uses the same width / height / minimum)
     readonly property int lyricsWindowWidth: 420
     readonly property int lyricsWindowHeight: 200
@@ -111,6 +113,8 @@ Singleton {
     readonly property int shotSettle: 250
     readonly property real shotDimOpacity: 0.45
     readonly property int shotMinSize: 4
+    // The snipping toolbar's hint row under the buttons (fits a BevelButton with a gap above and below)
+    readonly property int shotHintHeight: rowHeight + 3 * gap
     // Screen-share picker (sharepicker.qml): backdrop dim, grid columns, label strip under each card
     readonly property real shareDimOpacity: 0.35
     readonly property int shareGridColumns: 3

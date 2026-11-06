@@ -16,7 +16,6 @@ PopupWindow {
     property var openKeysCallback: function () {}
     property var openUpdatesCallback: function () {}
     property var openCleanupCallback: function () {}
-    property var openTrashCallback: function () {}
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -33,8 +32,6 @@ PopupWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             spacing: MenuStyle.pad
-
-            StartBanner {}
 
             ColumnLayout {
                 id: column
@@ -165,48 +162,46 @@ PopupWindow {
                     }
                 }
 
-                // Maintenance: pending updates (only when there are any), Clean up, Empty Trash with its size
-                MenuSeparator { Layout.fillWidth: true }
-                MenuRow {
+                // Maintenance: pending updates (only when there are any), Clean up, the Trash (its size; opens the folder)
+                RowLayout {
                     Layout.fillWidth: true
-                    visible: UpdateState.total > 0
-                    reserveIcon: true
-                    glyph: "\ue923"
-                    text: "Updates (" + UpdateState.total + ")"
-                    onClicked: {
-                        root.closeCallback();
-                        root.openUpdatesCallback();
+                    spacing: MenuStyle.pad
+
+                    BevelButton {
+                        Layout.fillWidth: true
+                        visible: UpdateState.total > 0
+                        text: "Updates (" + UpdateState.total + ")"
+                        glyph: "\ue923"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openUpdatesCallback();
+                        }
                     }
-                }
-                MenuRow {
-                    Layout.fillWidth: true
-                    reserveIcon: true
-                    glyph: "\ue872"
-                    text: "Clean up"
-                    onClicked: {
-                        root.closeCallback();
-                        root.openCleanupCallback();
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: "Clean up"
+                        glyph: "\ue16c"
+                        onClicked: {
+                            root.closeCallback();
+                            root.openCleanupCallback();
+                        }
                     }
-                }
-                MenuRow {
-                    Layout.fillWidth: true
-                    reserveIcon: true
-                    glyph: "\ue872"
-                    text: CleanupState.trashLabel
-                    onClicked: {
-                        root.closeCallback();
-                        root.openTrashCallback();
+                    BevelButton {
+                        Layout.fillWidth: true
+                        text: CleanupState.trashLabel
+                        glyph: "\ue872"
+                        // Only opens the folder in the file manager: what is in the Trash is deleted there, where you can see it
+                        onClicked: {
+                            Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files + " trash:///"]);
+                            root.closeCallback();
+                        }
                     }
                 }
 
-                // Mounted USB drives, one row each; a click unmounts and powers the drive off (UsbState)
-                MenuSeparator {
-                    Layout.fillWidth: true
-                    visible: UsbState.ejectable.length > 0
-                }
+                // Mounted USB drives, one button each; a click unmounts and powers the drive off (UsbState)
                 Repeater {
                     model: UsbState.ejectable
-                    MenuRow {
+                    BevelButton {
                         required property var modelData
                         Layout.fillWidth: true
                         glyph: "\ue8fb"
