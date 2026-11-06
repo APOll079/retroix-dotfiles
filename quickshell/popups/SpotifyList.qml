@@ -247,6 +247,7 @@ SunkenField {
         }
         ScrollBar.vertical: RetroScrollBar {
             parent: listView.parent
+            visible: listView.visible && size < 1.0      // the bar outlives its list when the lyrics take over
             anchors.top: listView.top
             anchors.bottom: listView.bottom
             anchors.left: listView.right
@@ -321,6 +322,7 @@ SunkenField {
         }
         ScrollBar.vertical: RetroScrollBar {
             parent: grid.parent
+            visible: grid.visible && size < 1.0
             anchors.top: grid.top
             anchors.bottom: grid.bottom
             anchors.left: grid.right
