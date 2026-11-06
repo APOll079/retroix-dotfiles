@@ -37,6 +37,8 @@ Singleton {
 
     readonly property int barHeight: 32
     readonly property int barButtonHeight: 22
+    // The tray well (BarWell): one sunken box at the bar's right holding status items, padding inside it
+    readonly property int barWellPad: space2
     readonly property int barLabelButtonWidth: 56
     // Etched divider (menus and bar sections) and the bar-section gripper
     readonly property int separatorThickness: 6

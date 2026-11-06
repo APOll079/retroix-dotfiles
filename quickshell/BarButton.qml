@@ -12,6 +12,8 @@ Button {
     id: root
 
     property bool isToggled: false
+    // flat (Button's own property): no face or bevel at rest (an item inside the tray well); hover still
+    // fills with the accent and pressed / toggled still sink, like Win95's flat toolbar buttons
     property bool urgent: false
     property bool interactive: true
     property bool tucked: false
@@ -41,7 +43,7 @@ Button {
 
     background: Rectangle {
         visible: !root.tucked
-        color: root.lit ? MenuStyle.selectBar : Config.colors.base
+        color: root.lit ? MenuStyle.selectBar : (root.flat && !root.sunken ? "transparent" : Config.colors.base)
         Dither {
             anchors.fill: parent
             anchors.margins: 2
@@ -50,6 +52,7 @@ Button {
             color2: MenuStyle.bevelLight
         }
         Bevel {
+            visible: !root.flat || root.sunken
             anchors.fill: parent
             button: true
             raised: !root.sunken

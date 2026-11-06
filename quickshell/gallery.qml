@@ -27,7 +27,8 @@ ShellRoot {
             readonly property int swatchH: 22
 
             implicitWidth: outer * 3 + colW * 3 + outer * 2
-            implicitHeight: Math.max(col1.implicitHeight, col2.implicitHeight, col3.implicitHeight) + outer * 2
+            readonly property int columnsHeight: Math.max(col1.implicitHeight, col2.implicitHeight, col3.implicitHeight)
+            implicitHeight: columnsHeight + outer * 3 + barStrip.implicitHeight
             color: Config.colors.base
 
             component Cap: Text {
@@ -300,6 +301,51 @@ ShellRoot {
                 }
                 RetroText { text: "RetroText disabledLook"; disabledLook: true; font.family: MenuStyle.bodyFont; font.pixelSize: MenuStyle.fontSize }
                 Item { Layout.fillHeight: true }
+            }
+
+            // ---------- full width: the bar's right side, boxes (today) vs one tray well (B1) ----------
+            ColumnLayout {
+                id: barStrip
+                x: page.outer
+                y: page.outer * 2 + page.columnsHeight
+                width: page.width - 2 * page.outer
+                spacing: MenuStyle.gap
+                Head { text: "Bar right side: a box per item (today) / one tray well (B1)" }
+                component BarStrip: Rectangle {
+                    default property alias items: stripRow.data
+                    Layout.fillWidth: true
+                    implicitHeight: MenuStyle.barHeight
+                    color: Config.colors.base
+                    Row {
+                        id: stripRow
+                        anchors.right: parent.right
+                        anchors.rightMargin: MenuStyle.space8
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: MenuStyle.gap
+                    }
+                }
+                BarStrip {
+                    Gripper { anchors.verticalCenter: parent.verticalCenter }
+                    BarButton { iconFontValue: "\uefef" }
+                    BarButton { iconFontValue: ""; label: "CPU   2% 46\u00b0 GPU 36\u00b0 RAM 30%" }
+                    BarButton { iconFontValue: "\ue1b2"; label: "ETH"; interactive: false; dim: true }
+                    BarButton { iconFontValue: "\ue1a7"; label: "ON"; isToggled: true; toggledIconFontValue: "" }
+                    BarButton { iconFontValue: "\ue7f4"; label: "4\u00b0C | Fri 6 Nov | 00:33" }
+                }
+                BarStrip {
+                    BarWell {
+                        anchors.verticalCenter: parent.verticalCenter
+                        BarButton { flat: true; iconFontValue: "\uefef" }
+                        Popups.MenuSeparator { vertical: true }
+                        BarButton { flat: true; iconFontValue: ""; label: "CPU   2% 46\u00b0 GPU 36\u00b0 RAM 30%" }
+                        Popups.MenuSeparator { vertical: true }
+                        BarButton { flat: true; iconFontValue: "\ue1b2"; label: "ETH"; interactive: false; dim: true }
+                        Popups.MenuSeparator { vertical: true }
+                        BarButton { flat: true; iconFontValue: "\ue1a7"; label: "ON"; isToggled: true; toggledIconFontValue: "" }
+                        Popups.MenuSeparator { vertical: true }
+                        BarButton { flat: true; iconFontValue: "\ue7f4"; label: "4\u00b0C  Fri 6 Nov  00:33" }
+                    }
+                }
             }
 
             // Save the page once everything has settled, then quit (QS_GALLERY_OUT = the PNG path)

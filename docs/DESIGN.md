@@ -28,6 +28,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `space12` | int | `12` |  |
 | `pad` | int | `space6` |  |
 | `gap` | int | `space4` |  |
+| `barWellPad` | int | `space2` |  |
 | `tabPagePad` | int | `space4` |  |
 | `spotifyInset` | int | `space2` | padding inside the drawer's sunken fields and tiles |
 | `spotifyColumnGap` | int | `space4` | between the drawer's rows (the rest of the menus use pad) |
