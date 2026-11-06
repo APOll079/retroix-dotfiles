@@ -127,3 +127,8 @@ quickshell/popups/ServicesPanel.qml	function showDetails\(name\)	The service toa
 quickshell/popups/ServicesPanel.qml	text: "Log"	Services panel: Log shows the last 40 log lines of the selected user service; Back or Escape returns to the list
 quickshell/DiskWatch.qml	-u", "critical"	Failed SMART health raises a critical toast
 quickshell/DiskWatch.qml	is not responding	An unreachable mount: one quiet toast per cooldown, never a storm
+quickshell/popups/CalendarTab.qml	onClicked: TodoState\.toggle	Calendar tab: a click on a task row toggles done
+quickshell/popups/CalendarTab.qml	root\.submit\(\)	Calendar tab: Enter in the add field adds the task (a leading yyyy-MM-dd is the due date)
+quickshell/popups/CalendarTab.qml	root\.pickDay	Calendar tab: a click on a calendar day, with the add field empty, sets the due date for the next task
+quickshell/popups/CalendarTab.qml	text: "Delete"	Calendar tab: a right click on a task row opens a menu with Delete
+quickshell/popups/CalendarTab.qml	onClicked: root\.dueFor = ""	Calendar tab: the due-date chip clears the picked date

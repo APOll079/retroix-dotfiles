@@ -1,6 +1,5 @@
 import Quickshell
 import QtQuick
-import Quickshell.Services.Notifications
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
@@ -20,6 +19,7 @@ ColumnLayout {
             var now = new Date()
             root.viewMonth = now.getMonth()
             root.viewYear = now.getFullYear()
+            TodoState.refreshToday()
         }
     }
 
@@ -172,12 +172,19 @@ ColumnLayout {
                 year: root.viewYear
                 locale: Qt.locale("en_GB")
                 delegate: Item {
+                    id: cell
+                    readonly property string key: TodoState.ymd(model.year, model.month, model.day)
+                    readonly property bool due: TodoState.dueDays[cell.key] === true
+                    readonly property bool picked: root.dueFor !== "" && root.dueFor === cell.key
                     implicitWidth: MenuStyle.calendarCell
                     implicitHeight: MenuStyle.rowHeight - 2
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 1
                         color: model.today ? MenuStyle.selectBar : "transparent"
+                        // the day picked as the next task's due date: an outline (inside the fill on today)
+                        border.width: cell.picked ? 1 : 0
+                        border.color: model.today ? MenuStyle.selectText : MenuStyle.selectBar
                     }
                     Text {
                         renderType: Text.NativeRendering
@@ -188,8 +195,161 @@ ColumnLayout {
                         color: model.today ? MenuStyle.selectText : (model.month === grid.month ? Config.colors.text : Config.colors.shadow)
                         text: model.day
                     }
+                    // an open task is due this day: a short bar under the number
+                    Rectangle {
+                        objectName: "dueMark"
+                        visible: cell.due
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: MenuStyle.space2 + 1
+                        width: MenuStyle.space8
+                        height: MenuStyle.space2
+                        color: model.today ? MenuStyle.selectText : MenuStyle.selectBar
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: root.pickDay(model.year, model.month, model.day)
+                    }
                 }
             }
+        }
+    }
+
+    // ---- to-do list (TodoState: todo.txt in the state dir) ----
+
+    // The list always shows this many rows, so the tab never changes height as tasks come and go
+    // The day picked on the grid as the due date of the next added task ("" = none)
+    property string dueFor: ""
+
+    function pickDay(y, m, d) {
+        if (addBox.text !== "")
+            return;
+        root.dueFor = TodoState.ymd(y, m, d);
+    }
+    // Enter in the add field: a leading yyyy-MM-dd is the due date, else the picked day
+    function submit() {
+        const t = TodoState.splitInput(addBox.text);
+        if (t.text === "")
+            return;
+        TodoState.add(t.text, t.due !== "" ? t.due : root.dueFor);
+        addBox.text = "";
+        root.dueFor = "";
+    }
+
+    SunkenField {
+        Layout.fillWidth: true
+        Layout.preferredHeight: MenuStyle.todoRows * MenuStyle.rowHeight + 2 * padding
+        padding: MenuStyle.space2
+
+        EmptyState {
+            anchors.fill: parent
+            visible: TodoState.items.length === 0
+            glyph: "\ue834"
+            text: "No tasks"
+        }
+
+        ListView {
+            id: todoList
+            objectName: "todoList"
+            anchors.fill: parent
+            visible: TodoState.items.length > 0
+            model: TodoState.items
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: RetroScrollBar { id: todoBar }
+            readonly property int barRoom: todoBar.visible ? MenuStyle.scrollBarWidth : 0
+            delegate: Item {
+                id: row
+                required property var modelData
+                required property int index
+                readonly property bool overdue: TodoState.isOverdue(row.modelData, TodoState.today)
+                width: todoList.width - todoList.barRoom
+                height: MenuStyle.rowHeight
+
+                // The row (hover, click, the box); its text is drawn over it so a done task can be struck out
+                MenuRow {
+                    id: mr
+                    anchors.fill: parent
+                    reserveIcon: true
+                    glyph: row.modelData.done ? "\ue834" : "\ue835"
+                    onClicked: TodoState.toggle(row.index)
+                }
+                Text {
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    anchors.left: parent.left
+                    anchors.leftMargin: MenuStyle.pad + MenuStyle.iconSize + MenuStyle.pad
+                    anchors.right: dueText.visible ? dueText.left : parent.right
+                    anchors.rightMargin: MenuStyle.pad
+                    anchors.verticalCenter: parent.verticalCenter
+                    elide: Text.ElideRight
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    font.strikeout: row.modelData.done
+                    color: mr.lit ? MenuStyle.selectText : (row.modelData.done ? Config.colors.shadow : Config.colors.text)
+                    textFormat: Text.PlainText
+                    text: row.modelData.text
+                }
+                Text {
+                    id: dueText
+                    renderType: Text.NativeRendering
+                    font.hintingPreference: Font.PreferFullHinting
+                    visible: row.modelData.due !== ""
+                    anchors.right: parent.right
+                    anchors.rightMargin: MenuStyle.pad
+                    anchors.verticalCenter: parent.verticalCenter
+                    font.family: MenuStyle.bodyFont
+                    font.pixelSize: MenuStyle.fontSize
+                    color: mr.lit ? MenuStyle.selectText : (row.overdue ? Config.colors.urgent : Config.colors.shadow)
+                    textFormat: Text.PlainText
+                    text: row.modelData.due
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onClicked: mouse => {
+                        const i = row.index;
+                        todoMenu.model = [{ text: "Delete", glyph: "\ue872", action: () => TodoState.remove(i) }];
+                        todoMenu.openAt(row, mouse.x, mouse.y);
+                    }
+                }
+            }
+        }
+    }
+
+    // the right-click menu of a task row (Delete)
+    readonly property var rowMenu: todoMenu
+    PopupMenu {
+        id: todoMenu
+    }
+
+    // The add field; the picked due date sits beside it as a button that clears it
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: MenuStyle.gap
+        SearchBox {
+            id: addBox
+            objectName: "addBox"
+            Layout.fillWidth: true
+            showIcon: false
+            placeholder: root.dueFor !== "" ? "Add a task" : "Add a task, e.g. 2026-11-10 buy milk"
+            onEscaped: addBox.input.focus = false
+            onKeyPressed: event => {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    root.submit();
+                    event.accepted = true;
+                }
+            }
+        }
+        BevelButton {
+            id: dueChip
+            objectName: "dueChip"
+            visible: root.dueFor !== ""
+            Layout.preferredHeight: addBox.height
+            text: root.dueFor
+            glyph: "\ue5cd"
+            focusPolicy: Qt.NoFocus
+            onClicked: root.dueFor = ""
         }
     }
 

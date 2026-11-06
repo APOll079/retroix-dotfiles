@@ -89,6 +89,8 @@ Singleton {
     readonly property int shotFilterButtonWidth: 56
     // History action buttons (Copy / Open / Delete / Folder, the viewer's Grid): one width, glyph + label
     readonly property int shotActionButtonWidth: 88
+    // Calendar tab to-do list: rows shown (it scrolls beyond), fixed so the tab never changes height
+    readonly property int todoRows: 5
     // Games grid: columns, title strip under each cover, cover decode width, and the label
     // column of the Add game form
     readonly property int gamesGridColumns: 7

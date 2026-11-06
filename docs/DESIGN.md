@@ -107,6 +107,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `shotThumbWidth` | int | `320` |  |
 | `shotFilterButtonWidth` | int | `56` |  |
 | `shotActionButtonWidth` | int | `88` |  |
+| `todoRows` | int | `5` |  |
 | `gamesGridColumns` | int | `7` |  |
 | `gamesTitleHeight` | int | `32` |  |
 | `gamesCoverDecodeWidth` | int | `200` |  |
