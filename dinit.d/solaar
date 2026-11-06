@@ -1,0 +1,8 @@
+# dinit user service for Solaar, the Logitech mouse / keyboard manager (~/.config/dinit.d/solaar).
+# Enable once: dinitctl --user enable solaar   (starts it now and at every login)
+# --window=hide: no window, tray only. NEEDS A LIVE TEST: the flag is from memory, and a GUI program needs the Wayland
+# environment in the user dinit (WAYLAND_DISPLAY / XDG_RUNTIME_DIR); if it exits at once, check `dinitctl --user status solaar`.
+type = process
+command = /usr/bin/solaar --window=hide
+restart = true
+waits-for = dbus

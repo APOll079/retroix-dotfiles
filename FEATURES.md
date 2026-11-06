@@ -77,7 +77,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
 ### Round 4, tools (never looked at, fakes only)
-- [ ] Solaar starts hidden at login (log in again after the autostart change: `hyprctl reload` does not run it) and the mouse battery shows; the mic, screen-share, REPLAY and mouse-battery indicators are flat icons with no bevel, only clickable things look like buttons
+- [ ] Solaar: `dinitctl --user enable solaar` (copy `dinit.d/solaar` first, your sync does it), it stays running and the mouse battery shows; if it can't open a display the user dinit lacks the Wayland environment; the mic, screen-share, REPLAY and mouse-battery indicators are flat icons with no bevel, only clickable things look like buttons
 - [ ] Task Manager GPU / VRAM / Read / Write numbers against radeontop / iotop on the AMD card, and the extra columns fit at 760 px; Default apps: Make default really changes `xdg-settings get default-web-browser` and `xdg-mime query default image/png`
 - [ ] Troubleshoot: each of the four restarts with the real dinit services (and the relaunch fallback for hyprpaper / EasyEffects); Login report after a real login (needs the new `autostart.lua` marks: `hyprctl reload` does not re-run them, log in again)
 - [ ] Solaar: `solaar show` on the real mouse parses and the bar button appears; Flatpak: Sober shows in Games and launches; MangoHud overlay for a Steam game (see the note in docs), a Flatpak game and an own entry; security audit: the first run is silent, a new CVE toasts
