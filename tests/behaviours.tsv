@@ -135,3 +135,8 @@ quickshell/popups/CalendarTab.qml	onClicked: root\.dueFor = ""	Calendar tab: the
 quickshell/UsbState.qml	open=Open.*eject=Eject	A new USB drive raises a toast with Open and Eject actions
 quickshell/UsbState.qml	function eject\(dev\)	UsbState.eject (toast action and Start menu)
 quickshell/popups/StartMenu.qml	UsbState\.eject\(modelData\.dev\)	Start menu: a mounted USB drive's Eject row unmounts and powers it off
+quickshell/popups/LyricsWindow.qml	Keys\.onEscapePressed	Esc closes the Lyrics window
+quickshell/LyricsWindowState.qml	function toggle	The Lyrics window toggles by IPC
+quickshell/popups/SpotifyMoreMenu.qml	key: "lyrics"	Spotify "..." menu: Lyrics window
+quickshell/shell.qml	target: "lyrics"	IPC handler lyrics (used by the keybind)
+hypr/binds.lua	\-\-\ help:\ Media\ \|\ Lyrics\ window	Key: Media | Lyrics window

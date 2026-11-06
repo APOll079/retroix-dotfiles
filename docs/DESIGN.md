@@ -108,6 +108,10 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `shotFilterButtonWidth` | int | `56` |  |
 | `shotActionButtonWidth` | int | `88` |  |
 | `todoRows` | int | `5` |  |
+| `lyricsWindowWidth` | int | `420` |  |
+| `lyricsWindowHeight` | int | `200` |  |
+| `lyricsMinWidth` | int | `280` |  |
+| `lyricsMinHeight` | int | `140` |  |
 | `gamesGridColumns` | int | `7` |  |
 | `gamesTitleHeight` | int | `32` |  |
 | `gamesCoverDecodeWidth` | int | `200` |  |

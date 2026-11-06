@@ -91,6 +91,11 @@ Singleton {
     readonly property int shotActionButtonWidth: 88
     // Calendar tab to-do list: rows shown (it scrolls beyond), fixed so the tab never changes height
     readonly property int todoRows: 5
+    // Lyrics window (a real window: hypr/windowrules.lua "lyrics-window" uses the same width / height / minimum)
+    readonly property int lyricsWindowWidth: 420
+    readonly property int lyricsWindowHeight: 200
+    readonly property int lyricsMinWidth: 280
+    readonly property int lyricsMinHeight: 140
     // Games grid: columns, title strip under each cover, cover decode width, and the label
     // column of the Add game form
     readonly property int gamesGridColumns: 7

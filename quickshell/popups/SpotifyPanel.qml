@@ -184,7 +184,7 @@ PanelWindow {
 
     onVisibleChanged: {
         SpotifyState.active = visible;
-        Lyrics.fast = visible && root.lyricsMode;
+        Lyrics.fast = (visible && root.lyricsMode) || LyricsWindowState.visible;
         if (visible && MenuStyle.animNormal > 0)
             openFade.restart();
     }
@@ -226,7 +226,7 @@ PanelWindow {
         }
     }
     onLyricsModeChanged: {
-        Lyrics.fast = root.visible && root.lyricsMode;
+        Lyrics.fast = (root.visible && root.lyricsMode) || LyricsWindowState.visible;
         if (root.lyricsMode)
             Qt.callLater(() => lyricsView.currentIndex = Lyrics.index);
         root.focusKeys();

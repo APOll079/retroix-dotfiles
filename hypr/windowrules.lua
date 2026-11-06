@@ -155,6 +155,21 @@ hl.window_rule({
     persistent_size = true
 })
 
+-- Quickshell's Lyrics window (popups/LyricsWindow.qml, a FloatingWindow titled "Lyrics"): float, pinned (stays on
+-- every workspace), bottom-right above the 32px bar. Size = MenuStyle.lyricsWindow*; field names as in the
+-- task-manager rule above; `pin` and the `move` expressions are from the wiki, not seen running here
+hl.window_rule({
+    name  = "lyrics-window",
+    match = {
+        initial_title = "^Lyrics$"
+    },
+    float    = true,
+    pin      = true,
+    size     = { 420, 200 },
+    min_size = { 280, 140 },
+    move     = { "monitor_w-window_w-16", "monitor_h-window_h-48" }
+})
+
 -- HyprEmoji (SUPER + period): float near the cursor. Rule taken from the package's own
 -- /usr/share/hypremoji/hypremoji.lua; without it the picker tiles and fills half the screen.
 hl.window_rule({

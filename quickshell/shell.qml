@@ -32,6 +32,13 @@ Scope {
         function open(): void { TaskWindow.open(""); }
         function performance(): void { TaskWindow.open("performance"); }
     }
+    // Lyrics window (popups/LyricsWindow.qml): `qs ipc call lyrics toggle`
+    IpcHandler {
+        target: "lyrics"
+        function toggle(): void { LyricsWindowState.toggle(); }
+        function open(): void { LyricsWindowState.open(); }
+        function close(): void { LyricsWindowState.close(); }
+    }
     Variants {
         model: Quickshell.screens
         IdleDim {}

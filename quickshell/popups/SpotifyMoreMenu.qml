@@ -29,6 +29,7 @@ Item {
             model: [
                 { text: "Reload library", glyph: "\ue5d5", key: "reload" },
                 { text: "Change client ID", glyph: "\ue890", key: "client" },
+                { text: "Lyrics window", glyph: "\uec0b", key: "lyrics" },
                 { text: "Log out", glyph: "\ue9ba", key: "logout" }
             ]
             onPicked: (index, entry) => {
@@ -36,6 +37,8 @@ Item {
                 if (entry.key === "reload") {
                     SpotifyState.reloadLibrary();
                     panel.note = "Reloading...";
+                } else if (entry.key === "lyrics") {
+                    LyricsWindowState.toggle();
                 } else if (entry.key === "client") {
                     panel.confirmClient = true;
                 } else {

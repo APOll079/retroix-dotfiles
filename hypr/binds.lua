@@ -51,6 +51,7 @@ hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(cheatSheet))  -- help: Desktop | Thi
 hl.bind(mainMod .. " + " .. "V", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") clipboard']]))  -- help: Apps | Clipboard history
 hl.bind(mainMod .. " + " .. "TAB", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") windows']]))  -- help: Windows | Window switcher
 hl.bind(mainMod .. " + " .. "L", hl.dsp.exec_cmd("hyprlock"))  -- help: Desktop | Lock screen
+hl.bind(mainMod .. " + ALT" .. " + " .. "L", hl.dsp.exec_cmd("qs ipc call lyrics toggle"))  -- help: Media | Lyrics window (toggle)
 hl.bind(mainMod .. " + " .. "N", hl.dsp.exec_cmd([[bash -c 'qs ipc call notifications_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Desktop | Side panel (notifications)
 
 -- Move focus with mainMod + arrow keys
