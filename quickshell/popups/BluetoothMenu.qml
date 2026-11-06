@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic
 import Quickshell.Bluetooth
 import ".."
 
@@ -326,8 +327,10 @@ PopupWindow {
                     id: pairedList
                     anchors.fill: parent
                     model: root.paired
+                    // The scroll bar floats over the right edge: the rows give it room while it shows
+                    ScrollBar.vertical: RetroScrollBar { id: pairedBar }
                     delegate: RowLayout {
-                        width: pairedList.width
+                        width: pairedList.width - (pairedBar.visible ? MenuStyle.scrollBarWidth : 0)
                         spacing: MenuStyle.gap
                         MenuRow {
                             Layout.fillWidth: true
@@ -387,8 +390,9 @@ PopupWindow {
                     id: availableList
                     anchors.fill: parent
                     model: root.available
+                    ScrollBar.vertical: RetroScrollBar { id: availableBar }
                     delegate: MenuRow {
-                        width: availableList.width
+                        width: availableList.width - (availableBar.visible ? MenuStyle.scrollBarWidth : 0)
                         glyph: "\ue1aa"
                         text: root.label(modelData)
                         trailing: modelData.pairing ? "Cancel" : "Pair"
