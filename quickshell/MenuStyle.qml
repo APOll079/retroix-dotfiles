@@ -18,9 +18,16 @@ Singleton {
     readonly property int widthMedium: 320
     readonly property int widthLarge: 480
 
-    // Spacing scale (even numbers, not a strict grid): pad 6, gap 4, rows 22, title bar 20
-    readonly property int pad: 6
-    readonly property int gap: 4
+    // Spacing scale: the only paddings and gaps in the shell are these five steps. Every *Pad / *Gap /
+    // *Inset / *Spacing below is one of them (scripts/check.py warns about any other). Sizes of things
+    // (rows 22, title bar 20, buttons) are not spacing and have their own names.
+    readonly property int space2: 2
+    readonly property int space4: 4
+    readonly property int space6: 6
+    readonly property int space8: 8
+    readonly property int space12: 12
+    readonly property int pad: space6
+    readonly property int gap: space4
     readonly property int rowHeight: 22
     readonly property int titleHeight: 20
 
@@ -87,15 +94,15 @@ Singleton {
     readonly property int spotifyGridColumns: 4
     readonly property int spotifyGridColumnsLibrary: 3   // library grid tiles per row
     readonly property int spotifyRowHeight: 34      // library / song rows (two lines of 12 px text)
-    readonly property int spotifyInset: 2           // padding inside the drawer's sunken fields and tiles
+    readonly property int spotifyInset: space2           // padding inside the drawer's sunken fields and tiles
     readonly property int spotifyTileIcon: 32       // placeholder icon on a cover without art
     readonly property int spotifyClickGuard: 350    // ms after opening something during which clicks are ignored
-    readonly property int spotifyColumnGap: 4       // between the drawer's rows (the rest of the menus use pad)
+    readonly property int spotifyColumnGap: space4       // between the drawer's rows (the rest of the menus use pad)
     readonly property int spotifyCompactRow: 24     // the drawer's seek / transport / volume / search rows and its icon buttons
     readonly property int spotifyTabHeight: 28      // the Win95 tab strip (the selected tab is 1px taller and joins the page)
     readonly property int spotifyChipHeight: 20     // chips: smaller than tabs and buttons
     readonly property int spotifyStatusHeight: 18   // the status bar at the bottom of the drawer
-    readonly property int spotifyPagePad: 3         // inside the tab page's bevel
+    readonly property int spotifyPagePad: space4         // inside the tab page's bevel
     readonly property int spotifyRecentCount: 3    // the newest, one row, square tiles of about 120 px (collapsible)
     readonly property int spotifyLyricsCover: 32    // the cover in the compact lyrics header
     readonly property int spotifyNoteMs: 3000       // how long a short message stays on the status bar
@@ -121,7 +128,7 @@ Singleton {
     readonly property color likedColor: "#1db954"    // liked heart: Spotify green (the one colour not from the palette, on request; bevelLight below is the second, a derived tint)
     readonly property int lyricsFastTick: 100
     readonly property int lyricsFontSize: 16      // Monaco hints cleanly at 12 and 16
-    readonly property int lyricsLineGap: 8        // between two lyric lines; a wrapped line keeps its normal spacing, so it reads as one
+    readonly property int lyricsLineGap: space8        // between two lyric lines; a wrapped line keeps its normal spacing, so it reads as one
     readonly property real lyricsAnchor: 0.38     // where the current lyric sits (0 top, 0.5 middle)
     readonly property int cheatKeyWidth: 140     // key chip column in the cheat sheet
     readonly property int searchHeight: 32
@@ -182,7 +189,7 @@ Singleton {
     // muted title bars stand up out of it in every theme), and each entry's frame (1px outline + 2px
     // raised bevel)
     readonly property color notificationWell: Qt.darker(Config.colors.shadow, 1.25)
-    readonly property int notificationCardInset: 3
+    readonly property int notificationCardInset: space4
     // Home tab: the Applications volume list scrolls after this height (about five apps)
     readonly property int audioAppsMaxHeight: 240
     // Home tab: EQ preset buttons per row before they wrap
@@ -202,9 +209,9 @@ Singleton {
     // Right-aligned value next to a meter ("100%", "MUTE")
     readonly property int valueLabelWidth: 40
     // Title bar: gap around the title, gap between title icon and text
-    readonly property int titleSpacing: 8
-    readonly property int titleIconGap: 6
-    readonly property int traySpacing: 8
+    readonly property int titleSpacing: space8
+    readonly property int titleIconGap: space6
+    readonly property int traySpacing: space8
     // Unread marker on the bell: size and offset from the button's top-left
     readonly property int unreadDotSize: 6
     readonly property int unreadDotX: 4
@@ -253,10 +260,10 @@ Singleton {
 
     // Frame geometry: 1px outline + 2px bevel + 1px gap, then the title bar, then a 1px outlined
     // content box (the double frame), then padding inside that box.
-    readonly property int frameInset: 4
-    readonly property int boxGap: 2
-    readonly property int boxPadH: 5
-    readonly property int boxPadV: 4
+    readonly property int frameInset: space4
+    readonly property int boxGap: space2
+    readonly property int boxPadH: space4
+    readonly property int boxPadV: space4
     readonly property int chromeTop: frameInset + titleHeight + boxGap + 1 + boxPadV
     readonly property int chromeBottom: frameInset + 1 + boxPadV
     readonly property int chromeHeight: chromeTop + chromeBottom

@@ -20,6 +20,8 @@ PUA = re.compile("[\ue000-\uf8ff\U000f0000-\U000ffffd]")
 ESC = re.compile(r"\\u\{?([0-9a-fA-F]{4,6})\}?")
 SIZE_PROP = re.compile(r"\b(pixelSize|width|height|implicitWidth|implicitHeight|spacing|(?:left|right|top|bottom)?[Mm]argins?|padding|radius)\s*:\s*(\d+)\b")
 BEHAVIOUR = re.compile(r"acceptedButtons|on\w*Clicked|onPressed|Keys\.on|Qt\.Key_|hl\.bind\(|IpcHandler|function \w+\(|-- help:")
+SPACING_PROP = re.compile(r"readonly property int (\w*(?:[Pp]ad|[Gg]ap|[Ii]nset|[Ss]pacing)\w*)\s*:\s*(\d+)\b")
+SPACE_STEPS = (0, 2, 4, 6, 8, 12)   # MenuStyle.space*
 SECRET = re.compile(r"(access_token|refresh_token|client_secret)\s*[\"':=]+\s*[\"']?[A-Za-z0-9_\-]{16,}")
 
 fails, warns = [], []
@@ -159,6 +161,10 @@ def check_diff(files):
             for l in added:
                 if PUA.search(l):
                     warns.append(f"{f}: raw icon glyph added, write it as a \\uXXXX escape: {l.strip()[:80]}")
+                if "MenuStyle.qml" in f:
+                    for name, val in SPACING_PROP.findall(l):
+                        if int(val) not in SPACE_STEPS:
+                            warns.append(f"{f}: spacing '{name}: {val}' is off the scale {SPACE_STEPS[1:]}, use a space* step")
                 if "MenuStyle.qml" not in f:
                     for prop, val in SIZE_PROP.findall(l):
                         if prop == "radius" and int(val) > 0:
