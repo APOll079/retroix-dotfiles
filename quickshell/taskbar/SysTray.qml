@@ -8,17 +8,17 @@ import "../popups" as Popups
 import ".."
 
 // The tray half of the bar's well: tray icons as flat BarButtons, an etched separator, then bell +
-// weather + clock. Bar.qml puts it inside the BarWell. The right-click menu is the shared ContextMenu
+// weather + clock. Bar.qml puts it inside the BarWell. The right-click menu is the shared PopupMenu
 // built from the item's QsMenuOpener entries (menuModel); a menu with submenus falls back to Qt's native
-// QsMenuAnchor for that item, since ContextMenu has no submenus.
+// QsMenuAnchor for that item, since PopupMenu has no submenus.
 Row {
     id: sysTrayRow
     spacing: 0
     property bool clockToggled: false
     signal clockClicked(var item)
 
-    // QsMenuOpener entries -> ContextMenu model: [{ text, enabled, checked, separator, action }].
-    // Entry icons are dropped (ContextMenu has a glyph column, not image icons). Leading, trailing and
+    // QsMenuOpener entries -> PopupMenu model: [{ text, enabled, checked, separator, action }].
+    // Entry icons are dropped (PopupMenu has a glyph column, not image icons). Leading, trailing and
     // doubled separators are removed.
     function menuModel(entries) {
         const out = [];
@@ -84,7 +84,7 @@ Row {
                 id: opener
                 menu: trayItem.item.menu
             }
-            Popups.ContextMenu {
+            Popups.PopupMenu {
                 id: ctx
             }
             // Fallback for menus with submenus. Anchored directly under its own icon, in

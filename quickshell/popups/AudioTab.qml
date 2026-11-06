@@ -7,7 +7,7 @@ import ".."
 import "." as P
 
 // Audio section of the Home tab: the output (EasyEffects-aware routing), the microphone, and per-app volume (the overall volume is on the DAC). `active` is true while Home is showing.
-// Each part is a GroupBox.
+// Each part is a GroupFrame.
 ColumnLayout {
     id: root
     property bool active: false
@@ -17,7 +17,7 @@ ColumnLayout {
     // The hardware sinks. EasyEffects sits in front of them and follows the default sink (see
     // AudioState.qml), so a click makes that sink the default and the tick is the current default;
     // "EQ off" marks a sink the EQ is switched off for (settings.json "audio.eqOutputMatch").
-    P.GroupBox {
+    P.GroupFrame {
         Layout.fillWidth: true
         visible: AudioState.outputs.length > 0
         title: "Output"
@@ -54,7 +54,7 @@ ColumnLayout {
     // === EQ PRESETS ===
     // settings.json "audio.eqPresets" (empty = hidden): one click loads that EasyEffects preset; the
     // one loaded last is sunken. Separate from the automatic "EQ off" bypass above.
-    P.GroupBox {
+    P.GroupFrame {
         Layout.fillWidth: true
         visible: AudioState.eqPresets.length > 0
         title: "EQ preset"
@@ -89,7 +89,7 @@ ColumnLayout {
         return d || k || n.name;
     }
 
-    P.GroupBox {
+    P.GroupFrame {
         Layout.fillWidth: true
         visible: AudioState.mic !== null
         title: "Microphone"
@@ -165,7 +165,7 @@ ColumnLayout {
     }
 
     // Capped (scrolls after a few apps) so the side panel can't outgrow the screen
-    P.GroupBox {
+    P.GroupFrame {
         Layout.fillWidth: true
         visible: root.appGroups.length > 0
         title: "Applications"

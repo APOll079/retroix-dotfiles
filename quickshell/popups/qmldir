@@ -52,10 +52,10 @@ SpotifyVolume 1.0 SpotifyVolume.qml
 SpotifySeek 1.0 SpotifySeek.qml
 SpotifyHeading 1.0 SpotifyHeading.qml
 RetroScrollBar 1.0 RetroScrollBar.qml
-ContextMenuBody 1.0 ContextMenuBody.qml
-ContextMenu 1.0 ContextMenu.qml
+PopupMenuBody 1.0 PopupMenuBody.qml
+PopupMenu 1.0 PopupMenu.qml
 ConfirmBar 1.0 ConfirmBar.qml
-GroupBox 1.0 GroupBox.qml
+GroupFrame 1.0 GroupFrame.qml
 EmptyState 1.0 EmptyState.qml
 TabPage 1.0 TabPage.qml
 StatusBar 1.0 StatusBar.qml

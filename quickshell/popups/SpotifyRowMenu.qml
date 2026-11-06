@@ -1,7 +1,7 @@
 import QtQuick
 import ".."
 
-// The song's options (right-click, or Menu / Shift+F10): the shared ContextMenuBody over the drawer, right under the
+// The song's options (right-click, or Menu / Shift+F10): the shared PopupMenuBody over the drawer, right under the
 // row (above it when there is no room). The body takes the keyboard when the menu opens (Up / Down move, Enter runs, Escape closes); a click outside closes too.
 // Like shows the real state (asked when it opens).
 Item {
@@ -87,7 +87,7 @@ Item {
         x: 2 * MenuStyle.pad
         y: below + height <= parent.height - MenuStyle.spotifyStatusHeight - MenuStyle.pad ? below : Math.max(MenuStyle.pad, above)
         MouseArea { anchors.fill: parent }
-        ContextMenuBody {
+        PopupMenuBody {
             id: body
             width: parent.width
             model: menu.entries

@@ -18,7 +18,7 @@ Button {
     property bool selected: false
     property int iconBox: MenuStyle.iconSize   // the icon / thumbnail square (the Spotify lists use a bigger one)
     // Keep the icon column's width even when this row has no icon, so labels line up down a menu. Set it on
-    // every row of a menu that has at least one icon (ContextMenuBody does it by itself); a menu without
+    // every row of a menu that has at least one icon (PopupMenuBody does it by itself); a menu without
     // any icon leaves it off, so its labels don't indent.
     property bool reserveIcon: false
     property bool accentTitle: false           // the title in the accent colour (the playing song)

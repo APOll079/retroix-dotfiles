@@ -1,7 +1,7 @@
 import QtQuick
 import ".."
 
-// The status bar's "..." menu: the shared ContextMenuBody over the drawer, closed by a click anywhere else.
+// The status bar's "..." menu: the shared PopupMenuBody over the drawer, closed by a click anywhere else.
 // Log out and Change client ID ask first (in the status bar); Reload library asks Spotify again.
 Item {
     id: menu
@@ -23,7 +23,7 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: MenuStyle.spotifyStatusHeight + 2 * MenuStyle.pad
         MouseArea { anchors.fill: parent }
-        ContextMenuBody {
+        PopupMenuBody {
             id: body
             width: parent.width
             model: [

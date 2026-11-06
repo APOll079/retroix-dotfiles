@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import ".."
 
 // The one menu look for every right-click and dropdown menu: the shell's raised frame (outline + two-ring
-// bevel), no title bar, MenuRows with an icon column, etched separators. Used inside ContextMenu (its
+// bevel), no title bar, MenuRows with an icon column, etched separators. Used inside PopupMenu (its
 // own popup window) or placed inline (the Spotify drawer).
 // model: [{ text, glyph, trailing, checked, enabled, separator, action }]; every key optional except text
 // (or separator: true). action() runs after picked() is emitted.

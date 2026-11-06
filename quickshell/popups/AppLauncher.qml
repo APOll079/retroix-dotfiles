@@ -8,7 +8,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import ".."
 import "../utils" as Utils
-// Qt.Controls ships an attached-only ContextMenu that would shadow ours, so ours is reached as Popups.ContextMenu
+// Qt.Controls ships an attached-only PopupMenu that would shadow ours, so ours is reached as Popups.PopupMenu
 import "." as Popups
 
 // Launcher (Super+D). One result list fed by providers:
@@ -19,7 +19,7 @@ import "." as Popups
 // - clipboard: Super+V opens the cliphist history; Enter copies the entry back
 // Tabs along the top switch between Apps, Games (cover grid, GamesView.qml, shared with the
 // standalone Games menu) and Clipboard; Ctrl+Tab cycles them.
-// Right-click an app (or Shift+Enter) for its options in the shared ContextMenu: launch, pin/unpin, move pinned up/down, hide
+// Right-click an app (or Shift+Enter) for its options in the shared PopupMenu: launch, pin/unpin, move pinned up/down, hide
 // (the "Hidden (n)" chip lists hidden apps) and uninstall (owner found by scripts/app-owner.sh, then
 // `yay -Rns` / `flatpak uninstall` in a terminal after a confirm).
 PanelWindow {
@@ -646,7 +646,7 @@ PanelWindow {
         clipEdit.running = true;
     }
 
-    // The options menu (shared ContextMenu): entries for the app whose row was right-clicked / Shift+Entered
+    // The options menu (shared PopupMenu): entries for the app whose row was right-clicked / Shift+Entered
     function optionsModel(entry) {
         const pinned = LauncherState.isPinned(entry.id);
         const hidden = LauncherState.isHidden(entry.id);
@@ -718,7 +718,7 @@ PanelWindow {
     property Item optionsAnchor: null
     property point optionsPoint: Qt.point(0, 0)
 
-    Popups.ContextMenu {
+    Popups.PopupMenu {
         id: optionsMenu
         // KEYBOARD: when the menu goes away the search box takes the keys back (needs a live test)
         onVisibleChanged: {

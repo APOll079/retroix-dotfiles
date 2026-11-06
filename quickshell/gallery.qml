@@ -201,8 +201,8 @@ ShellRoot {
                         Popups.MenuRow { width: parent.width; text: "Muted title bar" }
                     }
                 }
-                Head { text: "GroupBox" }
-                Popups.GroupBox {
+                Head { text: "GroupFrame" }
+                Popups.GroupFrame {
                     Layout.fillWidth: true
                     title: "Output"
                     Popups.MenuRow { Layout.fillWidth: true; text: "DM15 Analog Stereo"; glyph: "\ue32d"; marked: true }
@@ -215,8 +215,8 @@ ShellRoot {
                     implicitHeight: MenuStyle.rowHeight * 3
                     Popups.EmptyState { anchors.centerIn: parent; width: parent.width; glyph: "\ue7f6"; text: "No notifications" }
                 }
-                Head { text: "ContextMenuBody" }
-                Popups.ContextMenuBody {
+                Head { text: "PopupMenuBody" }
+                Popups.PopupMenuBody {
                     currentIndex: 1
                     model: [
                         { text: "Open", glyph: "\ue2c8" },

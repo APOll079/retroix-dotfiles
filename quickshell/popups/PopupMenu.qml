@@ -3,10 +3,10 @@ import Quickshell
 
 import ".."
 
-// A right-click / dropdown menu in its own popup window (ContextMenuBody inside). openAt(item, x, y)
+// A right-click / dropdown menu in its own popup window (PopupMenuBody inside). openAt(item, x, y)
 // shows it at that point of item (it slides / flips to stay on screen). It takes keyboard focus while
 // open (grabFocus) and closes on a pick, Escape, or a click anywhere outside it.
-// model: see ContextMenuBody. picked(index, entry) is emitted before the entry's action runs.
+// model: see PopupMenuBody. picked(index, entry) is emitted before the entry's action runs.
 PopupWindow {
     id: root
 
@@ -39,7 +39,7 @@ PopupWindow {
     implicitWidth: body.implicitWidth
     implicitHeight: body.implicitHeight
 
-    ContextMenuBody {
+    PopupMenuBody {
         id: body
         anchors.fill: parent
         focus: true

@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
-// Qt Controls has its own ContextMenu; ours is reached through Local
+// Qt Controls has its own PopupMenu; ours is reached through Local
 import "." as Local
 
 // Wallpaper browser (Themes > Wallpapers...), centred, the launcher's size. The content is
@@ -44,11 +44,11 @@ PanelWindow {
         id: frame
 
         // Dropdowns of the menu bar (popup windows, closed until a title opens them)
-        Local.ContextMenu {
+        Local.PopupMenu {
             id: fileMenu
             onVisibleChanged: if (!visible) searchInput.focusInput()
         }
-        Local.ContextMenu {
+        Local.PopupMenu {
             id: viewMenu
             onVisibleChanged: if (!visible) searchInput.focusInput()
         }
@@ -70,7 +70,7 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                // Menu bar: File / View open a dropdown (ContextMenu) with actions this window already has
+                // Menu bar: File / View open a dropdown (PopupMenu) with actions this window already has
                 Row {
                     Layout.fillWidth: true
                     MenuTitle {
@@ -148,7 +148,7 @@ PanelWindow {
     }
 
     // A menu title in the window's menu bar: flat until hovered or open, then the accent bar. Click opens
-    // the dropdown under it, a second click closes it. `build` returns the ContextMenu model when it opens.
+    // the dropdown under it, a second click closes it. `build` returns the PopupMenu model when it opens.
     component MenuTitle: Rectangle {
         id: mt
         property string text: ""
