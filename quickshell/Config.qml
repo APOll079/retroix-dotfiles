@@ -134,6 +134,8 @@ property string currentTheme: "default"
 property JsonObject execCommands: JsonObject {
 property string terminal: "kitty"
 property string files: "nemo"
+// How the terminal names its window for the qs-dialog float rule: kitty / alacritty "--class", foot "--app-id", "" = don't name it (no float rule)
+property string terminalClassFlag: "--class"
 }
 property JsonObject systemDetails: JsonObject {
 property string osName: "Linux Distro"

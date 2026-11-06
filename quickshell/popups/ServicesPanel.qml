@@ -9,8 +9,8 @@ import ".."
 // dinit services (Start > Services, `qs ipc call services_<mon> toggle`), centred like the Games
 // menu. Lists `dinitctl list` with state; Start / Stop / Restart act on the selected service.
 // Two scopes: "User" (your own dinit instance: pipewire, wireplumber, ...) runs straight away;
-// "System" (the machine's dinit) runs `doas dinitctl ...` in a floating terminal (`kitty --class
-// qs-dialog`), so the password prompt is the real one and nothing is stored. The panel closes while
+// "System" (the machine's dinit) runs `doas dinitctl ...` in a floating terminal (the configured
+// `execCommands.terminal`, named `qs-dialog` through `execCommands.terminalClassFlag`), so the password prompt is the real one and nothing is stored. The panel closes while
 // the terminal is open (it would hold the keyboard over it) and the list refreshes when the
 // terminal exits. User actions refresh the list when they finish.
 // Type to filter, Up / Down select, Escape clears the search, then closes.
@@ -304,6 +304,12 @@ PanelWindow {
         }
     }
 
+    // The System-scope terminal command. Pure: verb and name stay separate arguments after the script,
+    // never in its text. classFlag "" = don't name the window.
+    function dialogCommand(terminal, classFlag, verb, name) {
+        return [terminal].concat(classFlag !== "" ? [classFlag, "qs-dialog"] : []).concat(["fish", "-c", "doas dinitctl --system $argv[1] $argv[2]; echo; read -P 'Press Enter to close'", verb, name]);
+    }
+
     // Start / Stop / Restart. User services run directly. System services open a floating terminal
     // where doas asks for the password: the panel closes first (an Overlay panel with the keyboard
     // would sit over the terminal), the list refreshes when the terminal exits. The name goes in as
@@ -313,7 +319,7 @@ PanelWindow {
         if (!s || !/^[A-Za-z0-9][A-Za-z0-9@._:+-]*$/.test(s.name))
             return;
         if (root.scope === "system") {
-            termProc.command = ["kitty", "--class", "qs-dialog", "fish", "-c", "doas dinitctl --system $argv[1] $argv[2]; echo; read -P 'Press Enter to close'", verb, s.name];
+            termProc.command = root.dialogCommand(Config.settings.execCommands.terminal, Config.settings.execCommands.terminalClassFlag, verb, s.name);
             termProc.running = true;
             root.closeCallback();
         } else {

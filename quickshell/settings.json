@@ -12,7 +12,8 @@
         "currentTheme": "dusty",
         "execCommands": {
             "files": "nemo",
-            "terminal": "kitty"
+            "terminal": "kitty",
+            "terminalClassFlag": "--class"
         },
         "idle": {
             "dimMinutes": 5,
