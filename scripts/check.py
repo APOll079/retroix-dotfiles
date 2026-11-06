@@ -116,6 +116,17 @@ def check_design():
         (warns if MODE == "edit" else fails).append(msg)
 
 
+def check_interaction():
+    """tests/interaction/*.qml: real simulated clicks and keys on the shared components, offscreen. Slow (a few
+    seconds), so not in the per-edit hook."""
+    if MODE == "edit":
+        return
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "run-interaction-tests.py")], capture_output=True, text=True)
+    if r.returncode:
+        bad = [l for l in r.stdout.splitlines() if "TEST FAIL" in l]
+        fails.append("interaction tests failed (python3 scripts/run-interaction-tests.py):\n      " + "\n      ".join(bad[:6]))
+
+
 def check_qmldir():
     for qmldir in ROOT.glob("quickshell/**/qmldir"):
         listed = set(re.findall(r"^(?:singleton\s+)?\w+\s+[\d.]+\s+(\S+\.qml)", qmldir.read_text(), re.M))
@@ -233,6 +244,7 @@ def run(files):
     check_contract()
     check_design()
     check_qmldir()
+    check_interaction()
     check_syntax(files)
     check_diff(files)
 

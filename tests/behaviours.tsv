@@ -98,3 +98,4 @@ quickshell/popups/SessionPanel.qml	ConfirmBar \{	Session panel: the confirm is a
 quickshell/popups/AppLauncher.qml	Qt\.Key_Return.*ShiftModifier	Launcher: Shift+Enter opens the app's options menu
 quickshell/popups/AppLauncher.qml	TapHandler	Launcher: right-click on an app opens its options menu
 quickshell/popups/AppLauncher.qml	function movePinned	Launcher: Move up / down keeps the menu open on the moved app
+tests/interaction/components.qml	MenuStrip: a second click closes it	Interaction tests: real clicks and keys on the shared components still pass
