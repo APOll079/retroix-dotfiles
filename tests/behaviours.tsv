@@ -100,3 +100,5 @@ quickshell/popups/AppLauncher.qml	TapHandler	Launcher: right-click on an app ope
 quickshell/popups/AppLauncher.qml	function movePinned	Launcher: Move up / down keeps the menu open on the moved app
 tests/interaction/components.qml	MenuStrip: a second click closes it	Interaction tests: real clicks and keys on the shared components still pass
 quickshell/Idle.qml	qs-caffeine\.json	Caffeine is kept in XDG_RUNTIME_DIR (survives reload and restart, cleared at logout)
+quickshell/LaptopControls.qml	btBatteryText\(root\.btDevices\)	Bluetooth button shows the lowest connected device battery, else ON / OFF
+quickshell/LaptopControls.qml	tooltip: root\.btBatteryTooltip	Bluetooth button tooltip lists "name NN%" per connected device with a known battery

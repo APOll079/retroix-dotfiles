@@ -24,8 +24,28 @@ Row {
     property string netIconVal: "\ue63d"
     // Bluetooth from BlueZ directly: OFF, ON, or ON with the connected icon
     readonly property bool btOn: Bluetooth.defaultAdapter !== null && Bluetooth.defaultAdapter.enabled
-    readonly property bool btConnected: Bluetooth.devices.values.some(d => d.connected)
-    readonly property string btText: btOn ? "ON" : "OFF"
+    readonly property bool btConnected: root.btDevices.some(d => d.connected)
+    // The devices the battery choice looks at (a plain list; tests replace it with fixtures)
+    property var btDevices: Bluetooth.devices.values
+    // Battery of connected devices (BlueZ reports it as 0..1 when the device exposes it). The text is the
+    // lowest one as "82%", or "" when no connected device has a battery; the tooltip is one "name 82%"
+    // line per such device. Pure functions of a plain array, so tests feed them fixtures.
+    function btDeviceName(d) {
+        return d.name || d.deviceName || d.address || "";
+    }
+    function btWithBattery(devices) {
+        return (devices || []).filter(d => d && d.connected && d.batteryAvailable);
+    }
+    function btBatteryText(devices) {
+        const list = root.btWithBattery(devices);
+        if (list.length === 0)
+            return "";
+        return Math.round(Math.min(...list.map(d => d.battery)) * 100) + "%";
+    }
+    function btBatteryTooltip(devices) {
+        return root.btWithBattery(devices).map(d => root.btDeviceName(d) + " " + Math.round(d.battery * 100) + "%").join("\n");
+    }
+    readonly property string btText: root.btBatteryText(root.btDevices) || (btOn ? "ON" : "OFF")
     readonly property string btIconVal: !btOn ? "\ue1a9" : (btConnected ? "\ue1a8" : "\ue1a7")
 
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
@@ -118,6 +138,7 @@ Row {
         iconFontValue: root.btIconVal
         toggledIconFontValue: ""
         label: root.btText
+        tooltip: root.btBatteryTooltip(root.btDevices)
         minWidth: MenuStyle.barLabelButtonWidth
         isToggled: root.currentPopup === Config.SystemPopup.BluetoothMenu
         onClicked: root.toggleMenu(root.bluetoothMenuRef, Config.SystemPopup.BluetoothMenu, btBtn)

@@ -84,7 +84,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `titleHeight` | int | `20` |  |
 | `barHeight` | int | `32` |  |
 | `barButtonHeight` | int | `22` |  |
-| `barLabelButtonWidth` | int | `56` |  |
+| `barLabelButtonWidth` | int | `62` |  |
 | `separatorThickness` | int | `6` |  |
 | `gripperWidth` | int | `4` |  |
 | `sliderKnobWidth` | int | `10` |  |
