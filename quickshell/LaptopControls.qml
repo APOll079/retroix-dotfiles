@@ -26,7 +26,26 @@ Item {
     // Everything but the sysmon button, so Bar.qml can work out the width with the GPU part shown
     // without reading anything that changes when it hides (that would be a binding loop)
     readonly property real otherWidth: (privacyRow.width > 0 ? privacyRow.width + MenuStyle.gap : 0) + caffeineBtn.width + MenuStyle.gap + MenuStyle.gap + ethLabel.width + MenuStyle.gap + btBtn.width
-    readonly property real widthWithGpu: otherWidth + MenuStyle.barSysMonWidth
+    readonly property real widthWithGpu: otherWidth + sysProbe.implicitWidth
+
+    // The sysmon label: every number sits in a fixed-width cell (Monaco is monospace), so the button
+    // never changes width while it ticks and nothing next to it moves. Cells are sized to the widest
+    // real value: CPU load up to 100, a temperature up to 99 degrees (or "--"), RAM up to 99.
+    function cell(value, width) {
+        return String(value).padStart(width, " ");
+    }
+    function sysLabel(cpu, cpuTemp, gpuTemp, mem, withGpu) {
+        return "CPU " + cell(cpu, 3) + "% " + cell(SysMon.tempShort(cpuTemp), 3)
+            + (withGpu ? " GPU " + cell(SysMon.tempShort(gpuTemp), 3) : "")
+            + " RAM " + cell(mem, 2) + "%";
+    }
+    // Measures the widest label with the real button (font, size and padding included); never shown
+    BarButton {
+        id: sysProbe
+        visible: false
+        iconFontValue: ""
+        label: root.sysLabel(100, 99, 99, 99, true)
+    }
     implicitWidth: otherWidth + sysBtn.width
     implicitHeight: MenuStyle.barButtonHeight
 
@@ -76,10 +95,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         // No icon: the CPU/RAM labels say what it is (BarButton defaults to the Start grid icon)
         iconFontValue: ""
-        label: "CPU " + Math.round(SysMon.cpuLoad * 100) + "% " + SysMon.tempShort(SysMon.cpuTemp)
-            + (root.showGpu ? " GPU " + SysMon.tempShort(SysMon.gpuEdge) : "")
-            + " RAM " + SysMon.memPercent + "%"
-        minWidth: root.showGpu ? MenuStyle.barSysMonWidth : MenuStyle.barSysMonNoGpuWidth
+        label: root.sysLabel(Math.round(SysMon.cpuLoad * 100), SysMon.cpuTemp, SysMon.gpuEdge, SysMon.memPercent, root.showGpu)
         isToggled: root.currentPopup === Config.SystemPopup.SysMonMenu
         tooltip: "Left click: Task Manager \u00b7 Right click: temperatures"
         onClicked: TaskWindow.open("performance")

@@ -43,11 +43,6 @@ Singleton {
     readonly property int gripperWidth: 4
     // Slider knob (raised bevel block, track height)
     readonly property int sliderKnobWidth: 10
-    // Sysmon bar button, fixed so it doesn't change width as numbers tick. Monaco 12 is 7.2 px a
-    // character: "CPU 100% 100° GPU 100° RAM 100%" = 31 chars = 223.2 + 12 padding; without the
-    // GPU part (hidden when the centre text needs the room) 22 chars = 158.4 + 12
-    readonly property int barSysMonWidth: 236
-    readonly property int barSysMonNoGpuWidth: 172
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and
