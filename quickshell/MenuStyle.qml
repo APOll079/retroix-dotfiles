@@ -213,6 +213,9 @@ Singleton {
     // Bevel tones. The light edge IS the theme's highlight: theme/apply.py refuses a palette whose
     // highlight is less than 1.35:1 lighter than base, so it always reads as an edge.
     readonly property color bevelLight: Config.colors.highlight
+    // The inner light ring of a raised bevel: halfway from the face to the highlight (Win95's #dfdfdf
+    // between #c0c0c0 and white), so the two rings read as two steps
+    readonly property color bevelInnerLight: Qt.tint(Config.colors.base, Qt.alpha(Config.colors.highlight, 0.5))
     // Glyph of a bar button that is switched on (caffeine): the accent darkened, so it reads on the base face (accent itself is 2-4:1 there)
     readonly property color barOnGlyph: Qt.darker(selectBar, 1.8)
     readonly property color bevelDark: Qt.darker(Config.colors.shadow, 1.7)

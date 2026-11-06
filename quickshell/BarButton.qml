@@ -41,12 +41,8 @@ Button {
     background: Rectangle {
         visible: !root.tucked
         color: root.lit ? MenuStyle.selectBar : Config.colors.base
-        border.width: 1
-        border.color: Config.colors.outline
         Bevel {
             anchors.fill: parent
-            anchors.margins: 1
-            thickness: 1
             raised: !root.sunken
         }
     }

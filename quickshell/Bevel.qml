@@ -12,7 +12,7 @@ Item {
 
     readonly property color outerLight: raised ? MenuStyle.bevelLight : MenuStyle.bevelDark
     readonly property color outerDark: thickness === 1 ? (raised ? MenuStyle.bevelDark : MenuStyle.bevelLight) : (raised ? Config.colors.outline : MenuStyle.bevelLight)
-    readonly property color innerLight: raised ? MenuStyle.bevelLight : Config.colors.outline
+    readonly property color innerLight: raised ? MenuStyle.bevelInnerLight : Config.colors.outline
     readonly property color innerDark: raised ? MenuStyle.bevelDark : Config.colors.base
 
     // light edges first, dark edges drawn over them at the shared corners
