@@ -17,8 +17,10 @@ Button {
     property string markGlyph: "\ue5ca"     // the sign shown when marked (default: a check)
     property bool selected: false
     property int iconBox: MenuStyle.iconSize   // the icon / thumbnail square (the Spotify lists use a bigger one)
-    // The icon column keeps its width even when this row has no icon, so labels line up down a menu
-    property bool reserveIcon: true
+    // Keep the icon column's width even when this row has no icon, so labels line up down a menu. Set it on
+    // every row of a menu that has at least one icon (ContextMenuBody does it by itself); a menu without
+    // any icon leaves it off, so its labels don't indent.
+    property bool reserveIcon: false
     property bool accentTitle: false           // the title in the accent colour (the playing song)
     property bool trailingDim: false           // the trailing text dim (a duration column)
     readonly property bool lit: hover.hovered || hovered || visualFocus || down || selected

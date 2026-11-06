@@ -14,6 +14,8 @@ Rectangle {
 
     property var model: []
     property int currentIndex: -1
+    // the icon column only when at least one entry has an icon
+    readonly property bool anyIcon: root.model.some(e => !e.separator && !!e.glyph)
     signal picked(int index, var entry)
     signal escaped()
 
@@ -29,7 +31,7 @@ Rectangle {
             tm.text = e.trailing || "";
             trail = Math.max(trail, tm.advanceWidth);
         }
-        const row = MenuStyle.pad + MenuStyle.iconSize + MenuStyle.pad + Math.ceil(label)
+        const row = MenuStyle.pad + (root.anyIcon ? MenuStyle.iconSize + MenuStyle.pad : 0) + Math.ceil(label)
             + (trail > 0 ? MenuStyle.space12 + Math.ceil(trail) : 0) + MenuStyle.pad + MenuStyle.iconSize + MenuStyle.pad;
         root.menuWidth = Math.max(MenuStyle.contextMenuMinWidth, row + 2 * MenuStyle.frameInset);
     }
@@ -117,6 +119,7 @@ Rectangle {
                     width: parent.width
                     text: entry.modelData.text || ""
                     glyph: entry.modelData.glyph || ""
+                    reserveIcon: root.anyIcon
                     trailing: entry.modelData.trailing || ""
                     marked: entry.modelData.checked === true
                     enabled: entry.modelData.enabled !== false

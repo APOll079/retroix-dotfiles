@@ -167,14 +167,14 @@ ShellRoot {
                         ColumnLayout {
                             anchors.fill: parent
                             spacing: 0
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Normal"; glyph: "\ue88a" }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Selected"; glyph: "\ue88a"; selected: true }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Disabled"; glyph: "\ue88a"; enabled: false }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Marked"; glyph: "\ue88a"; marked: true }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Trailing"; trailing: "Ctrl+Q" }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "Two lines"; subtext: "second line, dim"; glyph: "\ue88a" }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Normal"; glyph: "\ue88a" }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Selected"; glyph: "\ue88a"; selected: true }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Disabled"; glyph: "\ue88a"; enabled: false }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Marked"; glyph: "\ue88a"; marked: true }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Trailing"; trailing: "Ctrl+Q" }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "Two lines"; subtext: "second line, dim"; glyph: "\ue88a" }
                             Popups.MenuSeparator { Layout.fillWidth: true }
-                            Popups.MenuRow { Layout.fillWidth: true; text: "No icon, long text that has to be cut off" }
+                            Popups.MenuRow { Layout.fillWidth: true; reserveIcon: true; text: "No icon, long text that has to be cut off" }
                         }
                     }
                 }
@@ -188,7 +188,7 @@ ShellRoot {
                         windowTitleIcon: "\ue7f4"
                         titleColor: MenuStyle.urgentBar
                         titleTextColor: MenuStyle.urgentText
-                        Popups.MenuRow { width: parent.width; text: "Critical toast title"; reserveIcon: false }
+                        Popups.MenuRow { width: parent.width; text: "Critical toast title" }
                     }
                 }
                 Head { text: "PopupWindowFrame (inactive)" }
