@@ -116,53 +116,37 @@ PanelWindow {
 
             MenuSeparator { Layout.fillWidth: true }
 
-            // Tabs
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: MenuStyle.gap
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Home"
-                    checked: root.tab === 0
-                    onClicked: root.tab = 0
-                }
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Calendar"
-                    checked: root.tab === 1
-                    onClicked: root.tab = 1
-                }
-                BevelButton {
-                    Layout.fillWidth: true
-                    text: "Phone"
-                    checked: root.tab === 2
-                    onClicked: root.tab = 2
-                }
-            }
-
-            StackLayout {
+            // Tabs on one raised page; Calendar / Phone take their own height, Home fills the full-height panel
+            TabPage {
+                id: tabs
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                // Calendar / Phone: their own height (Home fills the full-height panel)
-                Layout.preferredHeight: root.tab === 1 ? calendarTab.implicitHeight : root.tab === 2 ? phoneTab.implicitHeight : -1
-                currentIndex: root.tab
+                Layout.preferredHeight: root.tab === 0 ? -1 : tabs.frameTop + 2 * (3 + MenuStyle.tabPagePad) + (root.tab === 1 ? calendarTab.implicitHeight : phoneTab.implicitHeight)
+                tabs: [{ key: "home", text: "Home" }, { key: "calendar", text: "Calendar" }, { key: "phone", text: "Phone" }]
+                current: root.tab === 0 ? "home" : root.tab === 1 ? "calendar" : "phone"
+                onTabClicked: key => root.tab = key === "home" ? 0 : key === "calendar" ? 1 : 2
 
-                ColumnLayout {
-                    id: homeTab
-                    spacing: MenuStyle.pad
-                    AudioTab {
-                        Layout.fillWidth: true
-                        active: root.visible && root.tab === 0
+                StackLayout {
+                    anchors.fill: parent
+                    currentIndex: root.tab
+
+                    ColumnLayout {
+                        id: homeTab
+                        spacing: MenuStyle.pad
+                        AudioTab {
+                            Layout.fillWidth: true
+                            active: root.visible && root.tab === 0
+                        }
+                        MenuSeparator { Layout.fillWidth: true }
+                        NotificationList {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            active: root.visible && root.tab === 0
+                        }
                     }
-                    MenuSeparator { Layout.fillWidth: true }
-                    NotificationList {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        active: root.visible && root.tab === 0
-                    }
+                    CalendarTab { id: calendarTab; active: root.visible && root.tab === 1 }
+                    PhoneTab { id: phoneTab; active: root.visible && root.tab === 2 }
                 }
-                CalendarTab { id: calendarTab; active: root.visible && root.tab === 1 }
-                PhoneTab { id: phoneTab; active: root.visible && root.tab === 2 }
             }
         }
     }
