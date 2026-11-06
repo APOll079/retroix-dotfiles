@@ -79,6 +79,16 @@ ColumnLayout {
     }
 
     // === MICROPHONE ===
+    // One label: "nickname · description" when PipeWire gives both and they differ (a USB mic can be
+    // "AT2020 USB" + "Analog Stereo"), else whichever there is
+    function sourceLabel(n) {
+        const d = n.description || "";
+        const k = n.nickname || "";
+        if (d !== "" && k !== "" && d.indexOf(k) < 0)
+            return k + " · " + d;
+        return d || k || n.name;
+    }
+
     P.GroupBox {
         Layout.fillWidth: true
         visible: AudioState.mic !== null
@@ -92,7 +102,8 @@ ColumnLayout {
             font.family: MenuStyle.bodyFont
             font.pixelSize: MenuStyle.fontSize
             color: Config.colors.text
-            text: AudioState.mic ? (AudioState.mic.description || AudioState.mic.nickname || AudioState.mic.name) : ""
+            textFormat: Text.PlainText
+            text: AudioState.mic ? root.sourceLabel(AudioState.mic) : ""
         }
 
         RowLayout {
