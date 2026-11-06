@@ -43,20 +43,15 @@ ColumnLayout {
 
     SunkenField {
         Layout.fillWidth: true
-        implicitHeight: Math.max(MenuStyle.rowHeight * 3, deviceColumn.implicitHeight + 4)
+        implicitHeight: Math.max(MenuStyle.rowHeight * 3, root.devices.length === 0 ? noPhone.implicitHeight + 2 * MenuStyle.pad : deviceColumn.implicitHeight + 4)
         padding: 2
 
-        Text {
-            renderType: Text.NativeRendering
-            font.hintingPreference: Font.PreferFullHinting
+        EmptyState {
+            id: noPhone
             anchors.centerIn: parent
             width: parent.width - 2 * MenuStyle.pad
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
             visible: root.devices.length === 0
-            font.family: MenuStyle.bodyFont
-            font.pixelSize: MenuStyle.fontSize
-            color: MenuStyle.bevelDark
+            glyph: "\ue324"
             text: root.status !== "" ? root.status : "No phone found. Install KDE Connect on it and pair from there."
         }
 
