@@ -35,6 +35,32 @@ ShellRoot {
         shell.check("status: broken or empty input is off", R.parseStatus("").on === false && R.parseStatus("not json").on === false && R.parseStatus("{").on === false);
         shell.check("status: a missing since is 0", R.parseStatus('{"recording":true,"file":"x"}').since === 0);
 
+        const pz = R.parseStatus('{"recording":true,"file":"/v/a.mp4","since":100,"paused":true,"idle":12}');
+        shell.check("status: paused and idle", pz.paused === true && pz.idle === 12);
+        shell.check("status: not paused by default", on.paused === false && on.idle === 0 && off.paused === false);
+        shell.check("status: idle and paused only count while recording", R.parseStatus('{"recording":false,"paused":true,"idle":9}').paused === false);
+        shell.check("elapsed: leaves the paused time out", R.elapsedFor(160, 100, 20) === 40);
+        shell.check("elapsed: never negative", R.elapsedFor(100, 100, 30) === 0 && R.elapsedFor(50, 100, 0) === 0);
+
+        const good = R.parseCheck('{"ok":true,"problems":[],"warnings":["Under 2 GB free"]}');
+        shell.check("check: ok with a warning", good.ok === true && good.problems.length === 0 && good.warnings[0] === "Under 2 GB free");
+        const bad = R.parseCheck('{"ok":false,"problems":["No microphone found"],"warnings":[]}');
+        shell.check("check: a problem blocks", bad.ok === false && bad.problems[0] === "No microphone found");
+        shell.check("check: ok:true with a problem still blocks", R.parseCheck('{"ok":true,"problems":["x"],"warnings":[]}').ok === false);
+        shell.check("check: unreadable output never blocks", R.parseCheck("").ok === true && R.parseCheck("oops").ok === true);
+        shell.check("check: junk entries are dropped", R.parseCheck('{"ok":true,"problems":[1,null],"warnings":[{}]}').problems.length === 0);
+        shell.check("checkCommand: all becomes screen, mic as 0 / 1", R.checkCommand("s.sh", "all", true, "~/V").join("|") === "s.sh|check|screen|1|~/V");
+
+        const none = { ok: true, problems: [], warnings: [] };
+        shell.check("hint: shot region", R.hintText("region", false, none) === "Drag to select an area. Esc cancels.");
+        shell.check("hint: shot window", R.hintText("window", false, none) === "Click a window to capture it. Esc cancels.");
+        shell.check("hint: record region", R.hintText("region", true, none) === "Drag to select an area to record. Esc cancels.");
+        shell.check("hint: record window", R.hintText("window", true, none) === "Click a window to record it. Esc cancels.");
+        shell.check("hint: record screen and all point at Start", R.hintText("screen", true, none) === R.hintText("all", true, none) && R.hintText("screen", true, none).indexOf("Start") > 0);
+        shell.check("hint: a problem wins while recording is armed", R.hintText("region", true, bad) === "No microphone found" && R.hintIsProblem(true, bad) === true);
+        shell.check("hint: a problem is ignored in shot mode", R.hintText("region", false, bad) === "Drag to select an area. Esc cancels." && R.hintIsProblem(false, bad) === false);
+        shell.check("hint: a warning is appended", R.hintText("region", true, good) === "Drag to select an area to record. Esc cancels. Under 2 GB free.");
+
         shell.check("geometry: WxH+X+Y", R.geometry(10, 20, 300, 200) === "300x200+10+20");
         shell.check("geometry: rounds and clamps", R.geometry(-4, 1.6, 0.2, 99.5) === "1x100+0+2");
 

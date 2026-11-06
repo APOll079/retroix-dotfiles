@@ -33,6 +33,7 @@ PanelWindow {
     // Stop and the picks shoot as usual.
     property bool record: false
     property bool recordMic: false
+    onRecordMicChanged: root.refreshCheck()   // Mic on / off changes what the preflight asks
     readonly property bool recordArmed: root.record && !RecordState.recording
     property var recordArgs: null
     readonly property var scr: root.screen
@@ -140,7 +141,7 @@ PanelWindow {
             } else if (root.mode === "window") {
                 if (root.hoverWin)
                     root.shoot();
-            } else {
+            } else if (!root.recordArmed) {
                 root.shoot();
             }
         }
@@ -153,7 +154,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         width: toolRow.implicitWidth + 2 * MenuStyle.pad
-        height: MenuStyle.barHeight
+        height: MenuStyle.barHeight + MenuStyle.shotHintHeight
         color: Config.colors.base
         border.width: 1
         border.color: Config.colors.outline
@@ -170,9 +171,36 @@ PanelWindow {
 
         RowLayout {
             id: toolRow
-            anchors.centerIn: parent
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: Math.round((MenuStyle.barHeight - height) / 2)
             spacing: MenuStyle.gap
 
+            // What to do: take a picture or record a video (two buttons that act as one switch)
+            BevelButton {
+                text: "Shot"
+                glyph: "\ue412"
+                checked: !root.record && !RecordState.recording
+                focusPolicy: Qt.NoFocus
+                onClicked: root.setRecord(false)
+            }
+            BevelButton {
+                text: RecordState.recording ? "Stop" : "Record"
+                glyph: RecordState.recording ? "\ue047" : "\ue061"
+                checked: root.recordArmed || RecordState.recording
+                focusPolicy: Qt.NoFocus
+                onClicked: {
+                    if (RecordState.recording) {
+                        RecordState.stop();
+                        root.close();
+                    } else {
+                        root.setRecord(true);
+                    }
+                }
+            }
+            MenuSeparator {
+                vertical: true
+                Layout.preferredHeight: MenuStyle.rowHeight
+            }
             Repeater {
                 model: [
                     { key: "region", text: "Region", glyph: "" },
@@ -193,21 +221,7 @@ PanelWindow {
                 Layout.preferredHeight: MenuStyle.rowHeight
             }
             BevelButton {
-                text: RecordState.recording ? "Stop" : "Record"
-                glyph: RecordState.recording ? "\ue047" : "\ue061"
-                checked: root.recordArmed
-                focusPolicy: Qt.NoFocus
-                onClicked: {
-                    if (RecordState.recording) {
-                        RecordState.stop();
-                        root.close();
-                    } else {
-                        root.record = !root.record;
-                    }
-                }
-            }
-            BevelButton {
-                visible: root.recordArmed
+                enabled: root.recordArmed
                 text: "Mic"
                 glyph: "\ue029"
                 checked: root.recordMic
@@ -233,6 +247,37 @@ PanelWindow {
                 onClicked: root.close()
             }
         }
+        // The hint row: what the next click does, or what is wrong (Record only); Start for Screen / All
+        MenuSeparator {
+            x: MenuStyle.pad
+            y: MenuStyle.barHeight - 2
+            width: parent.width - 2 * MenuStyle.pad
+        }
+        RowLayout {
+            x: MenuStyle.pad
+            y: MenuStyle.barHeight + MenuStyle.gap
+            width: parent.width - 2 * MenuStyle.pad
+            height: MenuStyle.shotHintHeight - 2 * MenuStyle.gap
+            spacing: MenuStyle.pad
+            RetroText {
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: MenuStyle.fontSize
+                color: RecordState.hintIsProblem(root.record, RecordState.preflight) ? Config.colors.urgent : Config.colors.text
+                text: RecordState.hintText(root.mode, root.recordArmed, RecordState.preflight)
+            }
+            BevelButton {
+                visible: root.recordArmed && (root.mode === "screen" || root.mode === "all")
+                enabled: RecordState.preflight.ok
+                isDefault: true
+                text: "Start recording"
+                glyph: "\ue061"
+                focusPolicy: Qt.NoFocus
+                onClicked: root.shoot()
+            }
+        }
     }
 
     // Keys: Escape cancels, Enter shoots (screen / all; a region or window shoots on release / click), 1-4 pick a mode
@@ -243,10 +288,25 @@ PanelWindow {
         Keys.onReturnPressed: if (root.mode === "screen" || root.mode === "all") root.shoot()
         Keys.onEnterPressed: if (root.mode === "screen" || root.mode === "all") root.shoot()
         Keys.onPressed: event => {
+            if (event.text === "r" && !RecordState.recording) {
+                root.setRecord(!root.record);
+                return;
+            }
             const i = ["1", "2", "3", "4"].indexOf(event.text);
             if (i >= 0)
                 root.pick(["region", "window", "screen", "all"][i]);
         }
+    }
+
+    // Shot / Record switch; arming Record asks the preflight at once
+    function setRecord(on) {
+        root.record = on;
+        if (on)
+            root.refreshCheck();
+    }
+    function refreshCheck() {
+        if (root.record)
+            RecordState.check(root.mode, root.recordMic);
     }
 
     function setMode(m) {
@@ -257,12 +317,14 @@ PanelWindow {
             Hyprland.refreshMonitors();
             Hyprland.refreshToplevels();
         }
+        root.refreshCheck();
     }
 
     // Toolbar buttons and keys 1-4: Screen and All shoot straight away
     function pick(m) {
         root.setMode(m);
-        if (m === "screen" || m === "all")
+        // Recording waits for the Start button (or Enter); a plain shot is taken at once
+        if ((m === "screen" || m === "all") && !root.recordArmed)
             root.shoot();
     }
 
@@ -301,7 +363,9 @@ PanelWindow {
 
     function shoot() {
         if (root.recordArmed) {
-            root.runRecord();
+            // a problem from the preflight blocks it; the hint row says what
+            if (RecordState.preflight.ok)
+                root.runRecord();
             return;
         }
         // Drop the overlay chrome first; only the frozen frame stays on screen for grim

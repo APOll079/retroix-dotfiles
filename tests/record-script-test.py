@@ -23,6 +23,7 @@ def done(*_):
     sys.exit(0)
 signal.signal(signal.SIGINT, done)
 signal.signal(signal.SIGUSR1, lambda *_: open(log, "a").write("SIGUSR1\n"))
+signal.signal(signal.SIGUSR2, lambda *_: open(log, "a").write("SIGUSR2\n"))
 while True:
     time.sleep(0.05)
 '''
@@ -46,16 +47,19 @@ def main():
             d.mkdir()
         rt.chmod(0o700)
         # the script needs sh, sed, grep, tr, date, mkdir, mv, rm, sleep, kill, head, basename, dirname, nohup, python3
-        for tool in ("sh", "sed", "grep", "tr", "date", "mkdir", "mv", "rm", "sleep", "head", "basename", "dirname", "nohup", "python3", "cat", "env", "printf", "kill", "cut"):
+        for tool in ("sh", "sed", "grep", "tr", "date", "mkdir", "mv", "rm", "sleep", "head", "basename", "dirname", "nohup", "python3", "cat", "env", "printf", "kill", "cut", "tail", "df", "touch", "chmod"):
             p = shutil.which(tool)
             if p and not (bin_ / tool).exists():
                 (bin_ / tool).symlink_to(p)
+        pactl = bin_ / "pactl"
+        pactl.write_text('#!/bin/sh\n[ "$1" = get-default-source ] && printf "%s\\n" "$FAKE_SOURCE"\n')
+        pactl.chmod(0o755)
         fake = bin_ / "gpu-screen-recorder"
         fake.write_text(FAKE)
         fake.chmod(0o755)
         log = work / "fake.log"
         log.write_text("")
-        env = {"PATH": str(bin_), "HOME": str(home), "XDG_RUNTIME_DIR": str(rt), "FAKE_LOG": str(log)}
+        env = {"PATH": str(bin_), "HOME": str(home), "XDG_RUNTIME_DIR": str(rt), "FAKE_LOG": str(log), "FAKE_SOURCE": "alsa_input.usb-mic"}
 
         def rec(*a, e=None):
             return subprocess.run(["sh", str(SCRIPT), *a], env=e or env, capture_output=True, text=True, timeout=30)
@@ -104,6 +108,85 @@ def main():
         check("stop returns the hostile path intact", r.stdout.strip() == f)
         check("bad region is rejected", rec("start", "region", "0", str(out), "1;2").returncode == 1)
         check("bad output name is rejected", rec("start", "screen", "0", str(out), "-x").returncode == 1)
+
+        # pause / resume (SIGUSR2 toggles; the script keeps the bookkeeping)
+        import time
+        out2 = work / "out2"
+        r = rec("start", "screen", "0", str(out2), "DP-1")
+        check("start for the pause tests", r.returncode == 0)
+        st = json.loads(rec("status").stdout)
+        check("status has paused false and idle 0 at first", st["paused"] is False and st["idle"] == 0)
+        r = rec("pause")
+        time.sleep(0.3)
+        check("pause prints paused and signals SIGUSR2", r.returncode == 0 and r.stdout.strip() == "paused" and log.read_text().count("SIGUSR2") == 1)
+        time.sleep(1.1)
+        st = json.loads(rec("status").stdout)
+        check("status while paused: paused true and idle counts up", st["recording"] is True and st["paused"] is True and st["idle"] >= 1)
+        r = rec("pause")
+        time.sleep(0.3)
+        check("second pause resumes and signals again", r.stdout.strip() == "resumed" and log.read_text().count("SIGUSR2") == 2)
+        st = json.loads(rec("status").stdout)
+        check("after resume: not paused, idle keeps the paused time", st["paused"] is False and st["idle"] >= 1)
+        idle1 = st["idle"]
+        time.sleep(1.1)
+        check("idle does not grow while running", json.loads(rec("status").stdout)["idle"] == idle1)
+        rec("stop")
+        check("pause when not recording fails", rec("pause").returncode == 1)
+        check("stop clears the pause state", not (rt / "qs-record-pause").exists())
+        rec("start", "screen", "0", str(out2), "DP-1")
+        check("a new recording starts with idle 0", json.loads(rec("status").stdout)["idle"] == 0)
+        rec("stop")
+
+        # preflight
+        def chk(*a, e=None):
+            r = rec("check", *a, e=e)
+            return r.returncode, (json.loads(r.stdout) if r.stdout.strip() else None)
+        rc, j = chk("region", "0", str(work / "newdir" / "sub"))
+        check("check: all fine, a folder that doesn't exist yet is fine", rc == 0 and j["ok"] is True and j["problems"] == [])
+        rc, j = chk("region", "1", str(out))
+        check("check: mic ok with a default source", j["ok"] is True)
+        rc, j = chk("region", "1", str(out), e=dict(env, FAKE_SOURCE=""))
+        check("check: no default source is a problem", j["ok"] is False and j["problems"] == ["No microphone found"])
+        rc, j = chk("region", "1", str(out), e=dict(env, FAKE_SOURCE="alsa_output.pci.monitor"))
+        check("check: a monitor source is no microphone", j["ok"] is False and "No microphone found" in j["problems"])
+        rc, j = chk("region", "0", str(out), e=dict(env, FAKE_SOURCE=""))
+        check("check: mic off ignores the source", j["ok"] is True)
+        ro = work / "ro"
+        ro.mkdir()
+        ro.chmod(0o500)
+        rc, j = chk("screen", "0", str(ro / "clips"))
+        check("check: an unwritable folder is a problem", rc == 0 and j["ok"] is False and j["problems"] == ["Can't write to the recording folder"])
+        ro.chmod(0o700)
+        rec("start", "screen", "0", str(out2), "DP-1")
+        rc, j = chk("screen", "0", str(out2))
+        check("check: already recording is a problem", j["ok"] is False and "Already recording" in j["problems"])
+        rec("stop")
+        rec("replay-start", str(work / "rp"), "30")
+        rc, j = chk("screen", "0", str(out2))
+        check("check: replay running is only a warning", j["ok"] is True and j["warnings"] == ["The replay buffer is running too"])
+        rec("replay-stop")
+        rc, j = chk("bogus", "0", str(out2))
+        check("check: unknown mode is a problem", j["ok"] is False and "Unknown capture mode" in j["problems"])
+        bare = work / "nobin2"
+        bare.mkdir()
+        for tool in ("sh", "sed", "grep", "tr", "date", "mkdir", "dirname", "head", "cat", "cut", "tail", "df", "printf"):
+            pp = shutil.which(tool)
+            if pp and not (bare / tool).exists():
+                (bare / tool).symlink_to(pp)
+        rc, j = chk("screen", "0", str(out2), e=dict(env, PATH=str(bare)))
+        check("check: missing recorder is a problem, exit 0", rc == 0 and j["ok"] is False and "gpu-screen-recorder is not installed" in j["problems"])
+        rc, j = chk("screen", "1", str(out2), e=dict(env, PATH=str(bare)))
+        check("check: no pactl is a warning, not a problem", "Can't check the microphone" in j["warnings"])
+        check("check usage error", rec("check", "screen").returncode == 1)
+
+        # an immediate death is reported with gsr's own last line
+        dead = bin_ / "gpu-screen-recorder"
+        keep = dead.read_text()
+        dead.write_text("#!/bin/sh\necho 'no capture portal' >&2\nexit 1\n")
+        r = rec("start", "screen", "0", str(out2), "DP-1")
+        check("a recorder that dies at once: exit 1 with its last line", r.returncode == 1 and "exited right away: no capture portal" in r.stderr)
+        check("error prints that last line", rec("error").stdout.strip() == "no capture portal")
+        dead.write_text(keep)
 
         # missing tool
         e2 = dict(env, PATH=str(work / "nobin"))

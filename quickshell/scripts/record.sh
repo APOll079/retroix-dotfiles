@@ -7,7 +7,13 @@
 #       Writes <dir>/<name>.mp4 (name from shot-name.sh <class>, class defaults to "recording"; -2, -3 when taken)
 #       and prints the path. Refuses when already recording (exit 1). State: $XDG_RUNTIME_DIR/qs-record.json.
 #   record.sh stop     SIGINT (gsr finalises the file), waits up to 10 s, prints the file path.
-#   record.sh status   prints {"recording":bool,"file":"..","since":epoch}
+#   record.sh pause   toggles pause / resume with SIGUSR2 (gsr's pause signal: UNVERIFIED until a live test); prints
+#                     "paused" or "resumed". Pause bookkeeping lives in $XDG_RUNTIME_DIR/qs-record-pause.
+#   record.sh check <region|screen|window> <mic 0|1> <dir>   read-only preflight, always exit 0:
+#                     {"ok":bool,"problems":[..],"warnings":[..]}. Problems block (gsr missing, already recording,
+#                     folder not writable, disk almost full, no microphone); warnings don't (under 2 GB free, replay running).
+#   record.sh error   the last line gsr wrote to stderr (the log of the latest start)
+#   record.sh status   prints {"recording":bool,"file":"..","since":epoch,"paused":bool,"idle":seconds paused so far}
 #   record.sh replay-start <dir> [seconds] [output]   gsr -w <output|screen> -r <seconds, default 30> -c mp4 -o <dir>
 #   record.sh replay-save    SIGUSR1 to the replay process. UNVERIFIED until live: gsr documents SIGUSR1 as
 #                            "save the replay"; check a real clip appears and has the expected length.
@@ -22,6 +28,8 @@ here=$(dirname "$0")
 rt=${XDG_RUNTIME_DIR:-/tmp}
 rec_state=$rt/qs-record.json
 rep_state=$rt/qs-replay.json
+pause_state=$rt/qs-record-pause
+err_log=$rt/qs-record.log
 gsr=gpu-screen-recorder
 
 die() { printf '%s\n' "$1" >&2; exit "${2:-1}"; }
@@ -50,6 +58,9 @@ write_state() { # file pid path since
     p=$(printf %s "$3" | jesc)
     printf '{"pid":%s,"path":"%s","since":%s}\n' "$2" "$p" "$4" > "$1.tmp" && mv "$1.tmp" "$1"
 }
+pf_get() { sed -n "s/^$1=//p" "$pause_state" 2>/dev/null | head -n 1; }
+num() { case $1 in '' | *[!0-9]*) printf 0 ;; *) printf %s "$1" ;; esac; }
+last_err() { tail -n 1 "$err_log" 2>/dev/null | tr -d '\000-\037'; }
 wait_gone() { # pid, up to 10 s
     i=0
     while [ $i -lt 50 ] && kill -0 "$1" 2>/dev/null; do sleep 0.2; i=$((i + 1)); done
@@ -80,10 +91,11 @@ start)
     f=$dir/$name.mp4; n=2
     while [ -e "$f" ]; do f=$dir/$name-$n.mp4; n=$((n + 1)); done
     if [ "$mic" = 1 ]; then set -- "$@" -a default_output -a default_input; else set -- "$@" -a default_output; fi
-    nohup "$gsr" "$@" -f 60 -c mp4 -o "$f" >/dev/null 2>&1 </dev/null &
+    nohup "$gsr" "$@" -f 60 -c mp4 -o "$f" >/dev/null 2>"$err_log" </dev/null &
     pid=$!
     sleep 0.3
-    kill -0 "$pid" 2>/dev/null || die "gpu-screen-recorder exited right away"
+    kill -0 "$pid" 2>/dev/null || die "gpu-screen-recorder exited right away: $(last_err)"
+    rm -f "$pause_state"
     write_state "$rec_state" "$pid" "$f" "$(date +%s)"
     printf '%s\n' "$f"
     ;;
@@ -93,16 +105,79 @@ stop)
     f=$(st_path_raw "$rec_state" | junesc)
     kill -INT "$pid" 2>/dev/null
     wait_gone "$pid"
-    rm -f "$rec_state"
+    rm -f "$rec_state" "$pause_state"
     printf '%s\n' "$f"
+    ;;
+pause)
+    pid=$(st_pid "$rec_state")
+    alive "$pid" || { rm -f "$rec_state" "$pause_state"; die "not recording"; }
+    now=$(date +%s)
+    total=$(num "$(pf_get total)")
+    if [ "$(pf_get paused)" = 1 ]; then
+        from=$(num "$(pf_get from)")
+        total=$((total + now - from))
+        kill -USR2 "$pid" 2>/dev/null || die "could not signal gpu-screen-recorder"
+        printf 'paused=0\nfrom=0\ntotal=%s\n' "$total" > "$pause_state"
+        echo resumed
+    else
+        kill -USR2 "$pid" 2>/dev/null || die "could not signal gpu-screen-recorder"
+        printf 'paused=1\nfrom=%s\ntotal=%s\n' "$now" "$total" > "$pause_state"
+        echo paused
+    fi
+    ;;
+error)
+    last_err
+    echo
+    ;;
+check)
+    [ $# -ge 3 ] || die "usage: record.sh check <region|screen|window> <mic 0|1> <dir>"
+    mode=$1; mic=$2; dir=$(expand_dir "$3")
+    problems=""; warnings=""
+    add_p() { problems="${problems:+$problems,}\"$1\""; }
+    add_w() { warnings="${warnings:+$warnings,}\"$1\""; }
+    command -v "$gsr" >/dev/null 2>&1 || add_p "gpu-screen-recorder is not installed"
+    alive "$(st_pid "$rec_state")" && add_p "Already recording"
+    case $mode in region | window | screen) ;; *) add_p "Unknown capture mode" ;; esac
+    case $mic in 0 | 1) ;; *) add_p "Unknown microphone setting" ;; esac
+    # the nearest folder that exists, going up from the target
+    d=$dir
+    while [ ! -d "$d" ] && [ "$d" != / ] && [ "$d" != . ]; do d=$(dirname -- "$d"); done
+    if [ ! -d "$d" ] || [ ! -w "$d" ]; then
+        add_p "Can't write to the recording folder"
+    else
+        kb=$(df -Pk -- "$d" 2>/dev/null | tail -n 1 | tr -s ' ' | cut -d' ' -f4)
+        case $kb in
+            '' | *[!0-9]*) ;;
+            *)
+                if [ "$kb" -lt 512000 ]; then add_p "The disk is almost full"
+                elif [ "$kb" -lt 2097152 ]; then add_w "Under 2 GB free"; fi ;;
+        esac
+    fi
+    if [ "$mic" = 1 ]; then
+        if command -v pactl >/dev/null 2>&1; then
+            src=$(pactl get-default-source 2>/dev/null | head -n 1)
+            case $src in '' | *.monitor) add_p "No microphone found" ;; esac
+        else
+            add_w "Can't check the microphone"
+        fi
+    fi
+    alive "$(st_pid "$rep_state")" && add_w "The replay buffer is running too"
+    ok=true
+    [ -n "$problems" ] && ok=false
+    printf '{"ok":%s,"problems":[%s],"warnings":[%s]}\n' "$ok" "$problems" "$warnings"
     ;;
 status)
     pid=$(st_pid "$rec_state")
     if alive "$pid"; then
-        printf '{"recording":true,"file":"%s","since":%s}\n' "$(st_path_raw "$rec_state")" "$(st_since "$rec_state")"
+        paused=false; idle=$(num "$(pf_get total)")
+        if [ "$(pf_get paused)" = 1 ]; then
+            paused=true; idle=$((idle + $(date +%s) - $(num "$(pf_get from)")))
+        fi
+        printf '{"recording":true,"file":"%s","since":%s,"paused":%s,"idle":%s}\n' "$(st_path_raw "$rec_state")" "$(st_since "$rec_state")" "$paused" "$idle"
     else
         [ -e "$rec_state" ] && rm -f "$rec_state"
-        printf '{"recording":false,"file":"","since":0}\n'
+        rm -f "$pause_state"
+        printf '{"recording":false,"file":"","since":0,"paused":false,"idle":0}\n'
     fi
     ;;
 replay-start)
@@ -156,6 +231,6 @@ replay-last)
     exit 0
     ;;
 *)
-    die "usage: record.sh start|stop|status|replay-start|replay-save|replay-stop|replay-status|replay-last"
+    die "usage: record.sh start|stop|pause|check|error|status|replay-start|replay-save|replay-stop|replay-status|replay-last"
     ;;
 esac

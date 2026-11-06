@@ -23,6 +23,12 @@ Singleton {
     property int elapsed: 0
     readonly property string label: formatLabel(elapsed)
     property bool missing: false          // gpu-screen-recorder is not installed (record.sh exited 2)
+    property bool paused: false
+    property int idle: 0                  // seconds spent paused so far (from `status`); elapsed leaves them out
+    // The last preflight (`record.sh check`): problems block, warnings don't. Until the first answer nothing blocks.
+    property var preflight: ({ ok: true, problems: [], warnings: [] })
+    property var queuedCheck: null
+    property var startArgs: null
     property bool replaying: false
     property string replayDir: ""
     property string pendingMode: ""
@@ -37,16 +43,61 @@ Singleton {
         return h > 0 ? h + ":" + two(m) + ":" + two(r) : m + ":" + two(r);
     }
 
-    // `record.sh status` / `replay-status` output -> { on, path, since }; broken input gives the "off" value
+    // `record.sh status` / `replay-status` output -> { on, path, since, paused, idle }; broken input gives the "off" value
     function parseStatus(text) {
         try {
             const j = JSON.parse(String(text).trim());
             const on = j.recording === true || j.replaying === true;
             const p = j.file !== undefined ? j.file : j.dir;
-            return { on: on, path: on && typeof p === "string" ? p : "", since: on && Number(j.since) > 0 ? Number(j.since) : 0 };
+            return {
+                on: on,
+                path: on && typeof p === "string" ? p : "",
+                since: on && Number(j.since) > 0 ? Number(j.since) : 0,
+                paused: on && j.paused === true,
+                idle: on && Number(j.idle) > 0 ? Math.floor(Number(j.idle)) : 0
+            };
         } catch (e) {
-            return { on: false, path: "", since: 0 };
+            return { on: false, path: "", since: 0, paused: false, idle: 0 };
         }
+    }
+
+    // Seconds recorded: wall time since the start, minus the time spent paused
+    function elapsedFor(now, since, idle) {
+        return Math.max(0, Math.floor(now - since - idle));
+    }
+
+    // `record.sh check` output -> { ok, problems, warnings }. If the check itself can't be read it doesn't block
+    // anything (a broken preflight must never stop a recording that would have worked).
+    function parseCheck(text) {
+        try {
+            const j = JSON.parse(String(text).trim());
+            const arr = v => Array.isArray(v) ? v.filter(x => typeof x === "string") : [];
+            const problems = arr(j.problems);
+            return { ok: j.ok === true && problems.length === 0, problems: problems, warnings: arr(j.warnings) };
+        } catch (e) {
+            return { ok: true, problems: [], warnings: [] };
+        }
+    }
+
+    // The overlay's hint line: what the next click does, or the first problem (only while Record is armed)
+    function hintText(mode, record, pre) {
+        if (record && pre && pre.problems && pre.problems.length > 0)
+            return pre.problems[0];
+        let t;
+        if (!record)
+            t = mode === "region" ? "Drag to select an area. Esc cancels." : mode === "window" ? "Click a window to capture it. Esc cancels." : "Picking this captures it at once.";
+        else
+            t = mode === "region" ? "Drag to select an area to record. Esc cancels." : mode === "window" ? "Click a window to record it. Esc cancels." : "Records this screen. Press Start or Enter.";
+        if (record && pre && pre.warnings && pre.warnings.length > 0)
+            t += " " + pre.warnings[0] + ".";
+        return t;
+    }
+    function hintIsProblem(record, pre) {
+        return !!record && !!pre && !!pre.problems && pre.problems.length > 0;
+    }
+
+    function checkCommand(script, mode, mic, dir) {
+        return [script, "check", mode === "all" ? "screen" : mode, mic ? "1" : "0", dir];
     }
 
     // Geometry for the script from a rectangle in global pixels: "WxH+X+Y" (sizes at least 1, offsets whole)
@@ -92,13 +143,35 @@ Singleton {
         Quickshell.execDetached(toastCommand(title, body, file));
     }
 
-    // geometry: WxH+X+Y for region / window, the output name for screen
+    // Preflight for the overlay: asks `record.sh check`, the answer lands in `preflight`. A second ask while one runs
+    // is queued (only the newest matters).
+    function check(mode, mic) {
+        if (!active)
+            return;
+        if (checkProc.running) {
+            queuedCheck = { mode: mode, mic: mic };
+            return;
+        }
+        checkProc.thenStart = false;
+        checkProc.command = checkCommand(script, mode, mic, dir);
+        checkProc.running = true;
+    }
+
+    // geometry: WxH+X+Y for region / window, the output name for screen. The preflight runs once more first.
     function start(mode, mic, geometry, cls) {
-        if (!active || recording || startProc.running)
+        if (!active || recording || startProc.running || checkProc.running)
             return;
         pendingMode = mode;
-        startProc.command = startCommand(script, mode, mic, dir, geometry, cls);
-        startProc.running = true;
+        startArgs = { mode: mode, mic: mic, geometry: geometry, cls: cls };
+        checkProc.thenStart = true;
+        checkProc.command = checkCommand(script, mode, mic, dir);
+        checkProc.running = true;
+    }
+
+    function togglePause() {
+        if (!active || !recording || pauseProc.running)
+            return;
+        pauseProc.running = true;
     }
 
     function stop() {
@@ -138,7 +211,9 @@ Singleton {
         recording = s.on;
         file = s.path;
         since = s.since;
-        elapsed = s.on ? Math.max(0, Math.floor(Date.now() / 1000 - s.since)) : 0;
+        paused = s.paused;
+        idle = s.idle;
+        elapsed = s.on ? elapsedFor(Date.now() / 1000, s.since, s.idle) : 0;
     }
 
     onActiveChanged: {
@@ -167,6 +242,64 @@ Singleton {
     }
 
     Process {
+        id: checkProc
+        property bool thenStart: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.preflight = root.parseCheck(text);
+                if (checkProc.thenStart) {
+                    checkProc.thenStart = false;
+                    const a = root.startArgs;
+                    if (!root.preflight.ok) {
+                        root.toast("Recording blocked", root.preflight.problems[0], "");
+                    } else if (a) {
+                        startProc.command = root.startCommand(root.script, a.mode, a.mic, root.dir, a.geometry, a.cls);
+                        startProc.running = true;
+                    }
+                }
+            }
+        }
+        onExited: {
+            if (root.queuedCheck) {
+                const q = root.queuedCheck;
+                root.queuedCheck = null;
+                root.check(q.mode, q.mic);
+            }
+        }
+    }
+
+    Process {
+        id: pauseProc
+        command: [root.script, "pause"]
+        onExited: statusProc.running = true
+    }
+
+    // A recorder that dies right after starting (a wrong portal, no permission) is reported with its own last line
+    Timer {
+        id: verifyTimer
+        interval: 1500
+        onTriggered: verifyProc.running = true
+    }
+    Process {
+        id: verifyProc
+        command: [root.script, "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.applyStatus(text);
+                if (!root.recording)
+                    errProc.running = true;
+            }
+        }
+    }
+    Process {
+        id: errProc
+        command: [root.script, "error"]
+        stdout: StdioCollector {
+            onStreamFinished: root.toast("Recording stopped right away", text.trim() || "gpu-screen-recorder quit without a message", "")
+        }
+    }
+
+    Process {
         id: startProc
         stdout: StdioCollector {}
         stderr: StdioCollector { id: startErr }
@@ -174,6 +307,7 @@ Singleton {
             if (code === 0) {
                 root.missing = false;
                 statusProc.running = true;
+                verifyTimer.restart();
             } else if (code === 2) {
                 root.missing = true;
                 root.toast("Recording failed", "gpu-screen-recorder is not installed", "");
@@ -190,6 +324,8 @@ Singleton {
             onStreamFinished: {
                 const f = text.trim();
                 root.recording = false;
+                root.paused = false;
+                root.idle = 0;
                 root.elapsed = 0;
                 root.file = "";
                 if (f !== "")
