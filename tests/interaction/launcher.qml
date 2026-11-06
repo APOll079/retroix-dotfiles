@@ -96,6 +96,9 @@ ShellRoot {
                 const all = panel.killMatches(p.groups, p.self, "");
                 return all.length <= 8 && all[0].name === "zen" && all[1].name === "quickshell";
             })());
+            panel.mode = "clipboard"; panel.standalone = true; panel.cycleTab(1);
+            shell.check("standalone clipboard (Super+V): no tabs, so Ctrl+Tab cycling does nothing", panel.mode === "clipboard");
+            panel.standalone = false; panel.mode = "apps";
             shell.check("killMatches keeps the core effect", panel.killMatches(p.groups, p.self, "quickshell")[0].core.indexOf("the bar") === 0);
             shell.check("killMatches survives junk", panel.killMatches(null, 0, "x").length === 0 && panel.killMatches([null, 5, { name: "a" }], 0, "").length === 0);
             shell.check("killPids: the fresh read's pids for that exact name", shell.js(panel.killPids(p.groups, p.self, "zen")) === "[2001,2002,2003]");

@@ -219,3 +219,5 @@ quickshell/NasWatch.qml	function canRemount	NAS: remount only for configured mou
 quickshell/DownloadWatch.qml	-A default=Open -A folder="Show in folder"	Downloads: toast with Open and Show in folder
 quickshell/LaptopControls.qml	onClicked: NasWatch\.remountStale\(\)	The bar's NAS button remounts a stale or unmounted mount
 quickshell/popups/MenuRow.qml	property bool hoverLit	MenuRow: lists where the pointer moves the cursor turn the hover bar off (one lit row)
+quickshell/taskbar/Bar.qml	openLauncherMode\("clipboard", true\)	Super+V opens the clipboard on its own, without the launcher tabs
+quickshell/popups/AppLauncher.qml	tabsShown: !root\.standalone	The standalone clipboard window has no Apps / Games tabs

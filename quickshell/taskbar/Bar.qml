@@ -194,14 +194,14 @@ menu.openMenu();
 }
 
 // Open the launcher in another mode (clipboard, windows); toggles it off if already there
-function openLauncherMode(mode) {
+function openLauncherMode(mode, standalone) {
 if (appLauncher.visible && appLauncher.mode === mode) {
 taskbar.closeAllPopups();
 return;
 }
 taskbar.closeAllPopups();
 root.currentPopup = Config.SystemPopup.AppLauncher;
-appLauncher.open(mode);
+appLauncher.open(mode, standalone === true);
 }
 
 // Toggle the side panel; when it opens, it opens on `tab`.
@@ -270,7 +270,7 @@ taskbar.toggleMenu(appLauncher, Config.SystemPopup.AppLauncher, null, "keep");
 }
 // Super+V: clipboard history in the launcher
 function clipboard() {
-taskbar.openLauncherMode("clipboard");
+taskbar.openLauncherMode("clipboard", true);
 }
 // Super+Tab: open windows in the launcher (type to filter, Enter focuses)
 function windows() {

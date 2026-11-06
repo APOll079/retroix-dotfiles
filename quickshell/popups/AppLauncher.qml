@@ -37,6 +37,8 @@ PanelWindow {
     property var closeCallback: function () {}
 
     property string mode: "apps"          // apps | windows | games | clipboard
+    // Super+V: the clipboard on its own, without the Apps / Games / Clipboard tabs (those belong to Super+D)
+    property bool standalone: false
     property string category: "all"
     property var results: []
     property var optionsFor: null         // DesktopEntry whose options menu is open
@@ -126,6 +128,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         pagePad: root.mode === "clipboard" ? 0 : MenuStyle.tabPagePad
+                        tabsShown: !root.standalone
                         tabs: root.tabs
                         current: root.tabOf(root.mode)
                         onTabClicked: key => {
@@ -448,6 +451,8 @@ PanelWindow {
     }
 
     function cycleTab(d) {
+        if (root.standalone)
+            return;
         const i = root.tabs.findIndex(t => t.key === root.tabOf(root.mode));
         root.open(root.tabs[(i + d + root.tabs.length) % root.tabs.length].key);
     }
@@ -1052,8 +1057,9 @@ PanelWindow {
         root.open("apps");
     }
 
-    function open(mode) {
+    function open(mode, standalone) {
         root.mode = mode;
+        root.standalone = standalone === true && mode === "clipboard";
         root.category = "all";
         root.closeOptions();
         root.confirmKey = "";
