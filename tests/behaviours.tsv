@@ -284,3 +284,14 @@ quickshell/OverviewState.qml	hl\.dsp\.focus\(\{ workspace	Overview: workspace sw
 hypr/binds.lua	\-\-\ help:\ Media\ \|\ Mini\ player\ \(toggle\)	Key: Media | Mini player (toggle)
 hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Workspace\ overview	Key: Windows | Workspace overview
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Start\ the\ screensaver	Key: Desktop | Start the screensaver
+quickshell/popups/ThemeMenu.qml	CursorState\.cursorModel\(\)	Themes menu: Cursor button lists installed cursor themes and sizes 24/32/48
+quickshell/popups/ThemeMenu.qml	CursorState\.iconsModel\(\)	Themes menu: Icons button lists installed icon themes
+quickshell/popups/ThemeMenu.qml	text: "Edit theme\.\.\."	Themes menu: Edit theme... opens the theme editor
+quickshell/popups/ThemeEditor.qml	onClicked: root\.apply\(\)	Theme editor: Apply saves and makes custom the current theme
+quickshell/popups/ThemeEditor.qml	enabled: root\.canApply	Theme editor: Apply is off while apply.py would refuse the palette
+quickshell/popups/ThemeEditor.qml	onClicked: root\.save\(\)	Theme editor: Save writes custom-theme.json
+quickshell/popups/ThemeEditor.qml	onClicked: root\.pick\(roleRow\.modelData\)	Theme editor: Pick fills the field from the screen
+quickshell/popups/StartMenu.qml	onClicked: root\.toggleCascade\(\)	Start menu: Programs opens or closes the cascade (only with cascadingStart on)
+quickshell/popups/PopupCascade.qml	onClicked: root\.launch\(appRow\.index\)	Programs cascade: a click on an app launches it and closes everything
+quickshell/popups/PopupCascade.qml	Qt\.Key_Left	Programs cascade: Left closes the apps list
+quickshell/popups/PopupCascade.qml	Qt\.Key_Escape	Programs cascade: Escape closes the cascade, not the Start menu

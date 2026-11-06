@@ -4,6 +4,7 @@
     python3 ~/.config/quickshell/theme/apply.py dusty
     python3 ~/.config/quickshell/theme/apply.py dusty --no-reload   (write files only)
     python3 ~/.config/quickshell/theme/apply.py wallpaper --palette FILE   (palette from wallcolors.py)
+    python3 ~/.config/quickshell/theme/apply.py custom --palette FILE      (palette from the theme editor: custom-theme.json)
 
 Reads themes.json next to this file (or, with --palette FILE, the one palette in FILE, a JSON
 object like an entry of themes.json; the theme name is only used for {{theme}}), fills every template in templates/ and writes the
@@ -37,6 +38,8 @@ MIN_TEXT = 4.5
 MIN_URGENT = 3.0
 RELOAD_TIMEOUT = 10  # seconds per reload command
 USAGE = "usage: apply.py <theme> [--no-reload] [--palette FILE]"
+# Themes that are not in themes.json: their palette is a file (state dir) the shell makes, handed over with --palette
+PALETTE_THEMES = {"wallpaper": "wallpaper-theme.json (the wallpaper browser's Set + colours)", "custom": "custom-theme.json (the theme editor's Save)"}
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
@@ -291,6 +294,8 @@ def main():
         with open(os.path.join(HERE, "themes.json"), encoding="utf-8") as f:
             themes = json.load(f)
     if name not in themes:
+        if name in PALETTE_THEMES:
+            sys.exit(f"theme {name!r} has no palette in themes.json: give it its file, {PALETTE_THEMES[name]}, with --palette FILE")
         sys.exit(f"unknown theme {name!r}; known: {', '.join(themes)}")
     roles = derive(themes[name], name)
 

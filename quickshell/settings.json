@@ -118,6 +118,7 @@
             "folder": "~/Pictures/wallpapers"
         },
         "ui": {
+            "cascadingStart": false,
             "dither": true,
             "reduceMotion": false
         },

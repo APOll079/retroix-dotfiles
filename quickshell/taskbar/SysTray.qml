@@ -55,7 +55,11 @@ Row {
             flat: true
             iconFontValue: ""
             toggledIconFontValue: ""
-            minWidth: Config.settings.bar.trayIconSize + MenuStyle.space2
+            // Solaar's own tray icon carries the mouse battery % beside it (MouseState), so the battery is always visible
+            // instead of only in Solaar's window; a click still opens Solaar (the icon's normal activate)
+            readonly property bool isSolaar: String(item.id).toLowerCase().indexOf("solaar") >= 0 || String(item.title).toLowerCase().indexOf("solaar") >= 0
+            readonly property string badge: isSolaar && MouseState.visibleInBar ? MouseState.label : ""
+            minWidth: Config.settings.bar.trayIconSize + MenuStyle.space2 + (badge !== "" ? badgeText.implicitWidth + MenuStyle.gap : 0)
             isToggled: ctx.visible || nativeMenu.visible
 
             function openMenu() {
@@ -113,10 +117,23 @@ Row {
             IconImage {
                 id: trayIcon
                 source: trayItem.item.icon
-                anchors.centerIn: parent
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.horizontalCenterOffset: trayItem.badge !== "" ? -(badgeText.implicitWidth + MenuStyle.gap) / 2 : 0
                 width: Config.settings.bar.trayIconSize
                 height: Config.settings.bar.trayIconSize
                 visible: false
+            }
+            RetroText {
+                id: badgeText
+                visible: trayItem.badge !== ""
+                anchors.left: trayIcon.right
+                anchors.leftMargin: MenuStyle.gap
+                anchors.verticalCenter: parent.verticalCenter
+                font.family: MenuStyle.bodyFont
+                font.pixelSize: Config.settings.bar.fontSize
+                color: trayItem.contentColor
+                text: trayItem.badge
             }
             Loader {
                 anchors.fill: trayIcon

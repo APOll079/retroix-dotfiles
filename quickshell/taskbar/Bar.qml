@@ -121,6 +121,7 @@ id: themeMenu
 bar: taskbar
 menuWidth: themeMenuButton.x
 openWallpapers: function() { taskbar.toggleMenu(wallpaperBrowser, Config.SystemPopup.Wallpapers, null, "keep") }
+openEditor: function() { taskbar.toggleMenu(themeEditor, Config.SystemPopup.ThemeEditor, null, "keep") }
 }
 // ThemeMenu has no closeCallback; when it closes itself (picking a theme), reset the shared state.
 Connections {
@@ -156,6 +157,7 @@ Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; clo
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ColorHistoryPanel { screen: root.modelData; bar: taskbar; id: colorHistoryMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.NetworkPage { screen: root.modelData; bar: taskbar; id: networkPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
+Popups.ThemeEditor { screen: root.modelData; bar: taskbar; id: themeEditor; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.DefaultAppsPanel { screen: root.modelData; bar: taskbar; id: defaultAppsMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.FixPanel { screen: root.modelData; bar: taskbar; id: fixMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.LoginReportPanel { screen: root.modelData; bar: taskbar; id: loginReportMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
@@ -164,7 +166,7 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, overviewPanel, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, overviewPanel, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -352,6 +354,13 @@ IpcHandler {
 target: "games_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(gamesMenu, Config.SystemPopup.Games, null, "keep");
+}
+}
+
+IpcHandler {
+target: "themeeditor_" + root.modelData.name
+function toggle() {
+taskbar.toggleMenu(themeEditor, Config.SystemPopup.ThemeEditor, null, "keep");
 }
 }
 

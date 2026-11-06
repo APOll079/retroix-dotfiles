@@ -76,6 +76,10 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
+### Round 4, themes and the optional cascade (never looked at)
+- [ ] Themes menu: the Cursor and Icons dropdowns open inside it and a pick changes the GTK and Hyprland cursor (persisting across a Hyprland restart needs `hypr/env.lua` edited by hand); Edit theme... opens the editor, Pick works with the real hyprpicker, Apply switches the live shell to the "custom" palette, Save with a failing contrast is allowed but Apply is off
+- [ ] `settings.ui.cascadingStart: true` (Settings tab > Appearance): Programs appears first in Start, the cascade opens beside it and its keys work, the apps list flips left when there is no room; it uses a popup focus grab (the risky kind), so turn it off again if clicks misbehave
+
 ### Round 4, screensaver / mini player / overview (all visual: only seen live)
 - [ ] Screensaver: look at starfield, pipes, mystify and random; every screen blanks; cursor jitter at the start doesn't close it, a key / click / mouse move after 0.5 s does; no start with caffeine or a fullscreen video; it fires before the dim (3 min); a static frame under reduce motion (`qs ipc call screensaver preview`, Super+Ctrl+K)
 - [ ] Mini player (Super+Ctrl+O): the LCD and the 32 px digits, the marquee on a long title, play / prev / next / seek / volume with Spotify and with another player, "Nothing playing"; the window rule (size, pinned, bottom-left)
@@ -87,7 +91,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Restore workspaces (Super+Ctrl+W and 8 s after login): are Zen on 1 and VSCodium on 3 right (edit `hypr/restore.lua`), does `hl.exec_cmd(cmd, { workspace = "1 silent" })` work (the call shape is a guess; the fallback is one window rule per program)
 
 ### Round 4, tools (never looked at, fakes only)
-- [ ] Solaar: `dinitctl --user enable solaar` (copy `dinit.d/solaar` first, your sync does it), it stays running and the mouse battery shows; if it can't open a display the user dinit lacks the Wayland environment; the mic, screen-share, REPLAY and mouse-battery indicators are flat icons with no bevel, only clickable things look like buttons
+- [ ] Solaar: `dinitctl --user enable solaar` (copy `dinit.d/solaar` first, your sync does it), it stays running and the mouse battery shows; if it can't open a display the user dinit lacks the Wayland environment; the mic, screen-share and REPLAY indicators are flat icons with no bevel; the mouse battery % shows beside Solaar's tray icon (no separate item) and a click on it opens Solaar, only clickable things look like buttons
 - [ ] Task Manager GPU / VRAM / Read / Write numbers against radeontop / iotop on the AMD card, and the extra columns fit at 760 px; Default apps: Make default really changes `xdg-settings get default-web-browser` and `xdg-mime query default image/png`
 - [ ] Troubleshoot: each of the four restarts with the real dinit services (and the relaunch fallback for hyprpaper / EasyEffects); Login report after a real login (needs the new `autostart.lua` marks: `hyprctl reload` does not re-run them, log in again)
 - [ ] Solaar: `solaar show` on the real mouse parses and the bar button appears; Flatpak: Sober shows in Games and launches; MangoHud overlay for a Steam game (see the note in docs), a Flatpak game and an own entry; security audit: the first run is silent, a new CVE toasts

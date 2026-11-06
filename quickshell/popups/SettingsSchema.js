@@ -34,6 +34,7 @@ var SCHEMA = [
     e("Bar", "bar.monochromeTrayIcons", "bool", "Monochrome tray icons", "Tint tray icons with the theme text colour"),
 
     e("Appearance", "currentTheme", "choice", "Theme", "The colour palette", { choicesFrom: "themes" }),
+    e("Appearance", "ui.cascadingStart", "bool", "Cascading Start menu", "Adds a Programs button to the Start menu that opens categories and apps as cascading menus"),
     e("Appearance", "ui.dither", "bool", "Dither on meters", "Off gives flat empty tracks"),
     e("Appearance", "ui.reduceMotion", "bool", "Reduce motion", "Turns every animation off"),
 

@@ -22,6 +22,8 @@ PopupWindow {
     property var openDefaultAppsCallback: function () {}
     property var openFixCallback: function () {}
     property var openLoginReportCallback: function () {}
+    // settings.ui.cascadingStart (off by default): a Programs button opens the cascading Programs menu (PopupCascade.qml)
+    readonly property bool cascading: Config.settings.ui.cascadingStart === true
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -115,6 +117,15 @@ PopupWindow {
                     Layout.fillWidth: true
                     spacing: MenuStyle.pad
 
+                    BevelButton {
+                        id: programsButton
+                        Layout.fillWidth: true
+                        visible: root.cascading
+                        text: "Programs"
+                        glyph: "\ue5c3"
+                        checked: root.cascadeItem() !== null && root.cascadeItem().visible
+                        onClicked: root.toggleCascade()
+                    }
                     BevelButton {
                         Layout.fillWidth: true
                         text: "Files"
@@ -283,6 +294,31 @@ PopupWindow {
         }
     }
 
+    // Only loaded while the setting is on, so with it off nothing of the cascade exists
+    LazyLoader {
+        id: cascade
+        active: root.cascading
+        source: "PopupCascade.qml"
+    }
+
+    function cascadeItem(): var {
+        return cascade.item;
+    }
+
+    // The Programs menu opens at the Start menu's right edge, level with its button; the button again closes it
+    function toggleCascade() {
+        const c = root.cascadeItem();
+        if (!c)
+            return;
+        if (c.visible) {
+            c.close();
+            return;
+        }
+        c.closeCallback = function () { root.closeCallback(); };
+        const p = programsButton.mapToItem(null, 0, 0);
+        c.openAt(programsButton, root.width - p.x, 0);
+    }
+
     function openMenu() { openStartMenu() }
 
     function openStartMenu() {
@@ -293,6 +329,8 @@ PopupWindow {
     }
 
     function closeMenu() {
+        if (root.cascadeItem())
+            root.cascadeItem().close();
         root.visible = false;
     }
 }

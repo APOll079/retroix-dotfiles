@@ -15,6 +15,8 @@ PopupWindow {
     property int menuWidth: 0
     // Opens the wallpaper browser (set by Bar.qml)
     property var openWallpapers: function () {}
+    // Opens the theme editor panel (set by Bar.qml)
+    property var openEditor: function () {}
     anchor.window: root.bar
     anchor.rect.x: menuWidth
     anchor.rect.y: MenuStyle.barHeight
@@ -143,12 +145,51 @@ PopupWindow {
                 glyph: "\ue1bc"
                 onClicked: root.openWallpapers()
             }
+
+            BevelButton {
+                width: parent.width
+                text: "Edit theme..."
+                glyph: "\ue3c9"
+                onClicked: root.openEditor()
+            }
+
+            // Cursor and icon themes: scripts/appearance.sh through CursorState; the menus list what is installed
+            BevelButton {
+                id: cursorButton
+                width: parent.width
+                text: CursorState.cursorLabel()
+                glyph: "\ue323"
+                onClicked: {
+                    cursorMenu.model = CursorState.cursorModel();
+                    cursorMenu.openAt(cursorButton, 0, cursorButton.height);
+                }
+            }
+
+            BevelButton {
+                id: iconsButton
+                width: parent.width
+                text: CursorState.iconsLabel()
+                glyph: "\ue5c3"
+                onClicked: {
+                    iconsMenu.model = CursorState.iconsModel();
+                    iconsMenu.openAt(iconsButton, 0, iconsButton.height);
+                }
+            }
         }
+    }
+
+    PopupMenu {
+        id: cursorMenu
+    }
+
+    PopupMenu {
+        id: iconsMenu
     }
 
     function openMenu() { openThemeMenu() }
 
     function openThemeMenu() {
+        CursorState.refresh();
         root.visible = true;
     }
 

@@ -76,3 +76,5 @@ Overview 1.0 Overview.qml
 MiniPlayer 1.0 MiniPlayer.qml
 ScreensaverWindow 1.0 ScreensaverWindow.qml
 ScreensaverView 1.0 ScreensaverView.qml
+ThemeEditor 1.0 ThemeEditor.qml
+PopupCascade 1.0 PopupCascade.qml

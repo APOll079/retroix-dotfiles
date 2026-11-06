@@ -26,7 +26,35 @@ readonly property var fallbackThemes: ({
 // themes.json (or the built-in cherry), plus "wallpaper" once a palette was made from a picture
 property var baseThemes: fallbackThemes
 property var wallTheme: null
-readonly property var themes: wallTheme ? Object.assign({}, baseThemes, { "wallpaper": wallTheme }) : baseThemes
+// the palette built in the theme editor (custom-theme.json in the state dir), the theme named "custom"
+property var customTheme: null
+readonly property var themes: {
+const t = Object.assign({}, baseThemes);
+if (wallTheme)
+t["wallpaper"] = wallTheme;
+if (customTheme)
+t["custom"] = customTheme;
+return t;
+}
+readonly property string customPalette: Quickshell.statePath("custom-theme.json")
+FileView {
+id: customFile
+path: root.customPalette
+printErrors: false
+watchChanges: true
+onFileChanged: reload()
+onLoaded: {
+try {
+const p = JSON.parse(text());
+for (const k of ["base", "shadow", "highlight", "urgent", "accent", "text", "outline"])
+if (typeof p[k] !== "string" || !/^#[0-9a-fA-F]{6}$/.test(p[k]))
+throw new Error("missing or bad " + k);
+root.customTheme = p;
+} catch (e) {
+console.warn("custom-theme.json ignored: " + e);
+}
+}
+}
 // The palette theme/wallcolors.py wrote for the wallpaper browser's "Set + colours" (state dir, not the repo)
 readonly property string wallPalette: Quickshell.statePath("wallpaper-theme.json")
 function reloadWallTheme() { wallFile.reload() }
@@ -79,11 +107,14 @@ Quickshell.execDetached(cmd);
 // apply.py for the current theme; the wallpaper theme takes its palette file (null until it exists)
 function applyCommand() {
 const base = ["python3", "-I", Quickshell.shellDir + "/theme/apply.py", root.settings.currentTheme];
+if (root.settings.currentTheme === "custom")
+return root.customTheme ? base.concat(["--palette", root.customPalette]) : null;
 if (root.settings.currentTheme !== "wallpaper")
 return base;
 return root.wallTheme ? base.concat(["--palette", root.wallPalette]) : null;
 }
 // A new wallpaper palette while "wallpaper" is the theme: render the apps again
+onCustomThemeChanged: { if (root.settingsLoaded && !Quickshell.env("QS_NO_APPLY") && root.settings.currentTheme === "custom") applyTimer.restart() }
 onWallThemeChanged: { if (root.settingsLoaded && !Quickshell.env("QS_NO_APPLY") && root.settings.currentTheme === "wallpaper") applyTimer.restart() }
 function settingsReady() {
 if (root.settingsLoaded)
@@ -120,6 +151,7 @@ Troubleshoot,
 LoginReport,
 Network,
 Overview,
+ThemeEditor,
 None
 }
 property alias settings: settingsJsonAdapter.settings
@@ -216,6 +248,8 @@ property bool bluetooth: true
 // Look switches (Themes menu): dither = the 1px checkerboard on empty meter tracks; off = a flat track
 property JsonObject ui: JsonObject {
 property bool dither: true
+// a Programs button in the Start menu that opens categories and apps as cascading menus
+property bool cascadingStart: false
 property bool reduceMotion: false
 }
 // Idle: dim, then lock (hyprlock), then screens off; minutes, 0 = off for that step
