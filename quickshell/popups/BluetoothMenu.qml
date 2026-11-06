@@ -154,7 +154,7 @@ PopupWindow {
 
     PopupWindowFrame {
         windowTitle: "Bluetooth"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue1a7"
 
         ColumnLayout {
             id: column
@@ -174,7 +174,7 @@ PopupWindow {
                 BevelButton {
                     implicitWidth: MenuStyle.rowHeight + MenuStyle.gap
                     enabled: root.powered
-                    glyph: ""
+                    glyph: "\ue1aa"
                     checked: root.adapter !== null && root.adapter.discovering
                     onClicked: {
                         root.adapter.discovering = !root.adapter.discovering;
@@ -323,18 +323,16 @@ PopupWindow {
             SunkenField {
                 Layout.fillWidth: true
                 visible: root.powered
-                Layout.preferredHeight: Math.max(1, Math.min(root.paired.length, MenuStyle.bluetoothListRows)) * MenuStyle.rowHeight + 2 * padding
+                Layout.preferredHeight: root.paired.length === 0 ? noPaired.implicitHeight + 2 * MenuStyle.pad : Math.min(root.paired.length, MenuStyle.bluetoothListRows) * MenuStyle.rowHeight + 2 * padding
                 padding: 2
                 clip: true
 
-                Text {
-                    renderType: Text.NativeRendering
-                    font.hintingPreference: Font.PreferFullHinting
+                EmptyState {
+                    id: noPaired
                     anchors.centerIn: parent
+                    width: parent.width - 2 * MenuStyle.pad
                     visible: root.paired.length === 0
-                    font.family: MenuStyle.bodyFont
-                    font.pixelSize: MenuStyle.fontSize
-                    color: MenuStyle.bevelDark
+                    glyph: "\ue1a7"
                     text: "No paired devices"
                 }
 
@@ -347,7 +345,7 @@ PopupWindow {
                         spacing: MenuStyle.gap
                         MenuRow {
                             Layout.fillWidth: true
-                            glyph: modelData.connected ? "" : ""
+                            glyph: modelData.connected ? "\ue1a8" : "\ue1a7"
                             text: root.label(modelData)
                             marked: modelData.connected
                             trailing: root.status(modelData)
@@ -357,14 +355,14 @@ PopupWindow {
                         BevelButton {
                             implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: ""
+                            glyph: "\ue8e8"
                             checked: modelData.trusted
                             onClicked: modelData.trusted = !modelData.trusted
                         }
                         BevelButton {
                             implicitWidth: MenuStyle.rowHeight
                             implicitHeight: MenuStyle.rowHeight
-                            glyph: ""
+                            glyph: "\ue872"
                             onClicked: root.forgetting = modelData
                         }
                     }
@@ -405,7 +403,7 @@ PopupWindow {
                     model: root.available
                     delegate: MenuRow {
                         width: availableList.width
-                        glyph: ""
+                        glyph: "\ue1aa"
                         text: root.label(modelData)
                         trailing: modelData.pairing ? "Cancel" : "Pair"
                         onClicked: modelData.pairing ? modelData.cancelPair() : root.pairDevice(modelData)
