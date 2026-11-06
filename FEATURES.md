@@ -77,7 +77,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
 ### Round 4, themes and the optional cascade (never looked at)
-- [ ] Themes menu: the Cursor and Icons dropdowns open inside it and a pick changes the GTK and Hyprland cursor (persisting across a Hyprland restart needs `hypr/env.lua` edited by hand); Edit theme... opens the editor, Pick works with the real hyprpicker, Apply switches the live shell to the "custom" palette, Save with a failing contrast is allowed but Apply is off
+- [ ] Themes menu: the Cursor and Icons dropdowns open inside it and a pick changes the GTK and Hyprland cursor (it persists across a Hyprland restart through `~/.local/state/qs-cursor`, read by `hypr/env.lua`; log out and in to confirm); Edit theme... opens the editor, Pick works with the real hyprpicker, Apply switches the live shell to the "custom" palette, Save with a failing contrast is allowed but Apply is off
 - [ ] `settings.ui.cascadingStart: true` (Settings tab > Appearance): Programs appears first in Start, the cascade opens beside it and its keys work, the apps list flips left when there is no room; it uses a popup focus grab (the risky kind), so turn it off again if clicks misbehave
 
 ### Round 4, screensaver / mini player / overview (all visual: only seen live)

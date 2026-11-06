@@ -5,7 +5,9 @@
 #   appearance.sh list-icons          JSON array of installed icon themes (index.theme with Directories=, no cursors/)
 #   appearance.sh get-cursor          {"theme":"name","size":24} from gsettings ("" and 0 when unknown)
 #   appearance.sh get-icons           {"theme":"name"}
-#   appearance.sh set-cursor <name> <size>   gsettings cursor-theme + cursor-size, then hyprctl setcursor (runtime only)
+#   appearance.sh set-cursor <name> <size>   gsettings cursor-theme + cursor-size, then hyprctl setcursor (runtime only), and the
+#                                            choice is saved as "<name> <size>" in ${XDG_STATE_HOME:-$HOME/.local/state}/qs-cursor,
+#                                            which hypr/env.lua reads at the next Hyprland start, so the cursor survives it
 #   appearance.sh set-icons <name>           gsettings icon-theme
 # Searched: $HOME/.local/share/icons, $HOME/.icons and $APPEARANCE_SYSTEM_ICONS (default /usr/share/icons).
 # A name must match ^[A-Za-z0-9._-]+$ and not start with "." or "-". Exit codes: 0 ok, 2 bad usage or bad name.
@@ -92,6 +94,11 @@ case $1 in
         if command -v hyprctl >/dev/null 2>&1; then
             hyprctl setcursor "$2" "$3" >/dev/null 2>&1
             done_list="$done_list hyprctl"
+        fi
+        # remembered for hypr/env.lua (Hyprland reads the cursor from its environment at start)
+        state=${XDG_STATE_HOME:-${HOME:-/nonexistent}/.local/state}
+        if mkdir -p "$state" 2>/dev/null; then
+            printf '%s %s\n' "$2" "$3" > "$state/qs-cursor" 2>/dev/null && done_list="$done_list state"
         fi
         echo "applied:${done_list:- none}"
         ;;

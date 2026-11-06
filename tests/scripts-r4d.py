@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory() as t:
                 (fake / tool).symlink_to(Path(d) / tool)
                 return
 
-    for tool in ("sh", "env", "cat", "grep", "sort", "head", "tr", "python3"):
+    for tool in ("sh", "env", "cat", "grep", "sort", "head", "tr", "python3", "mkdir"):
         link(tool)
 
     def fakecmd(name, body):
@@ -107,6 +107,10 @@ with tempfile.TemporaryDirectory() as t:
         "gsettings set org.gnome.desktop.interface cursor-theme 'Bibata'",
         "gsettings set org.gnome.desktop.interface cursor-size 48",
         "hyprctl setcursor Bibata 48"])
+    saved = home / ".local/state/qs-cursor"
+    check("set-cursor: the choice is saved for hypr/env.lua as '<name> <size>'", saved.is_file() and saved.read_text() == "Bibata 48\n")
+    r = run("set-cursor", "Posy", "32", env={"XDG_STATE_HOME": str(tmp / "xdgstate")})
+    check("set-cursor: XDG_STATE_HOME is honoured", (tmp / "xdgstate/qs-cursor").read_text() == "Posy 32\n")
     log.write_text("")
     r = run("set-icons", "Papirus")
     check("set-icons: gsettings icon-theme", r.returncode == 0 and log.read_text().splitlines() == ["gsettings set org.gnome.desktop.interface icon-theme 'Papirus'"])
@@ -116,7 +120,7 @@ with tempfile.TemporaryDirectory() as t:
     check("set-cursor: a missing hyprctl is skipped, not an error", r.returncode == 0 and "hyprctl" not in log.read_text())
     (fake / "gsettings").unlink()
     r = run("set-cursor", "Bibata", "24")
-    check("set-cursor: no tool at all is still exit 0", r.returncode == 0 and "none" in r.stdout)
+    check("set-cursor: no tool at all is still exit 0 (only the saved choice is applied)", r.returncode == 0 and "gsettings" not in r.stdout and "hyprctl" not in r.stdout)
 
     # ---- hostile arguments ----
     fakecmd("gsettings", f'echo "gsettings $@" >> {log}\n')
