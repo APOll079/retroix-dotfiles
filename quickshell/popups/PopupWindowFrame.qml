@@ -35,14 +35,14 @@ Rectangle {
     Connections {
         target: root.Window.window
         function onVisibleChanged() {
-            if (root.active && root.Window.window && root.Window.window.visible && MenuStyle.animOpen > 0)
+            if (root.active && root.Window.window && root.Window.window.visible && MenuStyle.animNormal > 0)
                 openAnim.restart();
         }
     }
     ParallelAnimation {
         id: openAnim
-        NumberAnimation { target: root; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animOpen; easing.type: Easing.OutCubic }
-        NumberAnimation { target: openSlide; property: "y"; from: -MenuStyle.animSlide; to: 0; duration: MenuStyle.animOpen; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animNormal; easing.type: MenuStyle.animEasing }
+        NumberAnimation { target: openSlide; property: "y"; from: -MenuStyle.animSlide; to: 0; duration: MenuStyle.animNormal; easing.type: MenuStyle.animEasing }
     }
 
     Bevel {

@@ -42,7 +42,7 @@ Button {
             border.width: 1
             border.color: MenuStyle.selectBar
             Behavior on opacity {
-                NumberAnimation { duration: MenuStyle.animHover }
+                NumberAnimation { duration: MenuStyle.animFast }
             }
         }
     }

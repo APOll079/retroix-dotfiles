@@ -185,7 +185,7 @@ PanelWindow {
     onVisibleChanged: {
         SpotifyState.active = visible;
         Lyrics.fast = visible && root.lyricsMode;
-        if (visible && MenuStyle.animOpen > 0)
+        if (visible && MenuStyle.animNormal > 0)
             openFade.restart();
     }
     // Backup for click-outside: another window getting focus, or a workspace switch, closes the drawer
@@ -280,7 +280,7 @@ PanelWindow {
         anchors.fill: parent
         color: Config.colors.base
 
-        NumberAnimation { id: openFade; target: drawer; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animOpen; easing.type: Easing.OutCubic }
+        NumberAnimation { id: openFade; target: drawer; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animNormal; easing.type: MenuStyle.animEasing }
 
         Rectangle { x: parent.width - 1; y: 0; width: 1; height: parent.height; color: Config.colors.outline }
         Rectangle { x: 0; y: parent.height - 1; width: parent.width; height: 1; color: Config.colors.outline }

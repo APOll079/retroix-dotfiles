@@ -145,7 +145,7 @@ Scope {
                         property: "opacity"
                         to: 0
                         duration: MenuStyle.notificationFade
-                        easing.type: Easing.InOutQuad
+                        easing.type: MenuStyle.animEasing
                         onFinished: NotificationStore.hideToast(notifItem.modelData)
                     }
 

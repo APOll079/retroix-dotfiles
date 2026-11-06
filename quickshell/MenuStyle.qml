@@ -106,7 +106,6 @@ Singleton {
     readonly property int spotifyNoteMs: 3000       // how long a short message stays on the status bar
     readonly property int spotifyWheelStep: 5       // the mouse wheel on the volume row: percent per notch
     readonly property int spotifySeekStepMs: 5000   // the mouse wheel on the seek bar: ms per notch
-    readonly property int spotifyCrossfade: 150     // ms: a new cover fades in over the old one (0 = instant)
     readonly property int spotifyThumb: 28          // the thumbnail in a list row (fills the 34 px row)
     readonly property int spotifyListHeader: 30     // the list header: name, count, Play, Shuffle
     readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
@@ -158,17 +157,18 @@ Singleton {
     readonly property int taskMinHeight: 420
     readonly property int sysMonInterval: 2000      // CPU / RAM / temperature read interval
     readonly property int lyricsTick: 250
-    // Animations: short, no bounce. Menus fade + slide in on open (closing is instant), hover
-    // highlights fade, lists scroll smoothly. 0 turns one off.
-    readonly property int animOpen: 90
-    readonly property int animSlide: 4
-    readonly property int animHover: 60
-    readonly property int animFade: 80
-    readonly property int animScroll: 200
+    // Motion: two durations and one easing, no bounce. fast = hover highlights and fades, normal =
+    // menus opening (fade + slide), the lyrics scroll, a cover crossfade. 0 turns an animation off, and
+    // settings.ui.reduceMotion makes every duration 0 (the two slow ones below too).
+    readonly property bool reduceMotion: Config.settings.ui.reduceMotion
+    readonly property int animFast: reduceMotion ? 0 : 60
+    readonly property int animNormal: reduceMotion ? 0 : 120
+    readonly property int animEasing: Easing.OutCubic
+    readonly property int animSlide: 4          // px a menu slides in from
     // Idle dim layer strength (outline colour over the screen)
     readonly property real idleDimOpacity: 0.5
     // Idle dim fades in over this long (eased, no bounce); 0 = appears at once. It leaves instantly on input.
-    readonly property int idleDimFade: 1000
+    readonly property int idleDimFade: reduceMotion ? 0 : 1000
     // Weather refresh (wttr.in), ms
     readonly property int weatherRefresh: 1800000
     readonly property int weatherRetry: 60000           // after a failed fetch
@@ -201,7 +201,7 @@ Singleton {
     // ... and a device name in the prompt title is cut to this many characters (the longest sentence, "Type this passkey on", still fits)
     readonly property int bluetoothNameChars: 14
     readonly property int notificationTimeout: 10000
-    readonly property int notificationFade: 400
+    readonly property int notificationFade: reduceMotion ? 0 : 400   // slow on purpose, like the idle dim
     readonly property int osdMargin: 90
     readonly property int notificationMaxVisible: 4
     // Right-aligned value next to a meter ("100%", "MUTE")

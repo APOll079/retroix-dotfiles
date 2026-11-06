@@ -25,7 +25,7 @@ SunkenField {
     padding: MenuStyle.spotifyInset
     clip: true
 
-    NumberAnimation { id: listFade; target: listArea; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animFade }
+    NumberAnimation { id: listFade; target: listArea; property: "opacity"; from: 0; to: 1; duration: MenuStyle.animFast }
 
     SpotifyLyricsView {
         id: lyrics

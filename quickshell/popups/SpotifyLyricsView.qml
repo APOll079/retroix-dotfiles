@@ -67,7 +67,7 @@ Item {
         highlightRangeMode: ListView.ApplyRange
         preferredHighlightBegin: height * MenuStyle.lyricsAnchor - MenuStyle.rowHeight
         preferredHighlightEnd: height * MenuStyle.lyricsAnchor + MenuStyle.rowHeight
-        highlightMoveDuration: MenuStyle.animScroll
+        highlightMoveDuration: MenuStyle.animNormal
         highlightFollowsCurrentItem: true
         spacing: MenuStyle.lyricsLineGap
         // No room above the first line: at the start of a song the first lines sit at the top and the current one
@@ -83,7 +83,7 @@ Item {
             height: lyricText.implicitHeight + MenuStyle.gap
             color: current ? MenuStyle.selectBar : Qt.rgba(MenuStyle.selectBar.r, MenuStyle.selectBar.g, MenuStyle.selectBar.b, 0)
             Behavior on color {
-                ColorAnimation { duration: MenuStyle.animHover }
+                ColorAnimation { duration: MenuStyle.animFast }
             }
             Text {
                 id: lyricText

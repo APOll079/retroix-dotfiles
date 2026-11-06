@@ -80,7 +80,7 @@ RowLayout {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: MenuStyle.spotifyCrossfade
+                duration: MenuStyle.animNormal
             }
         }
         Text {

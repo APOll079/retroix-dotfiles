@@ -163,6 +163,7 @@ property bool bluetooth: true
 // Look switches (Themes menu): dither = the 1px checkerboard on empty meter tracks; off = a flat track
 property JsonObject ui: JsonObject {
 property bool dither: true
+property bool reduceMotion: false
 }
 // Idle: dim, then lock (hyprlock), then screens off; minutes, 0 = off for that step
 property JsonObject idle: JsonObject {

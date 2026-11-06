@@ -32,7 +32,7 @@ Button {
     background: Rectangle {
         color: root.lit ? MenuStyle.selectBar : Qt.rgba(MenuStyle.selectBar.r, MenuStyle.selectBar.g, MenuStyle.selectBar.b, 0)
         Behavior on color {
-            ColorAnimation { duration: MenuStyle.animHover }
+            ColorAnimation { duration: MenuStyle.animFast }
         }
         // Keyboard selection gets the dotted focus marker on top of the accent bar
         FocusRect {

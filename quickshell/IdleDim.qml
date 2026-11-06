@@ -29,7 +29,7 @@ PanelWindow {
         opacity: Idle.dimmed ? MenuStyle.idleDimOpacity : 0
         Behavior on opacity {
             enabled: MenuStyle.idleDimFade > 0
-            NumberAnimation { duration: MenuStyle.idleDimFade; easing.type: Easing.InOutQuad }
+            NumberAnimation { duration: MenuStyle.idleDimFade; easing.type: MenuStyle.animEasing }
         }
     }
 }
