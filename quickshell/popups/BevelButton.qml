@@ -4,7 +4,8 @@ import QtQuick.Layouts
 
 import ".."
 
-// Raised push button; pressing it flips the bevel to sunken and nudges the content.
+// Raised push button; pressing it pushes the bevel in and nudges the content. checked = the same plus a
+// dithered lighter face (flat lighter face when dither is off).
 Button {
     id: root
 
@@ -24,8 +25,16 @@ Button {
 
     background: Rectangle {
         color: Config.colors.base
+        Dither {
+            anchors.fill: parent
+            anchors.margins: 2
+            visible: root.checked
+            color1: MenuStyle.bevelInnerLight
+            color2: MenuStyle.bevelLight
+        }
         Bevel {
             anchors.fill: parent
+            button: true
             raised: !(root.down || root.checked)
         }
         FocusRect {

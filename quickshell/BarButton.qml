@@ -3,7 +3,8 @@ import QtQuick
 import QtQuick.Controls.Basic
 
 // The one bar button style: same height, bevel and padding everywhere.
-// Raised normally; toggled (menu open) or pressed = sunken bevel, solid face, content shifted 1px.
+// Raised normally; pressed = pushed-in bevel, content shifted 1px; toggled (menu open, switch on) =
+// the same plus a dithered lighter face (flat lighter face when dither is off), like a Win95 toolbar toggle.
 // interactive: false keeps the box but not the hover/press behaviour (status indicators).
 // tucked: no box at all, small and dim - a status label tucked beside the buttons.
 // dim: the dim text colour (on by default for tucked labels; the now-playing text turns it off).
@@ -41,8 +42,16 @@ Button {
     background: Rectangle {
         visible: !root.tucked
         color: root.lit ? MenuStyle.selectBar : Config.colors.base
+        Dither {
+            anchors.fill: parent
+            anchors.margins: 2
+            visible: root.interactive && root.isToggled && !root.lit
+            color1: MenuStyle.bevelInnerLight
+            color2: MenuStyle.bevelLight
+        }
         Bevel {
             anchors.fill: parent
+            button: true
             raised: !root.sunken
         }
     }

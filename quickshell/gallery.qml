@@ -75,6 +75,7 @@ ShellRoot {
                     }
                 }
                 Line { cap: "normal"; BarButton { label: "Wallpapers"; iconFontValue: "\ue3f4" } }
+                Line { cap: "pressed"; BarButton { label: "Wallpapers"; iconFontValue: "\ue1bc"; down: true } }
                 Line { cap: "toggled"; BarButton { label: "Wallpapers"; iconFontValue: "\ue3f4"; isToggled: true; toggledIconFontValue: "\ue3f4" } }
                 Line { cap: "disabled"; BarButton { label: "Wallpapers"; iconFontValue: "\ue3f4"; enabled: false } }
                 Line { cap: "urgent"; BarButton { label: "Bluetooth"; iconFontValue: "\ue1a7"; urgent: true } }
@@ -139,6 +140,7 @@ ShellRoot {
                 Line { cap: "normal"; Popups.BevelButton { text: "Cancel" } }
                 Line { cap: "glyph + text"; Popups.BevelButton { text: "Reboot"; glyph: "\ue5d5" } }
                 Line { cap: "icon only"; Popups.BevelButton { glyph: "\ue037" } Popups.BevelButton { glyph: "\ue034" } }
+                Line { cap: "pressed"; Popups.BevelButton { text: "Cancel"; down: true } }
                 Line { cap: "checked"; Popups.BevelButton { text: "Mute"; checkable: true; checked: true } }
                 Line { cap: "disabled"; Popups.BevelButton { text: "Forget"; enabled: false } Popups.BevelButton { glyph: "\ue037"; enabled: false } }
                 Line {

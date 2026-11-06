@@ -10,10 +10,15 @@ Item {
     // 2 = full bevel (frames), 1 = single ring (buttons, bar buttons)
     property int thickness: 2
 
-    readonly property color outerLight: raised ? MenuStyle.bevelLight : MenuStyle.bevelDark
+    // button: a pushed / switched-on button sinks like Win95's (outline outside, dark inside on the
+    // top-left), deeper than a sunken field (dark outside, outline inside)
+    property bool button: false
+
+    readonly property bool pushed: !raised && button
+    readonly property color outerLight: raised ? MenuStyle.bevelLight : (pushed ? Config.colors.outline : MenuStyle.bevelDark)
     readonly property color outerDark: thickness === 1 ? (raised ? MenuStyle.bevelDark : MenuStyle.bevelLight) : (raised ? Config.colors.outline : MenuStyle.bevelLight)
-    readonly property color innerLight: raised ? MenuStyle.bevelInnerLight : Config.colors.outline
-    readonly property color innerDark: raised ? MenuStyle.bevelDark : Config.colors.base
+    readonly property color innerLight: raised ? MenuStyle.bevelInnerLight : (pushed ? MenuStyle.bevelDark : Config.colors.outline)
+    readonly property color innerDark: raised ? MenuStyle.bevelDark : (pushed ? MenuStyle.bevelInnerLight : Config.colors.base)
 
     // light edges first, dark edges drawn over them at the shared corners
     Rectangle { x: 0; y: 0; width: root.width - 1; height: 1; color: root.outerLight }
