@@ -28,6 +28,7 @@ SPACE_STEPS = (0, 2, 4, 6, 8, 12)   # MenuStyle.space*
 SECRET = re.compile(r"(access_token|refresh_token|client_secret)\s*[\"':=]+\s*[\"']?[A-Za-z0-9_\-]{16,}")
 
 fails, warns = [], []
+MODE = None   # "edit" inside the PostToolUse hook, "stop" in the Stop hook, None for a plain run
 
 
 def git(*args):
@@ -104,6 +105,15 @@ def singletons():
         _SINGLETONS = sorted(q.stem for q in ROOT.glob("quickshell/**/*.qml")
                              if re.search(r"^\s*pragma\s+Singleton", q.read_text(encoding="utf-8", errors="replace"), re.M))
     return _SINGLETONS or ["NoSingletons"]
+
+
+def check_design():
+    """docs/DESIGN.md is generated from MenuStyle.qml and themes.json; a stale one is a WARN while
+    editing (so changing MenuStyle isn't blocked every time) and a FAIL in the full run and at stop."""
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gen-design.py"), "--check"], capture_output=True, text=True)
+    if r.returncode:
+        msg = "docs/DESIGN.md is stale (MenuStyle.qml or themes.json changed): run python3 scripts/gen-design.py"
+        (warns if MODE == "edit" else fails).append(msg)
 
 
 def check_qmldir():
@@ -221,6 +231,7 @@ def check_diff(files):
 
 def run(files):
     check_contract()
+    check_design()
     check_qmldir()
     check_syntax(files)
     check_diff(files)
@@ -236,7 +247,9 @@ def report():
 
 
 def main():
+    global MODE
     hook = sys.argv[2] if len(sys.argv) > 2 and sys.argv[1] == "--hook" else None
+    MODE = hook
     data = {}
     if hook:
         try:
