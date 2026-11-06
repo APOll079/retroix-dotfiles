@@ -98,17 +98,42 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: MenuStyle.pad
 
-                StartBanner {}
+                // The accent stripe belongs to the framed tabs; the Clipboard tab uses the full width
+                StartBanner { visible: root.mode !== "clipboard" }
 
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: MenuStyle.pad
 
-                    // Tabs joined to a raised page; the search box, filters and list live inside the page
+                    // Clipboard: plain buttons for the tabs and no raised page, so the list and the preview use the whole width
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: root.mode === "clipboard"
+                        spacing: MenuStyle.gap
+                        Repeater {
+                            model: root.tabs
+                            BevelButton {
+                                Layout.fillWidth: true
+                                text: modelData.text
+                                glyph: modelData.glyph
+                                checked: root.tabOf(root.mode) === modelData.key
+                                focusPolicy: Qt.NoFocus
+                                onClicked: {
+                                    if (root.tabOf(root.mode) !== modelData.key)
+                                        root.open(modelData.key);
+                                    searchInput.focusInput();
+                                }
+                            }
+                        }
+                    }
+
+                    // The other tabs: Win95 tabs joined to a raised page; the search box, filters and list live inside the page
                     TabPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        flat: root.mode === "clipboard"
+                        tabsShown: root.mode !== "clipboard"
                         tabs: root.tabs
                         current: root.tabOf(root.mode)
                         onTabClicked: key => {
@@ -392,9 +417,9 @@ PanelWindow {
     }
 
     readonly property var tabs: [
-        { key: "apps", text: "Apps" },
-        { key: "games", text: "Games" },
-        { key: "clipboard", text: "Clipboard" }
+        { key: "apps", text: "Apps", glyph: "\ue5c3" },
+        { key: "games", text: "Games", glyph: "\ue338" },
+        { key: "clipboard", text: "Clipboard", glyph: "\ue14f" }
     ]
 
     // "windows" (the "," search) lives on the Apps tab

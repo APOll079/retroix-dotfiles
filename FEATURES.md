@@ -52,6 +52,9 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] The urgent colour (darker, rust-coloured in cherry): the privacy icons, error text, a critical toast's title bar
 - [ ] Window frames (`hypr/plugins.lua`, never run): install hyprbars and imgborders with `hyprpm`, `hyprctl reload`; do the option names, buttons and window-rule keys in `docs/theming.md` hold; do floating windows get the bar and tiled ones not; does the bevel draw around windows
 
+### Clipboard layout (branch clipboard-layout, never looked at)
+- [ ] Launcher Clipboard tab (Super+V): no stripe and no raised page, tabs as a button row, the preview and list fill the width; switching to Apps / Games brings the stripe and joined tabs back, Ctrl+Tab and the tab buttons both work, and the dead space is gone (the preview pane is still 45 % wide: `MenuStyle.clipPreviewFraction`)
+
 ### Work pass, wave 2 (branch work-pass-w2, offscreen only, never looked at)
 - [ ] Updates (install pacman-contrib): the counts match `checkupdates` / `yay -Qua` / flatpak, the Arch news lines load, the dot on Start and the "Updates (N)" row appear, Update opens kitty on `yay -Syu`; neither panel nor the Start rows were ever looked at (glyph codepoints unchecked)
 - [ ] Clean up: real sizes per row (is `~/screenshots` the right folder?), Clean then the ConfirmBar then the doas terminal for pacman cache and orphans, old shots to the Trash, Empty Trash (Start row shows the size after the first Start open), Esc cancels a confirm first. `settings.cleanup.shotDays` is not read yet
