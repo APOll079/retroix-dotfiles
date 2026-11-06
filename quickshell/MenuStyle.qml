@@ -49,6 +49,8 @@ Singleton {
     readonly property int scrollBarWidth: 16
     readonly property int scrollRepeatDelay: 300
     readonly property int scrollRepeatRate: 50
+    // Right-click / dropdown menu: never narrower than this (it grows to its longest label)
+    readonly property int contextMenuMinWidth: 140
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and

@@ -71,3 +71,6 @@ hypr/binds.lua	\-\-\ help:\ Media\ \|\ Play\ /\ pause\ Spotify	Key: Media | Play
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Drag\ a\ window	Key: Mouse | Drag a window
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Maximise\ window	Key: Mouse | Maximise window
 hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode\ \(side\ buttons\)	Key: Desktop | Game mode (side buttons)
+quickshell/popups/ContextMenuBody.qml	event\.key === Qt\.Key_Escape	Context menus: Escape closes
+quickshell/popups/ContextMenu.qml	grabFocus: true	Context menus: a click outside closes them
+quickshell/popups/RetroScrollBar.qml	root\.decrease\(\)	Scrollbars: arrow buttons scroll

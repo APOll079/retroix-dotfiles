@@ -52,3 +52,5 @@ SpotifyVolume 1.0 SpotifyVolume.qml
 SpotifySeek 1.0 SpotifySeek.qml
 SpotifyHeading 1.0 SpotifyHeading.qml
 RetroScrollBar 1.0 RetroScrollBar.qml
+ContextMenuBody 1.0 ContextMenuBody.qml
+ContextMenu 1.0 ContextMenu.qml

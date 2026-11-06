@@ -184,6 +184,19 @@ ShellRoot {
                         Popups.MenuRow { width: parent.width; text: "Muted title bar" }
                     }
                 }
+                Head { text: "ContextMenuBody" }
+                Popups.ContextMenuBody {
+                    currentIndex: 1
+                    model: [
+                        { text: "Open", glyph: "\ue2c8" },
+                        { text: "Open with...", trailing: "Shift+Enter" },
+                        { separator: true },
+                        { text: "Pinned", checked: true },
+                        { text: "Uninstall", glyph: "\ue872", enabled: false },
+                        { separator: true },
+                        { text: "Properties" }
+                    ]
+                }
                 Item { Layout.fillHeight: true }
             }
 
