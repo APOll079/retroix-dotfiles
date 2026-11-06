@@ -94,275 +94,268 @@ FloatingWindow {
                     onClosed: root.refocus()
                 }
 
-                RowLayout {
+                TabPage {
                     Layout.fillWidth: true
-                    spacing: MenuStyle.gap
-                    Repeater {
-                        model: [
-                            { key: "apps", text: "Apps", glyph: "\ue8b0" },
-                            { key: "processes", text: "Processes", glyph: "\ue8ef" },
-                            { key: "performance", text: "Performance", glyph: "\ue922" }
-                        ]
-                        BevelButton {
+                    Layout.fillHeight: true
+                    tabs: [{ key: "apps", text: "Apps" }, { key: "processes", text: "Processes" }, { key: "performance", text: "Performance" }]
+                    current: root.tab
+                    onTabClicked: key => root.showTab(key)
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: MenuStyle.pad
+
+                        // --- Apps ---
+                        SunkenField {
                             Layout.fillWidth: true
-                            text: modelData.text
-                            glyph: modelData.glyph
-                            checked: root.tab === modelData.key
-                            focusPolicy: Qt.NoFocus
-                            onClicked: root.showTab(modelData.key)
-                        }
-                    }
-                }
-
-                // --- Apps ---
-                SunkenField {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.tab === "apps"
-                    padding: 2
-                    clip: true
-                    EmptyState {
-                        anchors.centerIn: parent
-                        width: parent.width - 4 * MenuStyle.pad
-                        visible: root.apps.length === 0
-                        glyph: "\ue8b0"
-                        text: "No open windows"
-                    }
-                    ListView {
-                        id: appList
-                        anchors.fill: parent
-                        model: root.apps
-                        currentIndex: root.appIndex
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
-                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
-                        ScrollBar.vertical: RetroScrollBar {}
-                        delegate: MenuRow {
-                            required property int index
-                            required property var modelData
-                            width: appList.width - appList.gutter
-                            reserveIcon: true
-                            selected: index === root.appIndex
-                            iconSource: Quickshell.iconPath(String(modelData.lastIpcObject.class || "").toLowerCase(), true)
-                            glyph: "\ue8b0"
-                            text: modelData.title
-                            subtext: (modelData.lastIpcObject.class || "") + "  ·  pid " + modelData.lastIpcObject.pid
-                            trailing: modelData.workspace ? modelData.workspace.name.replace("special:", "*") : ""
-                            onClicked: root.appIndex = index
-                            onDoubleClicked: {
-                                root.appIndex = index;
-                                root.switchToApp();
+                            Layout.fillHeight: true
+                            visible: root.tab === "apps"
+                            padding: 2
+                            clip: true
+                            EmptyState {
+                                anchors.centerIn: parent
+                                width: parent.width - 4 * MenuStyle.pad
+                                visible: root.apps.length === 0
+                                glyph: "\ue8b0"
+                                text: "No open windows"
                             }
-                        }
-                    }
-                }
-
-                // --- Processes ---
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: root.tab === "processes"
-                    spacing: MenuStyle.gap
-                    SearchBox {
-                        id: filter
-                        Layout.fillWidth: true
-                        placeholder: "Filter programs"
-                        onEscaped: root.cancelOrClose()
-                        onKeyPressed: event => {
-                            const i = root.groups.findIndex(g => g.name === root.selectedName);
-                            if (event.key === Qt.Key_Down) {
-                                root.selectAt(Math.min(root.groups.length - 1, i + 1));
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
-                                root.selectAt(Math.max(0, i - 1));
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Delete) {
-                                root.askEnd(false);
-                                event.accepted = true;
-                            } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
-                                confirmBar.accept();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Escape && root.confirm) {
-                                // An open confirm row backs out first, before the filter is cleared
-                                confirmBar.cancel();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
-                                root.cycleTab(1);
-                                event.accepted = true;
-                            }
-                        }
-                    }
-                    BevelButton {
-                        text: root.mineOnly ? "Mine" : "All"
-                        glyph: root.mineOnly ? "\ue7fd" : "\ue7ef"
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.mineOnly = !root.mineOnly
-                    }
-                }
-
-                // Column headers: click to sort, click again to flip
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: root.tab === "processes"
-                    spacing: MenuStyle.gap
-                    Repeater {
-                        model: [
-                            { key: "name", text: "Program", wide: true },
-                            { key: "cpu", text: "CPU", wide: false },
-                            { key: "mem", text: "Memory", wide: false },
-                            { key: "count", text: "Procs", wide: false }
-                        ]
-                        BevelButton {
-                            Layout.fillWidth: modelData.wide
-                            Layout.preferredWidth: modelData.wide ? -1 : MenuStyle.taskColumnWidth
-                            text: modelData.text + (root.sortKey === modelData.key ? (root.sortDesc ? " ▾" : " ▴") : "")
-                            checked: root.sortKey === modelData.key
-                            focusPolicy: Qt.NoFocus
-                            onClicked: root.sortBy(modelData.key)
-                        }
-                    }
-                }
-
-                SunkenField {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.tab === "processes"
-                    padding: 2
-                    clip: true
-                    EmptyState {
-                        anchors.centerIn: parent
-                        width: parent.width - 4 * MenuStyle.pad
-                        visible: root.groups.length === 0
-                        glyph: root.sample ? "\ue8b6" : "\ue88b"
-                        text: root.sample ? "No matches" : "Reading processes..."
-                    }
-                    ListView {
-                        id: procList
-                        anchors.fill: parent
-                        model: root.groups
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
-                        ScrollBar.vertical: RetroScrollBar {}
-                        delegate: Rectangle {
-                            id: procRow
-                            required property int index
-                            required property var modelData
-                            readonly property bool sel: modelData.name === root.selectedName
-                            width: procList.width - procList.gutter
-                            height: MenuStyle.rowHeight
-                            color: sel ? MenuStyle.selectBar : (rowMouse.containsMouse ? Config.colors.highlight : "transparent")
-                            readonly property color ink: sel ? MenuStyle.selectText : (modelData.mine ? Config.colors.text : Config.colors.shadow)
-                            RowLayout {
+                            ListView {
+                                id: appList
                                 anchors.fill: parent
-                                anchors.leftMargin: MenuStyle.pad
-                                anchors.rightMargin: MenuStyle.pad
-                                spacing: MenuStyle.gap
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    font.hintingPreference: Font.PreferFullHinting
-                                    textFormat: Text.PlainText
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                    font.family: MenuStyle.bodyFont
-                                    font.pixelSize: MenuStyle.fontSize
-                                    color: procRow.ink
-                                    text: procRow.modelData.name
-                                }
-                                Repeater {
-                                    model: [procRow.modelData.cpu.toFixed(1) + "%", root.bytes(procRow.modelData.mem), String(procRow.modelData.count)]
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        font.hintingPreference: Font.PreferFullHinting
-                                        Layout.preferredWidth: MenuStyle.taskColumnWidth
-                                        horizontalAlignment: Text.AlignRight
-                                        font.family: MenuStyle.bodyFont
-                                        font.pixelSize: MenuStyle.fontSize
-                                        color: procRow.ink
-                                        text: modelData
+                                model: root.apps
+                                currentIndex: root.appIndex
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+                                readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                                ScrollBar.vertical: RetroScrollBar {}
+                                delegate: MenuRow {
+                                    required property int index
+                                    required property var modelData
+                                    width: appList.width - appList.gutter
+                                    reserveIcon: true
+                                    selected: index === root.appIndex
+                                    iconSource: Quickshell.iconPath(String(modelData.lastIpcObject.class || "").toLowerCase(), true)
+                                    glyph: "\ue8b0"
+                                    text: modelData.title
+                                    subtext: (modelData.lastIpcObject.class || "") + "  ·  pid " + modelData.lastIpcObject.pid
+                                    trailing: modelData.workspace ? modelData.workspace.name.replace("special:", "*") : ""
+                                    onClicked: root.appIndex = index
+                                    onDoubleClicked: {
+                                        root.appIndex = index;
+                                        root.switchToApp();
                                     }
                                 }
                             }
-                            MouseArea {
-                                id: rowMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: root.selectedName = procRow.modelData.name
+                        }
+
+                        // --- Processes ---
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: root.tab === "processes"
+                            spacing: MenuStyle.gap
+                            SearchBox {
+                                id: filter
+                                Layout.fillWidth: true
+                                placeholder: "Filter programs"
+                                onEscaped: root.cancelOrClose()
+                                onKeyPressed: event => {
+                                    const i = root.groups.findIndex(g => g.name === root.selectedName);
+                                    if (event.key === Qt.Key_Down) {
+                                        root.selectAt(Math.min(root.groups.length - 1, i + 1));
+                                        event.accepted = true;
+                                    } else if (event.key === Qt.Key_Up) {
+                                        root.selectAt(Math.max(0, i - 1));
+                                        event.accepted = true;
+                                    } else if (event.key === Qt.Key_Delete) {
+                                        root.askEnd(false);
+                                        event.accepted = true;
+                                    } else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.confirm) {
+                                        confirmBar.accept();
+                                        event.accepted = true;
+                                    } else if (event.key === Qt.Key_Escape && root.confirm) {
+                                        // An open confirm row backs out first, before the filter is cleared
+                                        confirmBar.cancel();
+                                        event.accepted = true;
+                                    } else if (event.key === Qt.Key_Tab && (event.modifiers & Qt.ControlModifier)) {
+                                        root.cycleTab(1);
+                                        event.accepted = true;
+                                    }
+                                }
+                            }
+                            BevelButton {
+                                text: root.mineOnly ? "Mine" : "All"
+                                glyph: root.mineOnly ? "\ue7fd" : "\ue7ef"
+                                focusPolicy: Qt.NoFocus
+                                onClicked: root.mineOnly = !root.mineOnly
                             }
                         }
-                    }
-                }
 
-                // --- Performance ---
-                GridLayout {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: root.tab === "performance"
-                    columns: 2
-                    columnSpacing: MenuStyle.pad
-                    rowSpacing: MenuStyle.pad
-                    Graph {
-                        title: "CPU"
-                        value: root.sample ? root.sample.cpu.toFixed(0) + "%  ·  " + SysMon.tempText(SysMon.cpuTemp) : ""
-                        history: root.cpuHist
-                    }
-                    Graph {
-                        title: "Memory"
-                        value: root.sample ? root.bytes(root.sample.mem.used) + " / " + root.bytes(root.sample.mem.total) : ""
-                        history: root.memHist
-                    }
-                    Graph {
-                        title: "GPU"
-                        value: root.sample && root.sample.gpu ? root.sample.gpu.busy + "%  ·  " + SysMon.tempText(SysMon.gpuJunction) : "no data"
-                        history: root.gpuHist
-                    }
-                    Graph {
-                        title: "Video memory"
-                        value: root.sample && root.sample.gpu ? root.bytes(root.sample.gpu.vramUsed) + " / " + root.bytes(root.sample.gpu.vramTotal) : "no data"
-                        history: root.vramHist
-                    }
-                }
+                        // Column headers: click to sort, click again to flip
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: root.tab === "processes"
+                            spacing: MenuStyle.gap
+                            Repeater {
+                                model: [
+                                    { key: "name", text: "Program", wide: true },
+                                    { key: "cpu", text: "CPU", wide: false },
+                                    { key: "mem", text: "Memory", wide: false },
+                                    { key: "count", text: "Procs", wide: false }
+                                ]
+                                BevelButton {
+                                    Layout.fillWidth: modelData.wide
+                                    Layout.preferredWidth: modelData.wide ? -1 : MenuStyle.taskColumnWidth
+                                    text: modelData.text + (root.sortKey === modelData.key ? (root.sortDesc ? " ▾" : " ▴") : "")
+                                    checked: root.sortKey === modelData.key
+                                    focusPolicy: Qt.NoFocus
+                                    onClicked: root.sortBy(modelData.key)
+                                }
+                            }
+                        }
 
-                // --- Confirm: replaces the action row while a question is open ---
-                ConfirmBar {
-                    id: confirmBar
-                    Layout.fillWidth: true
-                    visible: root.confirm !== null
-                    message: root.confirm ? root.confirm.text : ""
-                    verb: root.confirm ? root.confirm.verb : ""
-                    glyph: "\ue002"
-                    onAccepted: root.doConfirm()
-                    onCanceled: root.confirm = null
-                }
+                        SunkenField {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.tab === "processes"
+                            padding: 2
+                            clip: true
+                            EmptyState {
+                                anchors.centerIn: parent
+                                width: parent.width - 4 * MenuStyle.pad
+                                visible: root.groups.length === 0
+                                glyph: root.sample ? "\ue8b6" : "\ue88b"
+                                text: root.sample ? "No matches" : "Reading processes..."
+                            }
+                            ListView {
+                                id: procList
+                                anchors.fill: parent
+                                model: root.groups
+                                clip: true
+                                boundsBehavior: Flickable.StopAtBounds
+                                readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                                ScrollBar.vertical: RetroScrollBar {}
+                                delegate: Rectangle {
+                                    id: procRow
+                                    required property int index
+                                    required property var modelData
+                                    readonly property bool sel: modelData.name === root.selectedName
+                                    width: procList.width - procList.gutter
+                                    height: MenuStyle.rowHeight
+                                    color: sel ? MenuStyle.selectBar : (rowMouse.containsMouse ? Config.colors.highlight : "transparent")
+                                    readonly property color ink: sel ? MenuStyle.selectText : (modelData.mine ? Config.colors.text : Config.colors.shadow)
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: MenuStyle.pad
+                                        anchors.rightMargin: MenuStyle.pad
+                                        spacing: MenuStyle.gap
+                                        Text {
+                                            renderType: Text.NativeRendering
+                                            font.hintingPreference: Font.PreferFullHinting
+                                            textFormat: Text.PlainText
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            font.family: MenuStyle.bodyFont
+                                            font.pixelSize: MenuStyle.fontSize
+                                            color: procRow.ink
+                                            text: procRow.modelData.name
+                                        }
+                                        Repeater {
+                                            model: [procRow.modelData.cpu.toFixed(1) + "%", root.bytes(procRow.modelData.mem), String(procRow.modelData.count)]
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                font.hintingPreference: Font.PreferFullHinting
+                                                Layout.preferredWidth: MenuStyle.taskColumnWidth
+                                                horizontalAlignment: Text.AlignRight
+                                                font.family: MenuStyle.bodyFont
+                                                font.pixelSize: MenuStyle.fontSize
+                                                color: procRow.ink
+                                                text: modelData
+                                            }
+                                        }
+                                    }
+                                    MouseArea {
+                                        id: rowMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: root.selectedName = procRow.modelData.name
+                                    }
+                                }
+                            }
+                        }
 
-                // --- Actions ---
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: root.confirm === null
-                    spacing: MenuStyle.gap
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                    BevelButton {
-                        visible: root.tab === "apps"
-                        text: "Switch to"
-                        enabled: root.selectedApp !== null
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.switchToApp()
-                    }
-                    BevelButton {
-                        visible: root.tab !== "performance"
-                        text: "End task"
-                        enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.askEnd(false)
-                    }
-                    BevelButton {
-                        visible: root.tab !== "performance"
-                        text: "Kill"
-                        enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
-                        focusPolicy: Qt.NoFocus
-                        onClicked: root.askEnd(true)
+                        // --- Performance ---
+                        GridLayout {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.tab === "performance"
+                            columns: 2
+                            columnSpacing: MenuStyle.pad
+                            rowSpacing: MenuStyle.pad
+                            Graph {
+                                title: "CPU"
+                                value: root.sample ? root.sample.cpu.toFixed(0) + "%  ·  " + SysMon.tempText(SysMon.cpuTemp) : ""
+                                history: root.cpuHist
+                            }
+                            Graph {
+                                title: "Memory"
+                                value: root.sample ? root.bytes(root.sample.mem.used) + " / " + root.bytes(root.sample.mem.total) : ""
+                                history: root.memHist
+                            }
+                            Graph {
+                                title: "GPU"
+                                value: root.sample && root.sample.gpu ? root.sample.gpu.busy + "%  ·  " + SysMon.tempText(SysMon.gpuJunction) : "no data"
+                                history: root.gpuHist
+                            }
+                            Graph {
+                                title: "Video memory"
+                                value: root.sample && root.sample.gpu ? root.bytes(root.sample.gpu.vramUsed) + " / " + root.bytes(root.sample.gpu.vramTotal) : "no data"
+                                history: root.vramHist
+                            }
+                        }
+
+                        // --- Confirm: replaces the action row while a question is open ---
+                        ConfirmBar {
+                            id: confirmBar
+                            Layout.fillWidth: true
+                            visible: root.confirm !== null
+                            message: root.confirm ? root.confirm.text : ""
+                            verb: root.confirm ? root.confirm.verb : ""
+                            glyph: "\ue002"
+                            onAccepted: root.doConfirm()
+                            onCanceled: root.confirm = null
+                        }
+
+                        // --- Actions ---
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: root.confirm === null
+                            spacing: MenuStyle.gap
+                            Item {
+                                Layout.fillWidth: true
+                            }
+                            BevelButton {
+                                visible: root.tab === "apps"
+                                text: "Switch to"
+                                enabled: root.selectedApp !== null
+                                focusPolicy: Qt.NoFocus
+                                onClicked: root.switchToApp()
+                            }
+                            BevelButton {
+                                visible: root.tab !== "performance"
+                                text: "End task"
+                                enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
+                                focusPolicy: Qt.NoFocus
+                                onClicked: root.askEnd(false)
+                            }
+                            BevelButton {
+                                visible: root.tab !== "performance"
+                                text: "Kill"
+                                enabled: root.tab === "apps" ? root.selectedApp !== null : (root.selectedGroup !== null && root.selectedGroup.mine)
+                                focusPolicy: Qt.NoFocus
+                                onClicked: root.askEnd(true)
+                            }
+                        }
                     }
                 }
 
