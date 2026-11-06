@@ -85,9 +85,6 @@ Singleton {
     // smallest drag that counts as a region (smaller = click, ignored)
     readonly property int shotGridColumns: 4
     readonly property int shotThumbWidth: 320
-    // History panel size as a fraction of the screen
-    readonly property real shotHistoryWidthFraction: 0.6
-    readonly property real shotHistoryHeightFraction: 0.7
     // History quick filter buttons (Today / Week / All)
     readonly property int shotFilterButtonWidth: 56
     // Games grid: columns, title strip under each cover, cover decode width, and the label
