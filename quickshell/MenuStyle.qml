@@ -87,6 +87,8 @@ Singleton {
     readonly property int shotThumbWidth: 320
     // History quick filter buttons (Today / Week / All)
     readonly property int shotFilterButtonWidth: 56
+    // History action buttons (Copy / Open / Delete / Folder, the viewer's Grid): one width, glyph + label
+    readonly property int shotActionButtonWidth: 88
     // Games grid: columns, title strip under each cover, cover decode width, and the label
     // column of the Add game form
     readonly property int gamesGridColumns: 7

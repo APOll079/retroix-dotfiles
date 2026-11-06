@@ -243,6 +243,7 @@ PanelWindow {
                         visible: root.page === 1
                         glyph: "\ue9b0"
                         text: "Grid"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         focusPolicy: Qt.NoFocus
                         onClicked: root.closeViewer()
                     }
@@ -265,18 +266,24 @@ PanelWindow {
                     }
                     BevelButton {
                         glyph: "\ue14d"
+                        text: "Copy"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.copy(root.targets)
                     }
                     BevelButton {
                         glyph: "\ue89e"
+                        text: "Open"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.openFiles(root.targets)
                     }
                     BevelButton {
                         glyph: "\ue872"
+                        text: "Delete"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         enabled: root.targets.length > 0
                         focusPolicy: Qt.NoFocus
                         onClicked: root.confirmDelete = true
@@ -284,6 +291,8 @@ PanelWindow {
                     BevelButton {
                         visible: root.page === 0
                         glyph: "\ue2c8"
+                        text: "Folder"
+                        Layout.preferredWidth: MenuStyle.shotActionButtonWidth
                         focusPolicy: Qt.NoFocus
                         onClicked: Quickshell.execDetached(["xdg-open", root.dir])
                     }
