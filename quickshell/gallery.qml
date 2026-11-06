@@ -255,6 +255,7 @@ ShellRoot {
                 Head { text: "RetroSlider" }
                 Popups.RetroSlider { Layout.fillWidth: true; value: 0.6 }
                 Popups.RetroSlider { Layout.fillWidth: true; value: 0.3; dim: true }
+                Popups.RetroSlider { Layout.fillWidth: true; value: 0.45; fill: true }
                 Head { text: "RetroScrollBar" }
                 Popups.SunkenField {
                     Layout.fillWidth: true

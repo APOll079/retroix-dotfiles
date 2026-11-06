@@ -29,6 +29,8 @@ RowLayout {
     }
     RetroSlider {
         id: seek
+        // a meter too (song progress): keeps the accent fill (A3), unlike the volume sliders
+        fill: true
         Layout.fillWidth: true
         implicitHeight: MenuStyle.spotifyCompactRow
         from: 0
