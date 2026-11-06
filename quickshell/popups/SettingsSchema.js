@@ -4,10 +4,15 @@
 // argument, so tests run them on fixtures). One schema entry per setting in Config.settings:
 //   { category, path: "idle.dimMinutes", type: "bool"|"int"|"string"|"list"|"choice"|"json-note",
 //     label, hint, min, max, choices: [...] | choicesFrom: "themes", restart: bool }
+//   type "action" = no setting: a row with an Open button that opens a tool (action: an id Bar.qml's toolActions knows); its path is "action:<id>"
 // A new setting in Config.qml needs one line here (tests/interaction/settingsview.qml fails until it has one).
 // json-note = no control suited (a list of objects): the row only says "Edit in settings.json".
 
-var CATEGORIES = ["General", "Bar", "Appearance", "Notifications", "Audio", "Idle and power", "Recording", "Watchers", "Weather", "Games and extras"];
+var CATEGORIES = ["General", "Bar", "Appearance", "Notifications", "Audio", "Idle and power", "Recording", "Watchers", "Weather", "Games and extras", "System tools"];
+
+function act(id, label, hint) {
+    return e("System tools", "action:" + id, "action", label, hint, { action: id });
+}
 
 function e(category, path, type, label, hint, extra) {
     var o = { category: category, path: path, type: type, label: label, hint: hint, restart: false };
@@ -96,7 +101,17 @@ var SCHEMA = [
     e("Games and extras", "games.mangohud", "bool", "MangoHud", "Overlay for games launched from here"),
     e("Games and extras", "spotifyExtras.trackToast", "bool", "Track toast", "A toast on every song change"),
     e("Games and extras", "mouse.enabled", "bool", "Mouse battery", "Show the Logitech battery (Solaar) in the bar"),
-    e("Games and extras", "wallpaper.folder", "string", "Wallpaper folder", "Folder the wallpaper browser lists (~ allowed)")
+    e("Games and extras", "wallpaper.folder", "string", "Wallpaper folder", "Folder the wallpaper browser lists (~ allowed)"),
+
+    // Tools that used to be buttons in the Start menu (rarely used): each opens its panel, as the Start button did
+    act("defaultApps", "Default apps", "Choose the default browser, image viewer, video player"),
+    act("network", "Network", "Addresses, ping, LAN devices, speed test (the ETH button in the bar opens it too)"),
+    act("services", "Services", "Start, stop and restart dinit services"),
+    act("troubleshoot", "Troubleshoot", "Restart PipeWire, the portals, hyprpaper or EasyEffects"),
+    act("loginReport", "Login report", "What slowed your last login"),
+    act("cleanUp", "Clean up", "Free space: package cache, orphans, unused Flatpak runtimes"),
+    act("colours", "Colours", "The colours you picked with the colour picker"),
+    act("updates", "Updates", "Pending updates, news and the update buttons (Start shows it while updates wait)")
 ];
 
 // Categories in schema order (CATEGORIES first, then any a later agent adds).

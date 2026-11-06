@@ -85,7 +85,7 @@ ShellRoot {
             menu.visible = true;
             tc.wait(200);
             shell.check("off: no Programs button, no cascade", (programs() === null || !programs().visible) && menu.cascadeItem() === null);
-            shell.check("off: the other buttons are all still there", ["Files", "Settings", "Terminal", "Power", "Services", "Network", "Keys", "Colours", "Default apps", "Troubleshoot", "Login report", "Clean up"].every(t => firstRow(t) !== undefined));
+            shell.check("off: the other buttons are all still there", ["Files", "Settings", "Terminal", "Power", "Keys"].every(t => firstRow(t) !== undefined));
 
             // on
             menu.cascading = true;

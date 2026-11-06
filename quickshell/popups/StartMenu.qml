@@ -12,16 +12,9 @@ PopupWindow {
     property int menuWidth: 0
     property var closeCallback: function () {}
     property var openPowerMenuCallback: function () {}
-    property var openServicesCallback: function () {}
-    property var openNetworkCallback: function () {}
     property var openKeysCallback: function () {}
     property var openSettingsCallback: function () {}
     property var openUpdatesCallback: function () {}
-    property var openCleanupCallback: function () {}
-    property var openColorHistoryCallback: function () {}
-    property var openDefaultAppsCallback: function () {}
-    property var openFixCallback: function () {}
-    property var openLoginReportCallback: function () {}
     // settings.ui.cascadingStart (off by default): a Programs button opens the cascading Programs menu (PopupCascade.qml)
     readonly property bool cascading: Config.settings.ui.cascadingStart === true
     anchor.window: root.bar
@@ -164,28 +157,13 @@ PopupWindow {
                     }
                 }
 
+                // The daily extras: the cheat sheet, the Trash (its size; only opens the folder in the file manager: what is in the
+                // Trash is deleted there, where you can see it), and the pending updates while there are any. The rarely used
+                // tools (Services, Network, Default apps, Troubleshoot, Login report, Clean up, Colours) are in Settings > System tools.
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: MenuStyle.pad
 
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Services"
-                        glyph: "\ue8b8"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openServicesCallback();
-                        }
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Network"
-                        glyph: "\ue63d"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openNetworkCallback();
-                        }
-                    }
                     BevelButton {
                         Layout.fillWidth: true
                         text: "Keys"
@@ -197,54 +175,13 @@ PopupWindow {
                     }
                     BevelButton {
                         Layout.fillWidth: true
-                        text: "Colours"
-                        glyph: "\ue40a"
+                        text: CleanupState.trashLabel
+                        glyph: "\ue872"
                         onClicked: {
+                            Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files + " trash:///"]);
                             root.closeCallback();
-                            root.openColorHistoryCallback();
                         }
                     }
-                }
-
-                // System pages: default apps, troubleshooting (restart a stuck service), what slowed the last login
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: MenuStyle.pad
-
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Default apps"
-                        glyph: "\ue8f1"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openDefaultAppsCallback();
-                        }
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Troubleshoot"
-                        glyph: "\ue869"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openFixCallback();
-                        }
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Login report"
-                        glyph: "\ue8b5"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openLoginReportCallback();
-                        }
-                    }
-                }
-
-                // Maintenance: pending updates (only when there are any), Clean up, the Trash (its size; opens the folder)
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: MenuStyle.pad
-
                     BevelButton {
                         Layout.fillWidth: true
                         visible: UpdateState.total > 0
@@ -253,25 +190,6 @@ PopupWindow {
                         onClicked: {
                             root.closeCallback();
                             root.openUpdatesCallback();
-                        }
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: "Clean up"
-                        glyph: "\ue16c"
-                        onClicked: {
-                            root.closeCallback();
-                            root.openCleanupCallback();
-                        }
-                    }
-                    BevelButton {
-                        Layout.fillWidth: true
-                        text: CleanupState.trashLabel
-                        glyph: "\ue872"
-                        // Only opens the folder in the file manager: what is in the Trash is deleted there, where you can see it
-                        onClicked: {
-                            Quickshell.execDetached(["sh", "-c", Config.settings.execCommands.files + " trash:///"]);
-                            root.closeCallback();
                         }
                     }
                 }

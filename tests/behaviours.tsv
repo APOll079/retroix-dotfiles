@@ -143,7 +143,6 @@ hypr/binds.lua	\-\-\ help:\ Media\ \|\ Lyrics\ window	Key: Media | Lyrics window
 quickshell/popups/CleanupPanel.qml	function accept\(\)	Clean up: the ConfirmBar's verb is the only thing that runs a clean-up
 quickshell/popups/CleanupPanel.qml	Qt\.Key_Escape	Clean up: Esc cancels the confirm first, then closes
 quickshell/popups/UpdatesPanel.qml	Qt\.Key_Return	Updates: Enter = Update (opens the terminal on yay -Syu, closes the panel)
-quickshell/popups/StartMenu.qml	text: "Clean up"	Start menu: Clean up row
 quickshell/popups/StartMenu.qml	text: CleanupState\.trashLabel	Start menu: the Trash row shows its size
 quickshell/popups/StartMenu.qml	text: "Updates \("	Start menu: Updates (N) row while updates are waiting
 quickshell/LaptopControls.qml	onClicked: RecordState\.togglePause\(\)	The bar's Pause / Resume button toggles pause
@@ -196,7 +195,6 @@ quickshell/RecordState.qml	Drag to select the text	Overlay hint for Text mode
 quickshell/RecordState.qml	gif="Save as GIF"	Recording saved toast: Save as GIF action
 quickshell/popups/ColorHistoryPanel.qml	ColorHistory\.copy\(	Colour history: a click copies the hex
 quickshell/ColorHistory.qml	function withColor	Colour history keeps the last 20, newest first
-quickshell/popups/StartMenu.qml	text: "Colours"	Start menu: Colours opens the colour history
 quickshell/taskbar/Bar.qml	target: "mic_"	IPC handler mic_<monitor> (used by the mic key)
 hypr/binds.lua	\-\-\ help:\ Audio\ \|\ Mute\ /\ unmute\ the\ microphone	Key: Audio | Mute / unmute the microphone
 quickshell/popups/AppLauncher.qml	killBar\.accept\(\)	Launcher: Enter on a kill row confirms through the ConfirmBar (End task / End anyway)
@@ -253,7 +251,6 @@ quickshell/popups/FixPanel.qml	function run\(id\)	Troubleshoot: only ids of the 
 quickshell/popups/DefaultAppsPanel.qml	DefaultApps\.makeDefault	Default apps: Make default calls defaultapps.sh set
 quickshell/popups/LoginReportPanel.qml	No login timestamps yet	Login report: empty state when the timestamp file is missing
 quickshell/SecurityAudit.qml	function decide	Security audit: first run only records, later runs toast new pairs
-quickshell/popups/StartMenu.qml	text: "Troubleshoot"	Start menu: Troubleshoot opens the Fix my desktop panel
 hypr/autostart.lua	mark\("session-start"\)	Login timestamps for the login report
 quickshell/popups/AppLauncher.qml	q\.startsWith\("/"\)	A query starting with / searches file and folder names
 quickshell/popups/AppLauncher.qml	activateFolder	Shift+Enter on a file row opens its folder
@@ -267,7 +264,6 @@ quickshell/FileSearch.qml	debounceMs: 250	File search: 250 ms debounce, one sear
 quickshell/scripts/filesearch.sh	--max-results	fd search is capped at 50
 hypr/restore.lua	"silent"	Restore launches silently on the entry's workspace
 quickshell/LaptopControls.qml	onClicked: root\.openNetwork\(\)	The ETH button opens the Network page
-quickshell/popups/StartMenu.qml	text: "Network"	Start menu: Network opens the Network page
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Find\ files\ \(toggle\)	Key: Desktop | Find files (toggle)
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Restore\ workspaces	Key: Desktop | Restore workspaces
 quickshell/ScreensaverState.qml	wakeDecision	Screensaver: keys, clicks and the wheel wake at once, a mouse move only after 500 ms
@@ -295,3 +291,7 @@ quickshell/popups/StartMenu.qml	onClicked: root\.toggleCascade\(\)	Start menu: P
 quickshell/popups/PopupCascade.qml	onClicked: root\.launch\(appRow\.index\)	Programs cascade: a click on an app launches it and closes everything
 quickshell/popups/PopupCascade.qml	Qt\.Key_Left	Programs cascade: Left closes the apps list
 quickshell/popups/PopupCascade.qml	Qt\.Key_Escape	Programs cascade: Escape closes the cascade, not the Start menu
+quickshell/popups/SettingRow.qml	onClicked: root\.actionRequested\(root\.entry\.action\)	Settings > System tools: an Open button opens the tool (Default apps, Network, Services, Troubleshoot, Login report, Clean up, Colours, Updates)
+quickshell/popups/AppLauncher.qml	root\.runAction\(id\)	The Settings tab's Open closes the launcher and opens the tool through Bar.qml's toolActions
+quickshell/taskbar/Bar.qml	defaultApps: function\(\)	Bar toolActions: the System tools rows each have a handler
+quickshell/popups/StartMenu.qml	text: "Keys"	Start menu: Keys opens the cheat sheet

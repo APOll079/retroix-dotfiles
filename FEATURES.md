@@ -97,6 +97,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Solaar: `solaar show` on the real mouse parses and the bar button appears; Flatpak: Sober shows in Games and launches; MangoHud overlay for a Steam game (see the note in docs), a Flatpak game and an own entry; security audit: the first run is silent, a new CVE toasts
 
 ### Settings tab (never looked at)
+- [ ] Start is clearly shorter (Files, Terminal, Settings, Power / Keys, Trash, Updates (N)); Settings > System tools opens each of the eight tools (Default apps, Network, Services, Troubleshoot, Login report, Clean up, Colours, Updates) and searching "network" in the Settings tab finds the row
 - [ ] Super+D, Settings tab (or Start > Settings, Super+Shift+comma): change one setting of each type (On/Off, number, text, list, choice) and check the bar and other menus follow; the label column and hints fit at 760 px with the real Monaco font; the search box filters rows from all categories, Down moves into the first control, Escape in an empty field returns to the search box; tab order across rows; "Open settings.json" opens your editor; which settings really need a restart (none is flagged yet)
 
 ### Round 4, desktop / notifications / audio / phone (never looked at, fakes only)

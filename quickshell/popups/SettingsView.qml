@@ -31,6 +31,7 @@ Item {
     readonly property int categoryWidth: MenuStyle.settingsCategoryWidth
 
     signal focusSearch()
+    signal actionRequested(string id)   // an "Open" row of System tools was clicked (the launcher closes and opens the tool)
     signal opened()
 
     readonly property var categoryNames: Schema.categories(schema)
@@ -161,6 +162,7 @@ Item {
                         onWritten: (path, restart) => root.note(message, "message")
                         onRefused: text => root.note(text, "error")
                         onEscaped: root.focusSearch()
+                        onActionRequested: id => root.actionRequested(id)
                     }
                 }
                 EmptyState {

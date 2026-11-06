@@ -105,16 +105,9 @@ bar: taskbar
 menuWidth: startmenuButton.x
 closeCallback: taskbar.closeAllPopups
 openPowerMenuCallback: function() { taskbar.toggleMenu(sessionPanel, Config.SystemPopup.SessionPanel, startmenuButton, "left") }
-openServicesCallback: function() { taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep") }
 openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
 openSettingsCallback: function() { taskbar.openLauncherMode("settings") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
-openCleanupCallback: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") }
-openColorHistoryCallback: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep") }
-openNetworkCallback: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") }
-openDefaultAppsCallback: function() { taskbar.toggleMenu(defaultAppsMenu, Config.SystemPopup.DefaultApps, null, "keep") }
-openFixCallback: function() { taskbar.toggleMenu(fixMenu, Config.SystemPopup.Troubleshoot, null, "keep") }
-openLoginReportCallback: function() { taskbar.toggleMenu(loginReportMenu, Config.SystemPopup.LoginReport, null, "keep") }
 }
 Popups.ThemeMenu {
 id: themeMenu
@@ -138,6 +131,7 @@ bar: taskbar
 screen: root.modelData
 closeCallback: taskbar.closeAllPopups
 screenHeight: modelData.height
+runAction: function(id) { if (taskbar.toolActions[id]) taskbar.toolActions[id](); }
 }
 
 Popups.BluetoothMenu { bar: taskbar; id: bluetoothMenu; closeCallback: taskbar.closeAllPopups }
@@ -166,6 +160,18 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
+// The tools the launcher's Settings tab opens (System tools rows; the ids are in popups/SettingsSchema.js, a test checks each one is here)
+readonly property var toolActions: ({
+defaultApps: function() { taskbar.toggleMenu(defaultAppsMenu, Config.SystemPopup.DefaultApps, null, "keep") },
+network: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") },
+services: function() { taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep") },
+troubleshoot: function() { taskbar.toggleMenu(fixMenu, Config.SystemPopup.Troubleshoot, null, "keep") },
+loginReport: function() { taskbar.toggleMenu(loginReportMenu, Config.SystemPopup.LoginReport, null, "keep") },
+cleanUp: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") },
+colours: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.ColorHistory, null, "keep") },
+updates: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
+})
+
 readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, overviewPanel, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {

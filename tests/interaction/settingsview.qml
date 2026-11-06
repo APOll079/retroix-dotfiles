@@ -41,6 +41,12 @@ ShellRoot {
     }
 
     FileView {
+        id: barFile
+        path: Quickshell.shellPath("taskbar/Bar.qml")
+        blockLoading: true
+    }
+
+    FileView {
         id: realSettings
         path: Quickshell.shellPath("settings.json")
         blockLoading: true
@@ -87,6 +93,7 @@ ShellRoot {
     property int escapes: 0
     property int focusSearches: 0
     property int openedCount: 0
+    property string lastAction: ""
 
     FloatingWindow {
         implicitWidth: 900; implicitHeight: 700
@@ -156,13 +163,21 @@ ShellRoot {
         // ---- (b) coverage
         const real = JSON.parse(realSettings.text()).settings;
         const leafPaths = shell.leaves(real, "", []);
-        const schemaPaths = S.map(s => s.path);
+        const schemaPaths = S.filter(s => s.type !== "action").map(s => s.path);
         const notes = S.filter(s => s.type === "json-note").map(s => s.path);
         shell.check("json-note exceptions are exactly session.customActions", js(notes) === js(["session.customActions"]));
         const missing = leafPaths.filter(p => schemaPaths.indexOf(p) < 0);
         shell.check("every settings.json key is in the schema (missing: " + missing.join(" ") + ")", missing.length === 0);
         const extra = schemaPaths.filter(p => leafPaths.indexOf(p) < 0);
         shell.check("every schema path exists in settings.json (extra: " + extra.join(" ") + ")", extra.length === 0);
+        // System tools rows: every action id is unique and has a handler in Bar.qml's toolActions
+        const acts = S.filter(s => s.type === "action");
+        const barText = barFile.text();
+        shell.check("System tools: eight action rows with unique ids", acts.length === 8 && new Set(acts.map(a => a.action)).size === 8);
+        const noHandler = acts.filter(a => barText.indexOf("\n" + a.action + ": function()") < 0).map(a => a.action);
+        shell.check("every System tools action has a handler in Bar.qml toolActions (missing: " + noHandler.join(" ") + ")", noHandler.length === 0);
+        shell.check("action rows come last, in their own category", acts.every(a => a.category === "System tools") && Schema.categories(S).slice(-1)[0] === "System tools");
+        shell.check("search finds a tool by name", Schema.search(S, "network").some(s => s.action === "network") && Schema.search(S, "services").some(s => s.action === "services"));
         shell.check("schema paths are unique", new Set(schemaPaths).size === schemaPaths.length);
         shell.check("every entry has a category, label and hint", S.every(s => s.category && s.label && s.hint));
         shell.check("every int has a range", S.filter(s => s.type === "int").every(s => s.min !== undefined && s.max !== undefined && s.min <= s.max));
@@ -277,6 +292,15 @@ ShellRoot {
         shell.check("view: there is an Open settings.json button", open.length === 1);
         tc.mouseClick(open[0]); tc.wait(50);
         shell.check("view: the button asks to open the file", shell.openedCount === 1);
+
+        // System tools: an Open row emits its action id (the launcher then closes and Bar.qml opens the tool)
+        view.actionRequested.connect(id => { shell.lastAction = id; });
+        view.query = "network"; tc.wait(200);
+        const opens = shell.buttonsOf(view, "Open");
+        shell.check("view: searching 'network' shows the Network tool row with an Open button", opens.length >= 1);
+        tc.mouseClick(opens[0]); tc.wait(50);
+        shell.check("view: clicking Open emits the tool's action id", shell.lastAction === "network");
+        view.query = "";
 
         console.log("TEST done failures=" + shell.failures);
         Qt.quit();

@@ -8,7 +8,8 @@ import "SettingsSchema.js" as Schema
 //   entry     a SettingsSchema entry; settings  the object holding the values (Config.settings, or a fixture)
 //   themeNames the keys offered by a choice with choicesFrom: "themes"
 // bool = On / Off button; int = digits field, refuses out-of-range text (message, not written); string = field;
-// list = comma-separated field; choice = a button per value; json-note = "Edit in settings.json".
+// list = comma-separated field; choice = a button per value; json-note = "Edit in settings.json";
+// action = an Open button that emits actionRequested(entry.action) (a tool, not a setting).
 // Fields save on Enter and when they lose focus, only if the text changed; Escape reverts the text, and with
 // nothing to revert emits escaped(). `message` (+ messageIsError) is what the view shows in its StatusBar.
 Item {
@@ -23,6 +24,7 @@ Item {
     signal written(string path, bool restart)
     signal refused(string text)
     signal escaped()
+    signal actionRequested(string id)
 
     readonly property string type: entry.type || ""
     readonly property var current: settings ? Schema.valueOf(settings, entry.path) : undefined
@@ -80,7 +82,7 @@ Item {
             input.forceActiveFocus();
             return true;
         }
-        const target = root.type === "bool" ? toggle : (root.type === "choice" && repeater.count > 0 ? repeater.itemAt(0) : null);
+        const target = root.type === "bool" ? toggle : (root.type === "action" ? openButton : (root.type === "choice" && repeater.count > 0 ? repeater.itemAt(0) : null));
         if (!target)
             return false;
         target.forceActiveFocus();
@@ -125,6 +127,17 @@ Item {
         checked: root.current === true
         text: checked ? "On" : "Off"
         onClicked: root.write(!(root.current === true))
+    }
+
+    BevelButton {
+        id: openButton
+        visible: root.type === "action"
+        anchors.left: parent.left
+        anchors.leftMargin: root.labelWidth
+        anchors.verticalCenter: parent.verticalCenter
+        text: "Open"
+        glyph: "\ue89e"
+        onClicked: root.actionRequested(root.entry.action)
     }
 
     Flow {

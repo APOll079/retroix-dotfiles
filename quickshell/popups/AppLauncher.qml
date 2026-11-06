@@ -43,6 +43,8 @@ PanelWindow {
     property string mode: "apps"          // apps | windows | games | clipboard | settings
     // Super+V: the clipboard on its own, without the Apps / Games / Clipboard tabs (those belong to Super+D)
     property bool standalone: false
+    // Bar.qml: opens a tool by id (the Settings tab's System tools rows: defaultApps, network, services, ...)
+    property var runAction: function(id) {}
     property string category: "all"
     property var results: []
     property var optionsFor: null         // DesktopEntry whose options menu is open
@@ -222,6 +224,10 @@ PanelWindow {
                                 visible: root.mode === "settings"
                                 query: root.mode === "settings" ? searchInput.text.trim() : ""
                                 onFocusSearch: searchInput.focusInput()
+                                onActionRequested: id => {
+                                    root.closeCallback();
+                                    root.runAction(id);
+                                }
                             }
 
                             // Results; in clipboard mode a preview pane sits on the left of the list
