@@ -225,8 +225,7 @@ PanelWindow {
                                     }
 
                                     EmptyState {
-                                        anchors.centerIn: parent
-                                        width: parent.width
+                                        anchors.fill: parent
                                         visible: root.previewImage === "" && root.previewText === ""
                                         glyph: "\ue8f4"
                                         text: "Nothing selected"
@@ -240,8 +239,7 @@ PanelWindow {
                                     clip: true
 
                                     EmptyState {
-                                        anchors.centerIn: parent
-                                        width: parent.width - 2 * MenuStyle.pad
+                                        anchors.fill: parent
                                         visible: root.results.length === 0
                                         glyph: root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
                                         text: root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"

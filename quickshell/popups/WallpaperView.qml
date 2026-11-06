@@ -116,8 +116,7 @@ Item {
             clip: true
 
             EmptyState {
-                anchors.centerIn: parent
-                width: parent.width - 4 * MenuStyle.pad
+                anchors.fill: parent
                 visible: root.results.length === 0
                 glyph: !WallpaperState.loaded ? "\ue88b" : (WallpaperState.folderSlow || WallpaperState.folderMissing) ? "\ue000" : root.query !== "" ? "\ue8b6" : "\ue1bc"
                 text: !WallpaperState.loaded ? "Looking for wallpapers..."

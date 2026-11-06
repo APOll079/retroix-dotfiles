@@ -316,8 +316,7 @@ PopupWindow {
 
                 EmptyState {
                     id: noPaired
-                    anchors.centerIn: parent
-                    width: parent.width - 2 * MenuStyle.pad
+                    anchors.fill: parent
                     visible: root.paired.length === 0
                     glyph: "\ue1a7"
                     text: "No paired devices"

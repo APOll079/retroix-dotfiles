@@ -113,8 +113,7 @@ FloatingWindow {
                             padding: 2
                             clip: true
                             EmptyState {
-                                anchors.centerIn: parent
-                                width: parent.width - 4 * MenuStyle.pad
+                                anchors.fill: parent
                                 visible: root.apps.length === 0
                                 glyph: "\ue8b0"
                                 text: "No open windows"
@@ -221,8 +220,7 @@ FloatingWindow {
                             padding: 2
                             clip: true
                             EmptyState {
-                                anchors.centerIn: parent
-                                width: parent.width - 4 * MenuStyle.pad
+                                anchors.fill: parent
                                 visible: root.groups.length === 0
                                 glyph: root.sample ? "\ue8b6" : "\ue88b"
                                 text: root.sample ? "No matches" : "Reading processes..."

@@ -158,8 +158,7 @@ PanelWindow {
                     clip: true
 
                     EmptyState {
-                        anchors.centerIn: parent
-                        width: parent.width - 4 * MenuStyle.pad
+                        anchors.fill: parent
                         visible: root.shown.length === 0
                         glyph: root.error !== "" ? "\ue000" : (root.services.length === 0 ? "\ue8b8" : "\ue8b6")
                         text: root.error !== "" ? root.error : (root.services.length === 0 ? "No services listed" : "No matches")

@@ -79,16 +79,12 @@ ColumnLayout {
         return e.appIcon ? Quickshell.iconPath(e.appIcon, true) : "";
     }
 
-    Item {
+    EmptyState {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: NotificationStore.items.length === 0
-        EmptyState {
-            anchors.centerIn: parent
-            width: parent.width - 2 * MenuStyle.pad
-            glyph: "\ue7f4"
-            text: "No notifications"
-        }
+        glyph: "\ue7f4"
+        text: "No notifications"
     }
 
     // The list sits in a deep well (darker field, 2 px sunken bevel). Each notification is a small

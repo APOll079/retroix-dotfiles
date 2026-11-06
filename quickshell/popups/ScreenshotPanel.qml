@@ -156,8 +156,7 @@ PanelWindow {
                         clip: true
 
                         EmptyState {
-                            anchors.centerIn: parent
-                            width: parent.width - 4 * MenuStyle.pad
+                            anchors.fill: parent
                             visible: folderModel.count === 0
                             glyph: "\ue3f4"
                             text: "No screenshots"

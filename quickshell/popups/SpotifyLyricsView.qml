@@ -15,8 +15,7 @@ Item {
     readonly property var view: lyricsView
     anchors.fill: parent
     Local.EmptyState {
-        anchors.centerIn: parent
-        width: parent.width - 2 * MenuStyle.pad
+        anchors.fill: parent
         visible: panel.lyricsMode && (Lyrics.lines.length === 0 || panel.remote)
         glyph: "\uec0b"
         text: panel.remote ? "Playing on " + panel.deviceName() + ". Lyrics show while this PC plays: press Play here below."

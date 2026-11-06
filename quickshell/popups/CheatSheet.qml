@@ -102,8 +102,7 @@ PanelWindow {
                     clip: true
 
                     EmptyState {
-                        anchors.centerIn: parent
-                        width: parent.width - 4 * MenuStyle.pad
+                        anchors.fill: parent
                         visible: root.shown.length === 0
                         glyph: root.binds.length === 0 ? "\ue312" : "\ue8b6"
                         text: root.binds.length === 0 ? "No keybinds found" : "No matches"

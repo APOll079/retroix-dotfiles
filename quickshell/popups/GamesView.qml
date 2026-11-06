@@ -91,8 +91,7 @@ Item {
             clip: true
 
             EmptyState {
-                anchors.centerIn: parent
-                width: parent.width - 4 * MenuStyle.pad
+                anchors.fill: parent
                 visible: root.results.length === 0
                 glyph: !GamesState.loaded ? "\ue88b" : (root.query !== "" ? "\ue8b6" : "\uea28")
                 text: !GamesState.loaded ? "Looking for games..." : (root.query !== "" ? "No matches" : (root.filter === "hidden" ? "Nothing hidden" : (root.filter === "all" ? "No games found\nUse Add game for anything that isn't in Steam" : "Nothing here")))

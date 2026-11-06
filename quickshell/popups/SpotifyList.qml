@@ -72,8 +72,7 @@ SunkenField {
     }
 
     Local.EmptyState {
-        anchors.centerIn: parent
-        width: parent.width - 2 * MenuStyle.pad
+        anchors.fill: parent
         visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
         glyph: panel.searchMode ? panel.kindGlyph("searchrow")
             : (panel.tab === "liked" || (panel.view !== null && panel.view.kind === "liked")) && !panel.addMode ? panel.kindGlyph("liked")

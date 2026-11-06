@@ -48,8 +48,7 @@ ColumnLayout {
 
         EmptyState {
             id: noPhone
-            anchors.centerIn: parent
-            width: parent.width - 2 * MenuStyle.pad
+            anchors.fill: parent
             visible: root.devices.length === 0
             glyph: "\ue324"
             text: root.status !== "" ? root.status : "No phone found. Install KDE Connect on it and pair from there."

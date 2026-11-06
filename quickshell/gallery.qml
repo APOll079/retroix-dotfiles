@@ -213,7 +213,7 @@ ShellRoot {
                 Popups.SunkenField {
                     Layout.fillWidth: true
                     implicitHeight: MenuStyle.rowHeight * 3
-                    Popups.EmptyState { anchors.centerIn: parent; width: parent.width; glyph: "\ue7f6"; text: "No notifications" }
+                    Popups.EmptyState { anchors.fill: parent; glyph: "\ue7f6"; text: "No notifications" }
                 }
                 Head { text: "PopupMenuBody" }
                 Popups.PopupMenuBody {
