@@ -113,14 +113,11 @@ FloatingWindow {
                     visible: root.tab === "apps"
                     padding: 2
                     clip: true
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.apps.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: "\ue8b0"
                         text: "No open windows"
                     }
                     ListView {
@@ -130,11 +127,14 @@ FloatingWindow {
                         currentIndex: root.appIndex
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: MenuRow {
                             required property int index
                             required property var modelData
-                            width: appList.width
+                            width: appList.width - appList.gutter
+                            reserveIcon: true
                             selected: index === root.appIndex
                             iconSource: Quickshell.iconPath(String(modelData.lastIpcObject.class || "").toLowerCase(), true)
                             glyph: "\ue8b0"
@@ -228,14 +228,11 @@ FloatingWindow {
                     visible: root.tab === "processes"
                     padding: 2
                     clip: true
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.groups.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: root.sample ? "\ue8b6" : "\ue88b"
                         text: root.sample ? "No matches" : "Reading processes..."
                     }
                     ListView {
@@ -244,12 +241,14 @@ FloatingWindow {
                         model: root.groups
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: Rectangle {
                             id: procRow
                             required property int index
                             required property var modelData
                             readonly property bool sel: modelData.name === root.selectedName
-                            width: procList.width
+                            width: procList.width - procList.gutter
                             height: MenuStyle.rowHeight
                             color: sel ? MenuStyle.selectBar : (rowMouse.containsMouse ? Config.colors.highlight : "transparent")
                             readonly property color ink: sel ? MenuStyle.selectText : (modelData.mine ? Config.colors.text : Config.colors.shadow)
@@ -289,9 +288,6 @@ FloatingWindow {
                                 hoverEnabled: true
                                 onClicked: root.selectedName = procRow.modelData.name
                             }
-                        }
-                        ScrollIndicator.vertical: ScrollIndicator {
-                            active: procList.moving
                         }
                     }
                 }

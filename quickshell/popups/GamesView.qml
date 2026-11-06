@@ -76,7 +76,7 @@ Item {
             Item { Layout.fillWidth: true }
             BevelButton {
                 text: "Add game"
-                glyph: ""
+                glyph: "\ue145"
                 focusPolicy: Qt.NoFocus
                 onClicked: root.openForm()
             }
@@ -90,22 +90,20 @@ Item {
             padding: 2
             clip: true
 
-            Text {
-                renderType: Text.NativeRendering
-                font.hintingPreference: Font.PreferFullHinting
+            EmptyState {
                 anchors.centerIn: parent
+                width: parent.width - 4 * MenuStyle.pad
                 visible: root.results.length === 0
-                horizontalAlignment: Text.AlignHCenter
-                font.family: MenuStyle.bodyFont
-                font.pixelSize: MenuStyle.fontSize
-                color: MenuStyle.bevelDark
-                text: !GamesState.loaded ? "Looking for games..." : (root.query !== "" ? "No match" : (root.filter === "hidden" ? "Nothing hidden" : (root.filter === "all" ? "No games found\nUse Add game for anything that isn't in Steam" : "Nothing here")))
+                glyph: !GamesState.loaded ? "\ue88b" : (root.query !== "" ? "\ue8b6" : "\uea28")
+                text: !GamesState.loaded ? "Looking for games..." : (root.query !== "" ? "No matches" : (root.filter === "hidden" ? "Nothing hidden" : (root.filter === "all" ? "No games found\nUse Add game for anything that isn't in Steam" : "Nothing here")))
             }
 
             GridView {
                 id: grid
                 anchors.fill: parent
-                cellWidth: width / MenuStyle.gamesGridColumns
+                readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                cellWidth: (width - gutter) / MenuStyle.gamesGridColumns
+                ScrollBar.vertical: RetroScrollBar {}
                 cellHeight: Math.round((cellWidth - 2 * MenuStyle.gap) * 3 / 2) + MenuStyle.gamesTitleHeight + 2 * MenuStyle.gap
                 clip: true
                 currentIndex: root.cursor
@@ -193,9 +191,6 @@ Item {
                         }
                         onDoubleClicked: root.launch(cell.modelData)
                     }
-                }
-                ScrollIndicator.vertical: ScrollIndicator {
-                    active: grid.moving
                 }
             }
         }
@@ -310,13 +305,13 @@ Item {
             }
             BevelButton {
                 text: "Launch"
-                glyph: ""
+                glyph: "\ue037"
                 focusPolicy: Qt.NoFocus
                 onClicked: root.launch(root.optionsFor)
             }
             BevelButton {
                 text: root.optionsFor && GamesState.isHidden(root.optionsFor.id) ? "Unhide" : "Hide"
-                glyph: root.optionsFor && GamesState.isHidden(root.optionsFor.id) ? "" : ""
+                glyph: root.optionsFor && GamesState.isHidden(root.optionsFor.id) ? "\ue8f4" : "\ue8f5"
                 focusPolicy: Qt.NoFocus
                 onClicked: {
                     GamesState.setHidden(root.optionsFor.id, !GamesState.isHidden(root.optionsFor.id));
@@ -327,7 +322,7 @@ Item {
             BevelButton {
                 visible: root.optionsFor !== null && root.optionsFor.dir !== ""
                 text: "Folder"
-                glyph: ""
+                glyph: "\ue2c8"
                 focusPolicy: Qt.NoFocus
                 onClicked: {
                     Quickshell.execDetached(["xdg-open", root.optionsFor.dir]);
@@ -338,7 +333,7 @@ Item {
             BevelButton {
                 visible: root.optionsFor !== null && root.optionsFor.source === "custom"
                 text: "Remove"
-                glyph: ""
+                glyph: "\ue872"
                 focusPolicy: Qt.NoFocus
                 onClicked: {
                     GamesState.removeCustom(root.optionsFor.title);
@@ -363,7 +358,7 @@ Item {
             Item { Layout.fillWidth: true }
             BevelButton {
                 text: "Add"
-                glyph: ""
+                glyph: "\ue145"
                 enabled: root.form.name.trim() !== "" && root.form.command.trim() !== ""
                 focusPolicy: Qt.NoFocus
                 onClicked: root.submitForm()

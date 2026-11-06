@@ -26,7 +26,7 @@ PopupWindow {
 
     PopupWindowFrame {
         windowTitle: "Session"
-        windowTitleIcon: ""
+        windowTitleIcon: "\ue8ac"
 
         ColumnLayout {
             id: column

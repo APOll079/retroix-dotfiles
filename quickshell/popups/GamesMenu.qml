@@ -56,7 +56,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: view.filter === "hidden" ? "Games - hidden" : "Games"
-            windowTitleIcon: ""
+            windowTitleIcon: "\ue338"
 
             ColumnLayout {
                 anchors.fill: parent

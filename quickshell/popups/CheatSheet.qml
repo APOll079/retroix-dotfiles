@@ -75,7 +75,7 @@ PanelWindow {
 
         PopupWindowFrame {
             windowTitle: "Keybinds"
-            windowTitleIcon: ""
+            windowTitleIcon: "\ue312"
 
             ColumnLayout {
                 anchors.fill: parent
@@ -101,14 +101,11 @@ PanelWindow {
                     padding: 2
                     clip: true
 
-                    Text {
-                        renderType: Text.NativeRendering
-                        font.hintingPreference: Font.PreferFullHinting
+                    EmptyState {
                         anchors.centerIn: parent
+                        width: parent.width - 4 * MenuStyle.pad
                         visible: root.shown.length === 0
-                        font.family: MenuStyle.bodyFont
-                        font.pixelSize: MenuStyle.fontSize
-                        color: MenuStyle.bevelDark
+                        glyph: root.binds.length === 0 ? "\ue312" : "\ue8b6"
                         text: root.binds.length === 0 ? "No keybinds found" : "No matches"
                     }
 
@@ -118,11 +115,13 @@ PanelWindow {
                         boundsBehavior: Flickable.StopAtBounds
                         clip: true
                         model: root.rows
+                        readonly property int gutter: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
+                        ScrollBar.vertical: RetroScrollBar {}
                         delegate: Item {
                             id: row
                             required property var modelData
                             readonly property bool isHeading: modelData.heading !== undefined
-                            width: list.width
+                            width: list.width - list.gutter
                             height: MenuStyle.rowHeight
 
                             Text {
@@ -186,9 +185,6 @@ PanelWindow {
                                 color: Config.colors.text
                                 text: row.isHeading ? "" : row.modelData.label
                             }
-                        }
-                        ScrollIndicator.vertical: ScrollIndicator {
-                            active: list.moving
                         }
                     }
                 }
