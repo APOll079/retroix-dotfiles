@@ -62,9 +62,10 @@ Singleton {
                 cw = Math.min(cw, maxW);
             cw = Math.max(0, Math.floor(cw));
             const ch = Math.floor(cw / aspect);
-            // the biggest cell wins; on a tie the squarer grid (fewer empty slots)
+            // the biggest cell wins; on a tie the grid with fewer empty slots, and then the WIDER one (more columns, fewer
+            // rows: a screen is wider than tall, and a capped card size made every shape tie, which gave one tall column)
             const empty = cols * rows - n;
-            if (best === null || cw > best.cellW || (cw === best.cellW && empty < best.empty))
+            if (best === null || cw > best.cellW || (cw === best.cellW && (empty < best.empty || (empty === best.empty && rows < best.rows))))
                 best = { cols: cols, rows: rows, cellW: cw, cellH: ch, empty: empty };
         }
         const gw = best.cols * best.cellW + (best.cols - 1) * gap, gh = best.rows * best.cellH + (best.rows - 1) * gap;

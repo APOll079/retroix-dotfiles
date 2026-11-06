@@ -73,6 +73,10 @@ ShellRoot {
         }));
         check("grid: more cells never make the cells bigger", O.gridFit(9, 1800, 900, 12, 16 / 9, 0).cellW <= O.gridFit(4, 1800, 900, 12, 16 / 9, 0).cellW);
         check("grid: a narrow tall area stacks the cells in one column", O.gridFit(3, 300, 1500, 12, 16 / 9, 0).cols === 1);
+        // the owner's case: a capped card size (maxW) ties every shape; the wide grid must win, not one tall column
+        const fw = O.gridFit(3, 1856, 990, 24, 16 / 9, 560);
+        check("grid: with a capped card size 3 cards sit in a row, not a column", fw.cols === 3 && fw.rows === 1 && fw.cellW === 560);
+        check("grid: with a capped card size 2 cards sit side by side and 4 make a 2 by 2 grid (the biggest cards)", O.gridFit(2, 1856, 990, 24, 16 / 9, 560).cols === 2 && O.gridFit(4, 1856, 990, 24, 16 / 9, 560).cols === 2 && O.gridFit(4, 1856, 990, 24, 16 / 9, 560).rows === 2);
         check("grid: nothing to lay out is harmless", O.gridFit(0, 100, 100, 12, 1.6, 0).cellW === 0 && O.gridFit(3, 0, 100, 12, 1.6, 0).cellW === 0);
 
         // cell positions
