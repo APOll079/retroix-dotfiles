@@ -10,11 +10,14 @@ import ".."
 // history`), centred. Taking shots lives in ScreenshotOverlay.qml.
 // - Grid: ~/screenshots newest first. Click selects, Ctrl+click toggles, Shift+click selects a
 //   range, Ctrl+A all; arrows move the dotted cursor, Shift+arrows extend. Today / Week / All
-//   quick filters, or type a date (typing resets the quick filter to All).
+//   quick filters, or type to filter by name or date: any printable key (not Space, which opens the
+//   viewer) goes into the box and resets the quick filter to All. A typed 8-digit date finds both
+//   name styles (screenshot_yyyyMMdd_HHmmss and <class>_yyyy-MM-dd_HH-mm); the match ignores case.
 // - Viewer (double-click, Enter, Space): one shot fit to the panel (1:1 and crisp when it fits),
 //   Left/Right step through the filtered shots, Escape back to the grid.
 // - Actions work on the selection (or the shown shot): Copy (one = the image, several = files as
-//   text/uri-list), Open, Delete (to the trash, asks first), Folder.
+//   text/uri-list), Open, Delete (to the trash, asks first), Folder. Ctrl+C / Ctrl+O = Copy / Open in the
+//   grid, the viewer and the filter box (in the box Ctrl+C copies the typed text while some is selected).
 PanelWindow {
     id: root
     // The bar window this popup hangs off (set by Bar.qml)
@@ -56,6 +59,7 @@ PanelWindow {
         folder: "file://" + root.dir
         nameFilters: root.filters()
         showDirs: false
+        caseSensitive: false
         sortField: FolderListModel.Time
         onStatusChanged: {
             if (status === FolderListModel.Ready && root.wantNewest)
@@ -110,14 +114,22 @@ PanelWindow {
                     SearchBox {
                         id: filterInput
                         Layout.fillWidth: true
-                        placeholder: "Filter by date, e.g. 20261010"
+                        placeholder: "Filter by name or date"
                         onEdited: {
                             root.quick = "all";
                             root.resetSelection();
                         }
-                        // Escape, Down and Enter hand the keys back to the grid
+                        // Escape, Down and Enter hand the keys back to the grid; Ctrl+O / Ctrl+C act on the
+                        // shot (Ctrl+C copies the typed text instead while some of it is selected)
                         onKeyPressed: event => {
-                            if (event.key === Qt.Key_Escape || event.key === Qt.Key_Down || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            const ctrl = event.modifiers & Qt.ControlModifier;
+                            if (ctrl && event.key === Qt.Key_O && !root.confirmDelete && root.targets.length > 0) {
+                                root.openFiles(root.targets);
+                                event.accepted = true;
+                            } else if (ctrl && event.key === Qt.Key_C && !root.confirmDelete && root.targets.length > 0 && filterInput.input.selectedText === "") {
+                                root.copy(root.targets);
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Escape || event.key === Qt.Key_Down || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                 keys.forceActiveFocus();
                                 event.accepted = true;
                             }
@@ -492,7 +504,15 @@ PanelWindow {
                 confirmBar.cancel();
             return;
         }
-        if (k === Qt.Key_Delete) {
+        if (ctrl && (k === Qt.Key_C || k === Qt.Key_O)) {
+            // Copy / Open the selection (grid) or the shown shot (viewer)
+            if (root.targets.length > 0) {
+                if (k === Qt.Key_C)
+                    root.copy(root.targets);
+                else
+                    root.openFiles(root.targets);
+            }
+        } else if (k === Qt.Key_Delete) {
             if (root.targets.length > 0)
                 root.confirmDelete = true;
         } else if (root.page === 1) {
@@ -523,6 +543,14 @@ PanelWindow {
                     root.resetSelection();
                 else
                     root.closeCallback();
+            } else if (event.text !== "" && event.text.charCodeAt(0) >= 32 && event.text.charCodeAt(0) !== 127 && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier))) {
+                // Any printable key (digits too, not Space) starts a filter: it goes into the box,
+                // which takes over the keyboard
+                root.quick = "all";
+                filterInput.text += event.text;
+                filterInput.input.cursorPosition = filterInput.input.length;
+                root.resetSelection();
+                filterInput.focusInput();
             } else
                 event.accepted = false;
         }
