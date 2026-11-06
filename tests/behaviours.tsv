@@ -76,3 +76,25 @@ quickshell/popups/PopupMenu.qml	grabFocus: true	Context menus: a click outside c
 quickshell/popups/RetroScrollBar.qml	root\.decrease\(\)	Scrollbars: arrow buttons scroll
 quickshell/popups/ConfirmBar.qml	function accept\(	Confirms: one template, the verb accepts and Cancel cancels
 quickshell/popups/MenuStrip.qml	closedAt	Menu bars: a click right after a dropdown was dismissed does not reopen it
+quickshell/taskbar/SysTray.qml	onRightClicked: openMenu	Tray: right click opens the item's menu
+quickshell/taskbar/SysTray.qml	secondaryActivate	Tray: middle click is secondaryActivate
+quickshell/taskbar/SysTray.qml	item\.activate\(\)	Tray: left click activates
+quickshell/taskbar/SysTray.qml	QsMenuAnchor	Tray: native menu fallback for submenus
+quickshell/popups/SpotifyRowMenu.qml	PopupMenuBody	Spotify: the row menu uses the shared menu body (its keys come from it)
+quickshell/popups/SpotifyRowMenu.qml	body\.forceActiveFocus\(\)	Spotify: the row menu takes the keyboard when it opens
+quickshell/popups/SpotifyMoreMenu.qml	PopupMenuBody	Spotify: the more menu uses the shared menu body
+quickshell/popups/SpotifyList.qml	RetroScrollBar	Spotify: lists use the Win95 scroll bar
+quickshell/popups/SpotifyStatusBar.qml	isDefault: true	Spotify: the confirm verb is the default button
+quickshell/popups/SidePanel.qml	onTabClicked	Side panel: a tab click switches tab
+quickshell/popups/SidePanel.qml	onAccepted: root\.run\(root\.pending\)	Side panel: the power confirm runs the action
+quickshell/popups/PhoneTab.qml	--unpair	Phone: Unpair after the confirm
+quickshell/popups/BluetoothMenu.qml	forgetting\.forget\(\)	Bluetooth: Forget after the confirm
+quickshell/popups/NotificationList.qml	No older notifications	Notification history: the end line
+quickshell/popups/TaskManager.qml	confirmBar\.accept\(\)	Task Manager: Enter confirms through the ConfirmBar
+quickshell/popups/TaskManager.qml	ConfirmBar \{	Task Manager: confirms are a ConfirmBar
+quickshell/popups/TaskManager.qml	function sortBy\(	Task Manager: header click and View > Sort by share one sort path
+quickshell/popups/ScreenshotPanel.qml	confirmBar\.accept\(\)	History: Enter confirms Move to Trash
+quickshell/popups/SessionPanel.qml	ConfirmBar \{	Session panel: the confirm is a ConfirmBar
+quickshell/popups/AppLauncher.qml	Qt\.Key_Return.*ShiftModifier	Launcher: Shift+Enter opens the app's options menu
+quickshell/popups/AppLauncher.qml	TapHandler	Launcher: right-click on an app opens its options menu
+quickshell/popups/AppLauncher.qml	function movePinned	Launcher: Move up / down keeps the menu open on the moved app
