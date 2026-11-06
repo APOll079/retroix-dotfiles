@@ -106,7 +106,7 @@ Item {
                 id: grid
                 anchors.fill: parent
                 cellWidth: width / MenuStyle.gamesGridColumns
-                cellHeight: (cellWidth - 2 * MenuStyle.gap) * 3 / 2 + MenuStyle.gamesTitleHeight + 2 * MenuStyle.gap
+                cellHeight: Math.round((cellWidth - 2 * MenuStyle.gap) * 3 / 2) + MenuStyle.gamesTitleHeight + 2 * MenuStyle.gap
                 clip: true
                 currentIndex: root.cursor
                 highlightFollowsCurrentItem: false
@@ -130,7 +130,7 @@ Item {
                             x: MenuStyle.gap
                             y: MenuStyle.gap
                             width: parent.width - 2 * MenuStyle.gap
-                            height: width * 3 / 2
+                            height: Math.round(width * 3 / 2)
                             clip: true
                             Image {
                                 id: art
@@ -149,7 +149,7 @@ Item {
                                     font.hintingPreference: Font.PreferFullHinting
                                     anchors.centerIn: parent
                                     font.family: MenuStyle.titleFont
-                                    font.pixelSize: parent.width / 2
+                                    font.pixelSize: Math.round(parent.width / 2)
                                     color: cell.isCurrent ? Config.colors.text : MenuStyle.selectText
                                     textFormat: Text.PlainText
                                     text: cell.modelData.title.charAt(0).toUpperCase()

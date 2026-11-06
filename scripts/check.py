@@ -12,6 +12,7 @@ silently disappear. Removing or changing one on purpose = edit that file in the 
 and say so in the report.
 """
 import json, os, re, shutil, subprocess, sys
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,6 +21,8 @@ PUA = re.compile("[\ue000-\uf8ff\U000f0000-\U000ffffd]")
 ESC = re.compile(r"\\u\{?([0-9a-fA-F]{4,6})\}?")
 SIZE_PROP = re.compile(r"\b(pixelSize|width|height|implicitWidth|implicitHeight|spacing|(?:left|right|top|bottom)?[Mm]argins?|padding|radius)\s*:\s*(\d+)\b")
 BEHAVIOUR = re.compile(r"acceptedButtons|on\w*Clicked|onPressed|Keys\.on|Qt\.Key_|hl\.bind\(|IpcHandler|function \w+\(|-- help:")
+HALF_POS = re.compile(r"\b(?:x|y|width|height|pixelSize|implicitWidth|implicitHeight|\w*[Oo]ffset|\w*[Mm]argins?)\s*:[^/\n]*/\s*[23]\b")
+CONST_HALF = re.compile(r"(?:MenuStyle\.\w+|\b\d+)\s*(?:\*\s*\d+\s*)?/\s*[23]\b")  # constants divide to whole numbers
 SPACING_PROP = re.compile(r"readonly property int (\w*(?:[Pp]ad|[Gg]ap|[Ii]nset|[Ss]pacing)\w*)\s*:\s*(\d+)\b")
 SPACE_STEPS = (0, 2, 4, 6, 8, 12)   # MenuStyle.space*
 SECRET = re.compile(r"(access_token|refresh_token|client_secret)\s*[\"':=]+\s*[\"']?[A-Za-z0-9_\-]{16,}")
@@ -111,6 +114,22 @@ def check_qmldir():
                 fails.append(f"{q.relative_to(ROOT)} is not listed in {qmldir.relative_to(ROOT)} (gives 'X is not a type')")
 
 
+def lint_problems(path):
+    """The qmllint warnings / errors that matter for one file (header lines only, not code excerpts)."""
+    r = subprocess.run([QMLLINT, "-I", "/usr/lib/qt6/qml", str(path)], capture_output=True, text=True)
+    # qmllint can't see a singleton's members (no root qmldir), so "Member x not found on type
+    # Config" is noise for every `pragma Singleton` file; the offscreen renders cover those.
+    return [l for l in (r.stdout + r.stderr).splitlines()
+            if re.match(r"(Warning|Error)\b", l)
+            and re.search(r"error|is not a type|Expected token|Syntax|not found", l, re.I)
+            and not re.search(r'Member ".*" not found on type "(%s)"' % "|".join(singletons()), l)]
+
+
+def lint_key(line):
+    """A lint line without its file name and position, so the same message compares equal after edits."""
+    return re.sub(r"^\w+:\s*\S+\.qml:\d+:\d+:\s*", "", line)
+
+
 def check_syntax(files):
     for f in files:
         p = ROOT / f
@@ -134,12 +153,25 @@ def check_syntax(files):
             except Exception as e:
                 fails.append(f"{f}: invalid JSON: {e}")
         elif p.suffix == ".qml" and os.path.exists(QMLLINT):
-            r = subprocess.run([QMLLINT, "-I", "/usr/lib/qt6/qml", str(p)], capture_output=True, text=True)
-            # qmllint can't see a singleton's members (no root qmldir), so "Member x not found on type
-            # Config" is noise for every `pragma Singleton` file; the offscreen renders cover those.
-            bad = [l for l in (r.stdout + r.stderr).splitlines()
-                   if re.search(r"error|is not a type|Expected token|Syntax|not found", l, re.I)
-                   and not re.search(r'Member ".*" not found on type "(%s)"' % "|".join(singletons()), l)]
+            bad = lint_problems(p)
+            if bad:
+                # Lint noise that was already in the committed file doesn't count: only what this change adds
+                old = git("show", f"HEAD:{f}")
+                if old:
+                    tmp = p.with_name("_headlint_" + p.name)   # same folder, so its imports resolve
+                    try:
+                        tmp.write_text(old, encoding="utf-8")
+                        before = Counter(lint_key(l) for l in lint_problems(tmp))
+                    finally:
+                        tmp.unlink(missing_ok=True)
+                    fresh = []
+                    for l in bad:
+                        k = lint_key(l)
+                        if before[k] > 0:
+                            before[k] -= 1
+                        else:
+                            fresh.append(l)
+                    bad = fresh
             if bad:
                 fails.append(f"{f}: qmllint:\n      " + "\n      ".join(bad[:5]))
 
@@ -161,6 +193,9 @@ def check_diff(files):
             for l in added:
                 if PUA.search(l):
                     warns.append(f"{f}: raw icon glyph added, write it as a \\uXXXX escape: {l.strip()[:80]}")
+                if not l.lstrip().startswith("//") and not re.search(r"Math\.(round|floor|ceil)\(", l) \
+                        and HALF_POS.search(CONST_HALF.sub("0", l)):
+                    warns.append(f"{f}: position or size divided without rounding (blurs 1px bevels), wrap it in Math.round: {l.strip()[:80]}")
                 if "MenuStyle.qml" in f:
                     for name, val in SPACING_PROP.findall(l):
                         if int(val) not in SPACE_STEPS:

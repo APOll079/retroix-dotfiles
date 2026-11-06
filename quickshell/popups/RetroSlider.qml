@@ -20,7 +20,7 @@ Slider {
 
     handle: Rectangle {
         x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
-        y: root.topPadding + root.availableHeight / 2 - height / 2
+        y: Math.round(root.topPadding + root.availableHeight / 2 - height / 2)
         implicitWidth: MenuStyle.sliderKnobWidth
         implicitHeight: root.implicitHeight
         color: Config.colors.base

@@ -53,16 +53,16 @@ SunkenField {
                 }
                 Rectangle {
                     x: MenuStyle.pad + MenuStyle.spotifyThumb + MenuStyle.pad
-                    y: parent.height / 2 - MenuStyle.rowHeight / 2 + 2
-                    width: (parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.5 + 0.12 * ((index * 5) % 4))
+                    y: Math.round(parent.height / 2 - MenuStyle.rowHeight / 2) + 2
+                    width: Math.round((parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.5 + 0.12 * ((index * 5) % 4)))
                     height: MenuStyle.gap + 2
                     color: Config.colors.shadow
                     opacity: 0.35
                 }
                 Rectangle {
                     x: MenuStyle.pad + MenuStyle.spotifyThumb + MenuStyle.pad
-                    y: parent.height / 2 + MenuStyle.gap
-                    width: (parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.3 + 0.1 * ((index * 3) % 3))
+                    y: Math.round(parent.height / 2) + MenuStyle.gap
+                    width: Math.round((parent.width - 3 * MenuStyle.pad - MenuStyle.spotifyThumb) * (0.3 + 0.1 * ((index * 3) % 3)))
                     height: MenuStyle.gap + 2
                     color: Config.colors.shadow
                     opacity: 0.2

@@ -79,8 +79,8 @@ PanelWindow {
         id: frame
         width: MenuStyle.launcherWidth
         height: MenuStyle.launcherHeight
-        x: (root.width - width) / 2
-        y: root.screenHeight / 2 - height / 2 - MenuStyle.barHeight
+        x: Math.round((root.width - width) / 2)
+        y: Math.round(root.screenHeight / 2 - height / 2) - MenuStyle.barHeight
 
         MouseArea {
             anchors.fill: parent

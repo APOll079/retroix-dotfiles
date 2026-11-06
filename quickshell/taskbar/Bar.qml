@@ -188,7 +188,7 @@ var pos = item.mapToItem(taskbar.contentItem, 0, 0);
 if (align === "left") {
 menu.anchor.rect.x = pos.x;
 } else {
-var x = pos.x + item.width / 2 - menu.implicitWidth / 2;
+var x = Math.round(pos.x + item.width / 2 - menu.implicitWidth / 2);
 menu.anchor.rect.x = Math.max(4, Math.min(x, taskbar.width - menu.implicitWidth - 4));
 }
 }

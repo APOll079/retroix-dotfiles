@@ -105,7 +105,7 @@ RowLayout {
                 visible: shown && mouse.hovered && !menu.visible && (title !== "" || description !== "")
                 onVisibleChanged: if (!visible) shown = false
                 anchor.window: taskbar
-                anchor.rect.x: Math.max(4, Math.min(sysTrayRow.mapToItem(null, trayItem.x, 0).x + trayItem.width / 2 - width / 2, taskbar.width - width - 4))
+                anchor.rect.x: Math.max(4, Math.min(Math.round(sysTrayRow.mapToItem(null, trayItem.x, 0).x + trayItem.width / 2 - width / 2), taskbar.width - width - 4))
                 anchor.rect.y: taskbar.height
                 implicitWidth: tipColumn.implicitWidth + 2 * MenuStyle.pad
                 implicitHeight: tipColumn.implicitHeight + 2 * MenuStyle.gap + 2

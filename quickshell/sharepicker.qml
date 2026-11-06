@@ -250,7 +250,7 @@ Scope {
                                                 anchors.centerIn: parent
                                                 visible: card.modelData.icon === ""
                                                 font.family: MenuStyle.titleFont
-                                                font.pixelSize: parent.height / 2
+                                                font.pixelSize: Math.round(parent.height / 2)
                                                 color: card.isCurrent ? Config.colors.text : MenuStyle.selectText
                                                 text: card.modelData.title.charAt(0).toUpperCase()
                                             }

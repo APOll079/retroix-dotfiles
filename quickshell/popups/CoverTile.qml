@@ -70,8 +70,8 @@ Item {
                 model: root.hasMosaic ? root.entry.mosaic.slice(0, 4) : []
                 Image {
                     required property string modelData
-                    width: parent.width / 2
-                    height: parent.height / 2
+                    width: Math.round(parent.width / 2)
+                    height: Math.round(parent.height / 2)
                     source: modelData
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
