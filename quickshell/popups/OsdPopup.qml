@@ -78,7 +78,7 @@ Scope {
         }
     }
 
-    // The microphone key (Super+Alt+M): the new state as text
+    // The microphone key (Super+Ctrl+M): the new state as text
     Connections {
         target: AudioState
         function onMicToggled(muted) {

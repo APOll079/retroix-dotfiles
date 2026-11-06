@@ -3,7 +3,7 @@
 #   mic.sh toggle   flips the mute of the default source, then prints the new state
 #   mic.sh status   prints {"muted":true|false}
 # Exit codes: 0 ok, 1 failed (no default source, wpctl error), 2 wpctl is not installed, 64 bad usage.
-# Used by AudioState.toggleMic() (the Super+Alt+M bind and the OSD). Arguments are never spliced into text.
+# Used by AudioState.toggleMic() (the Super+Ctrl+M bind and the OSD). Arguments are never spliced into text.
 
 export LC_ALL=C
 src=@DEFAULT_AUDIO_SOURCE@

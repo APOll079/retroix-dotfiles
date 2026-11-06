@@ -28,7 +28,7 @@ import Quickshell.Services.Pipewire
 //  - Presets         settings.json "audio.eqPresets": one button each; a click runs `easyeffects -l
 //                    <name>` (the same command as above). Loading a preset never touches the bypass.
 //                    The last one loaded is kept in eq-preset.json (state dir).
-//  - mic key         toggleMic() flips the default source's mute through scripts/mic.sh (the Super+Alt+M bind,
+//  - mic key         toggleMic() flips the default source's mute through scripts/mic.sh (the Super+Ctrl+M bind,
 //                    `qs ipc call mic_<monitor> toggle`) and emits micToggled(muted) for the OSD.
 //  - output toast    "Sound now plays on <sink>" once per change of the default output (debounced, never at start).
 //  - app volumes     the slider of an app in the Home tab is remembered by application name (app-volumes.json) and

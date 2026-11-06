@@ -87,7 +87,7 @@ hl.window_rule({
     center = true
 })
 
--- The drop-down terminal (SUPER + ALT + T in binds.lua): its own special workspace, floating along the top edge
+-- The drop-down terminal (SUPER + CTRL + T in binds.lua): its own special workspace, floating along the top edge
 hl.window_rule({
     name  = "dropdown-terminal",
     match = {

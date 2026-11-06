@@ -102,7 +102,7 @@ Row {
         tooltip: "Click to stop recording"
         onClicked: RecordState.stop()
     }
-    // Pause / resume the recording (Super+Alt+P)
+    // Pause / resume the recording (Super+Ctrl+P)
     BarButton {
         id: pauseBtn
         visible: RecordState.recording
@@ -112,7 +112,7 @@ Row {
         tooltip: RecordState.paused ? "Resume the recording" : "Pause the recording"
         onClicked: RecordState.togglePause()
     }
-    // Replay buffer armed (Super+Alt+R toggles, Super+Alt+S saves the last seconds)
+    // Replay buffer armed (Super+Ctrl+R toggles, Super+Ctrl+S saves the last seconds)
     BarButton {
         id: replayInd
         visible: RecordState.replaying

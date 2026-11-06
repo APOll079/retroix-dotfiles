@@ -78,12 +78,12 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+Tab | Window switcher |
 | Super+Shift+S, Print | Snipping tool (Shift+Print: instant full screenshot) |
 | Super+Shift+R | Record the screen (the snipping overlay with Record on); again stops |
-| Super+Alt+R, Super+Alt+S | Replay buffer on / off, save the last seconds as a clip |
-| Super+Alt+P | Pause / resume the recording |
-| Super+Alt+T | Drop-down terminal |
-| Super+Alt+Z | Zoom around the cursor (again to go back) |
+| Super+Ctrl+R, Super+Ctrl+S | Replay buffer on / off, save the last seconds as a clip |
+| Super+Ctrl+P | Pause / resume the recording |
+| Super+Ctrl+T | Drop-down terminal |
+| Super+Ctrl+Z | Zoom around the cursor (again to go back) |
 | (snipping overlay) R | Switch between Shot and Record |
-| Super+Alt+L | Lyrics window (small, pinned, follows the song) |
+| Super+Ctrl+L | Lyrics window (small, pinned, follows the song) |
 | (History panel) type, Ctrl+C, Ctrl+O | Filter shots, copy, open the selected shot |
 | Super+Shift+H | Screenshot history |
 | Ctrl+Shift+Esc | Task Manager |

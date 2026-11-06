@@ -4,6 +4,9 @@ Written by `python3 scripts/changelog.py` from the git history (one line per com
 
 ## 2026-11-06
 
+- Launcher, Task Manager, NAS and downloads: kill by name, history, emoji, ports, network speed, and the screenshot clean-up removed (`8a9a270`)
+- Audio, capture and Spotify items: mic key, output toast, app volumes, noise filter, DND while sharing, OCR, colour history, GIF, Spotify keys (`0f4ed4b`)
+- Round 3, my share: shared-component fixes and the Hyprland / repo batch (`4b1d58b`)
 - Bar, Start menu, updates, trash and the Clipboard tab (`6bbef0a`)
 - Network and VPN watch, notification search, hourly forecast, launcher answers (`b5ab90c`)
 - Recording: pause / resume, a preflight, and a clearer capture bar (`4cf79eb`)

@@ -24,13 +24,13 @@ hl.bind(mainMod .. " + SHIFT" .. " + " .. "H", hl.dsp.exec_cmd(screenshotHistory
 -- Games menu (quickshell GamesMenu.qml) on the focused monitor
 local function recordCmd(fn) return "bash -c 'qs ipc call record_$(hyprctl monitors -j | jq -r \".[] | select(.focused) | .name\") " .. fn .. "'" end
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("toggle")))  -- help: Screen | Record the screen (stops a running recording)
-hl.bind(mainMod .. " + ALT" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("replayToggle")))  -- help: Screen | Replay buffer on / off
-hl.bind(mainMod .. " + ALT" .. " + " .. "S", hl.dsp.exec_cmd(recordCmd("replaySave")))  -- help: Screen | Save the replay clip
-hl.bind(mainMod .. " + ALT" .. " + " .. "P", hl.dsp.exec_cmd(recordCmd("pauseToggle")))  -- help: Screen | Pause / resume the recording
+hl.bind(mainMod .. " + CTRL" .. " + " .. "R", hl.dsp.exec_cmd(recordCmd("replayToggle")))  -- help: Screen | Replay buffer on / off
+hl.bind(mainMod .. " + CTRL" .. " + " .. "S", hl.dsp.exec_cmd(recordCmd("replaySave")))  -- help: Screen | Save the replay clip
+hl.bind(mainMod .. " + CTRL" .. " + " .. "P", hl.dsp.exec_cmd(recordCmd("pauseToggle")))  -- help: Screen | Pause / resume the recording
 local gamesMenu = [[bash -c 'qs ipc call games_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "G", hl.dsp.exec_cmd(gamesMenu))  -- help: Apps | Games menu
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "c", hl.dsp.exec_cmd([[bash -c 'c=$(sh ~/.config/quickshell/scripts/colorpick.sh) && [ -n "$c" ] && qs ipc call colors add "$c"']]))  -- help: Screen | Pick a colour
-hl.bind(mainMod .. " + ALT" .. " + " .. "M", hl.dsp.exec_cmd([[bash -c 'qs ipc call mic_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Audio | Mute / unmute the microphone
+hl.bind(mainMod .. " + CTRL" .. " + " .. "M", hl.dsp.exec_cmd([[bash -c 'qs ipc call mic_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Audio | Mute / unmute the microphone
 -- Task Manager (quickshell TaskManager.qml): one real window; opens it, or focuses it when it is
 -- already open. Over a fullscreen game or video it leaves fullscreen first, so the window can't
 -- open hidden behind it (misc.on_focus_under_fullscreen only covers tiled windows).
@@ -53,7 +53,7 @@ hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(cheatSheet))  -- help: Desktop | Thi
 hl.bind(mainMod .. " + " .. "V", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") clipboard']]))  -- help: Apps | Clipboard history
 hl.bind(mainMod .. " + " .. "TAB", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") windows']]))  -- help: Windows | Window switcher
 hl.bind(mainMod .. " + " .. "L", hl.dsp.exec_cmd("hyprlock"))  -- help: Desktop | Lock screen
-hl.bind(mainMod .. " + ALT" .. " + " .. "L", hl.dsp.exec_cmd("qs ipc call lyrics toggle"))  -- help: Media | Lyrics window (toggle)
+hl.bind(mainMod .. " + CTRL" .. " + " .. "L", hl.dsp.exec_cmd("qs ipc call lyrics toggle"))  -- help: Media | Lyrics window (toggle)
 hl.bind(mainMod .. " + " .. "N", hl.dsp.exec_cmd([[bash -c 'qs ipc call notifications_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Desktop | Side panel (notifications)
 
 -- Move focus with mainMod + arrow keys
@@ -104,9 +104,9 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
--- SUPER + ALT + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
+-- SUPER + CTRL + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
 -- above; started the first time, then toggled. The "dropdown-terminal" rule in windowrules.lua floats and places it
-hl.bind(mainMod .. " + ALT" .. " + " .. "T", function()  -- help: Desktop | Drop-down terminal
+hl.bind(mainMod .. " + CTRL" .. " + " .. "T", function()  -- help: Desktop | Drop-down terminal
     local running = false
     for _, w in ipairs(hl.get_windows()) do
         if w.class == "dropterm" then running = true end
@@ -117,10 +117,10 @@ hl.bind(mainMod .. " + ALT" .. " + " .. "T", function()  -- help: Desktop | Drop
     hl.dispatch(hl.dsp.workspace.toggle_special("dropterm"))
 end)
 
--- SUPER + ALT + Z: magnify around the cursor (Hyprland's cursor zoom), again to go back. Option name from the
+-- SUPER + CTRL + Z: magnify around the cursor (Hyprland's cursor zoom), again to go back. Option name from the
 -- reference stubs (cursor.zoom_factor); the Lua call shape is a guess, not seen running here
 local zoomed = false
-hl.bind(mainMod .. " + ALT" .. " + " .. "Z", function()  -- help: Desktop | Zoom around the cursor (toggle)
+hl.bind(mainMod .. " + CTRL" .. " + " .. "Z", function()  -- help: Desktop | Zoom around the cursor (toggle)
     zoomed = not zoomed
     hl.config({ cursor = { zoom_factor = zoomed and 2.5 or 1.0 } })
 end)

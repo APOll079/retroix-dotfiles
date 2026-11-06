@@ -55,7 +55,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Capture bar, pause and preflight (branch record-controls, never looked at)
 - [ ] Overlay (Super+Shift+S, then Record): the new bar `[Shot][Record] | targets | [Mic] | [History][X]` and the hint row look right at real DPI (it was never rendered), R switches, Screen / All wait for "Start recording" (Enter too), a plain shot still fires at once, Mic is dim in Shot mode and nothing jumps
 - [ ] Preflight: Mic with no microphone shows the problem in red and blocks the start; a full disk or a read-only folder blocks; under 2 GB free only warns
-- [ ] Pause: the bar's Pause / Resume and Super+Alt+P: does `SIGUSR2` really pause gpu-screen-recorder, does the clip skip the paused time, does `PAUSED 0:42` freeze and resume. If SIGUSR2 does nothing, the fix is the signal or the option in `record.sh pause`
+- [ ] Pause: the bar's Pause / Resume and Super+Ctrl+P: does `SIGUSR2` really pause gpu-screen-recorder, does the clip skip the paused time, does `PAUSED 0:42` freeze and resume. If SIGUSR2 does nothing, the fix is the signal or the option in `record.sh pause`
 - [ ] A recorder that fails at once (wrong portal, no permission) toasts its own last line instead of nothing
 
 ### History search and hourly forecast (never looked at)
@@ -63,7 +63,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Hourly forecast in the Calendar tab: times match the place's local time (checked only against a fixture), four cells fit at 480 px (long values like "-12°C" may elide)
 
 ### Round 3, audio / capture / Spotify (never looked at, fakes only)
-- [ ] Super+Alt+M with `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` and the OSD; the mic icon only shows while an app records
+- [ ] Super+Ctrl+M with `wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle` and the OSD; the mic icon only shows while an app records
 - [ ] Noise filter: does `easyeffects -l <audio.noisePreset>` switch input noise reduction on, and `noiseOffPreset` / the last EQ preset off, without disturbing the output preset? (set both in settings.json first)
 - [ ] Output toast with a Bluetooth sink connecting / dropping; remembered volumes re-applied to a real stream (a browser with several streams); DND while sharing with a real portal stream
 - [ ] Overlay Text mode: OCR on screen text (Swedish + English; install tesseract + data); "Save as GIF" on the recording toast (does your notification daemon show both actions?); `hyprpicker -a` prints #rrggbb so Super+Shift+C fills Start > Colours
@@ -77,7 +77,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
 ### Round 3, my share (never looked at)
-- [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Alt+T drops the terminal down and hides it again; Super+Alt+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
+- [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Ctrl+T drops the terminal down and hides it again; Super+Ctrl+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
 - [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed
 - [ ] `bash scripts/install-hooks.sh` once, then a commit runs `check.py`; `bash uninstall.sh` (dry run) lists the newest backup
 
@@ -98,13 +98,13 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Work pass, wave 2 (branch work-pass-w2, offscreen only, never looked at)
 - [ ] Updates (install pacman-contrib): the counts match `checkupdates` / `yay -Qua` / flatpak, the Arch news lines load, the dot on Start and the "Updates (N)" row appear, Update opens kitty on `yay -Syu`; neither panel nor the Start rows were ever looked at (glyph codepoints unchecked)
 - [ ] Clean up: real sizes per row, Clean then the ConfirmBar then the doas terminal for pacman cache and orphans, Esc cancels a confirm first (the Trash is only a Start row that opens its folder)
-- [ ] Lyrics window (never looked at): Super+Alt+L during a synced song: floats pinned bottom-right (the rule's `pin` / `move` / `min_size` names are unverified, rule never reloaded), the line follows the music and wraps at 420 px, a second toggle closes it, Super+Q and Esc close it; the Spotify drawer's lyrics view still ticks fast after the window closes
+- [ ] Lyrics window (never looked at): Super+Ctrl+L during a synced song: floats pinned bottom-right (the rule's `pin` / `move` / `min_size` names are unverified, rule never reloaded), the line follows the music and wraps at 420 px, a second toggle closes it, Super+Q and Esc close it; the Spotify drawer's lyrics view still ticks fast after the window closes
 - [ ] USB drives (install udisks2): plug in a stick: toast with Open / Eject; Open mounts and opens the folder; the Start menu shows "Eject <name>" (never looked at); Eject with a file manager on it shows the busy error, then works after closing it; sticks plugged in before the shell starts don't toast; a stick with several partitions toasts once per partition
 - [ ] Calendar to-do list (never looked at): add with and without a date, click a day to set the due date, toggle, right click Delete, edit `todo.txt` in an editor and see it update, the due-day bars on today and a picked day, the checkbox glyphs show (codepoints unchecked), Escape in the add field, the tab keeps its height
 - [ ] Disk warnings: a mount above 90 % toasts once (fake one with a small tmpfs), the NAS mounts with the NAS off say "not responding" once and the bar never freezes; SMART on your disks: with and without the doas rule from `docs/desktop.md` (a failing disk toasts critical; one that passes stays silent)
 - [ ] Failed service toast: stop a user service from a terminal (`dinitctl --user stop spotifyd`): one toast with Restart and Details, Details opens Services on its log (does `catlog` print anything without `log-type = buffer`?); a stop through the panel doesn't toast; the panel's Log / Back buttons and Escape look right (the log view never ran in a window)
 - [ ] Screen recording: install `gpu-screen-recorder`; Super+Shift+R, Record (+ Mic) on region / window / screen on both monitors: the overlay isn't in the video, the bar shows REC m:ss and a click stops it, the "Recording saved" toast opens the file, the mic track is audible, a window clip has the right size (odd sizes may need even numbers), a Quickshell reload mid-recording keeps REC. Overlay and bar button have never been looked at
-- [ ] Replay buffer: Super+Alt+R arms it (REPLAY in the bar), wait past `replaySeconds`, Super+Alt+S: a clip appears within about 2 s, about that long, the toast opens it; save with nothing armed says so; toggle off ends the process. The `SIGUSR1` save signal is unverified. Binds are written, `luac -p` checked, never reloaded
+- [ ] Replay buffer: Super+Ctrl+R arms it (REPLAY in the bar), wait past `replaySeconds`, Super+Ctrl+S: a clip appears within about 2 s, about that long, the toast opens it; save with nothing armed says so; toggle off ends the process. The `SIGUSR1` save signal is unverified. Binds are written, `luac -p` checked, never reloaded
 ### Work pass, wave 1 (branch work-pass-w1, offscreen only)
 - [ ] History on the real panel and keyboard: type to filter, Space opens the viewer, Ctrl+C then paste elsewhere, Ctrl+O, the labelled buttons at real DPI (all tested on a scratch FloatingWindow copy only). Typing `[` goes into the glob and matches nothing (pre-existing)
 - [ ] Shot names: a window-mode shot is named after the picked window, region / screen after the focused one (assumes Hyprland still reports it while the overlay is up), All and no window give `screenshot_`; two in one minute get `-2`; History Today / Week still find old and new names
