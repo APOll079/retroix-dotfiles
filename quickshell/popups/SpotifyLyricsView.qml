@@ -14,18 +14,11 @@ Item {
     required property var panel
     readonly property var view: lyricsView
     anchors.fill: parent
-    Text {
-        renderType: Text.NativeRendering
-        font.hintingPreference: Font.PreferFullHinting
-        textFormat: Text.PlainText
+    Local.EmptyState {
         anchors.centerIn: parent
         width: parent.width - 2 * MenuStyle.pad
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.Wrap
         visible: panel.lyricsMode && (Lyrics.lines.length === 0 || panel.remote)
-        font.family: MenuStyle.bodyFont
-        font.pixelSize: MenuStyle.fontSize
-        color: MenuStyle.bevelDark
+        glyph: "\uec0b"
         text: panel.remote ? "Playing on " + panel.deviceName() + ". Lyrics show while this PC plays: press Play here below."
             : (Media.spotify === null ? "Lyrics follow this PC's player (the Spotify app or spotifyd); neither is running." : "No synced lyrics for this song")
     }

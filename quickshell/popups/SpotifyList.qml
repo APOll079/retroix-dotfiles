@@ -71,17 +71,14 @@ SunkenField {
         }
     }
 
-    Text {
-        renderType: Text.NativeRendering
-        font.hintingPreference: Font.PreferFullHinting
+    Local.EmptyState {
         anchors.centerIn: parent
         width: parent.width - 2 * MenuStyle.pad
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.Wrap
         visible: !panel.lyricsMode && panel.items.length === 0 && !panel.loadingList
-        font.family: MenuStyle.bodyFont
-        font.pixelSize: text.length <= MenuStyle.spotifyEmptyBigChars ? MenuStyle.spotifyTitleSize : MenuStyle.fontSize
-        color: MenuStyle.bevelDark
+        glyph: panel.searchMode ? panel.kindGlyph("searchrow")
+            : (panel.tab === "liked" || (panel.view !== null && panel.view.kind === "liked")) && !panel.addMode ? panel.kindGlyph("liked")
+            : panel.tab === "queue" && panel.view === null && !panel.addMode ? "\ue03c"
+            : panel.kindGlyph("")
         text: panel.emptyText()
     }
 
@@ -109,6 +106,7 @@ SunkenField {
     ListView {
         id: listView
         anchors.fill: parent
+        anchors.rightMargin: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0      // room for the scroll bar while it shows
         visible: !panel.lyricsMode && !panel.useGrid
         model: panel.items
         header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
@@ -200,6 +198,7 @@ SunkenField {
             MenuRow {
                 anchors.fill: parent
                 visible: !row.isHeading
+                reserveIcon: true
                 focusPolicy: Qt.NoFocus
                 rightPadding: row.showPlay ? MenuStyle.pad + playButton.width + MenuStyle.gap : MenuStyle.pad
                 selected: row.sel
@@ -243,8 +242,12 @@ SunkenField {
                 onClicked: panel.playItem(row.modelData)
             }
         }
-        ScrollIndicator.vertical: ScrollIndicator {
-            active: listView.moving
+        ScrollBar.vertical: RetroScrollBar {
+            parent: listView.parent
+            visible: listView.visible && size < 1.0      // the bar outlives its list when the lyrics take over
+            anchors.top: listView.top
+            anchors.bottom: listView.bottom
+            anchors.left: listView.right
         }
     }
 
@@ -252,6 +255,7 @@ SunkenField {
     ListView {
         id: grid
         anchors.fill: parent
+        anchors.rightMargin: ScrollBar.vertical.visible ? MenuStyle.scrollBarWidth : 0
         visible: !panel.lyricsMode && panel.useGrid
         model: panel.gridRows
         header: panel.listHead !== null ? headComp : (panel.showRecent ? recentComp : null)
@@ -313,8 +317,12 @@ SunkenField {
                 }
             }
         }
-        ScrollIndicator.vertical: ScrollIndicator {
-            active: grid.moving
+        ScrollBar.vertical: RetroScrollBar {
+            parent: grid.parent
+            visible: grid.visible && size < 1.0
+            anchors.top: grid.top
+            anchors.bottom: grid.bottom
+            anchors.left: grid.right
         }
     }
 }

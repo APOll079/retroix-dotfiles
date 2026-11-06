@@ -1,16 +1,14 @@
 import QtQuick
-import QtQuick.Layouts
 import ".."
 
-// The song's options (right-click, or Menu / Shift+F10): a small frame over the drawer, right under the
-// row (above it when there is no room). Up / Down move, Enter runs, Escape or a click outside closes.
+// The song's options (right-click, or Menu / Shift+F10): the shared ContextMenuBody over the drawer, right under the
+// row (above it when there is no room). The body takes the keyboard when the menu opens (Up / Down move, Enter runs, Escape closes); a click outside closes too.
 // Like shows the real state (asked when it opens).
 Item {
     id: menu
     required property var panel
     readonly property var request: panel.rowMenu
     readonly property var song: request ? request.song : null
-    property int cur: 0
     property var liked: null
     anchors.fill: parent
     visible: song !== null
@@ -33,7 +31,7 @@ Item {
     }
 
     onSongChanged: {
-        menu.cur = 0;
+        body.currentIndex = 0;
         menu.liked = null;
         if (menu.song === null)
             return;
@@ -42,7 +40,7 @@ Item {
             if (menu.song !== null && menu.song.uri === uri)
                 menu.liked = v;
         });
-        menu.forceActiveFocus();
+        body.forceActiveFocus();
     }
 
     function close() {
@@ -75,21 +73,6 @@ Item {
         menu.panel.focusKeys();
     }
 
-    Keys.onPressed: event => {
-        if (event.key === Qt.Key_Escape) {
-            menu.close();
-        } else if (event.key === Qt.Key_Down) {
-            menu.cur = (menu.cur + 1) % menu.entries.length;
-        } else if (event.key === Qt.Key_Up) {
-            menu.cur = (menu.cur + menu.entries.length - 1) % menu.entries.length;
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            menu.run(menu.entries[menu.cur].key);
-        } else {
-            return;
-        }
-        event.accepted = true;
-    }
-
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.AllButtons
@@ -100,31 +83,17 @@ Item {
         readonly property real below: menu.request ? menu.request.bottom : 0
         readonly property real above: menu.request ? menu.request.top - height : 0
         width: parent.width - 4 * MenuStyle.pad
-        height: MenuStyle.chromeTop + rows.implicitHeight + MenuStyle.chromeBottom
+        height: body.implicitHeight
         x: 2 * MenuStyle.pad
         y: below + height <= parent.height - MenuStyle.spotifyStatusHeight - MenuStyle.pad ? below : Math.max(MenuStyle.pad, above)
         MouseArea { anchors.fill: parent }
-        PopupWindowFrame {
-            windowTitle: menu.song ? menu.song.name : ""
-            ColumnLayout {
-                id: rows
-                anchors.left: parent.left
-                anchors.right: parent.right
-                spacing: 0
-                Repeater {
-                    model: menu.entries
-                    MenuRow {
-                        required property int index
-                        required property var modelData
-                        Layout.fillWidth: true
-                        focusPolicy: Qt.NoFocus
-                        selected: index === menu.cur
-                        text: modelData.text
-                        glyph: modelData.glyph
-                        onClicked: menu.run(modelData.key)
-                    }
-                }
-            }
+        ContextMenuBody {
+            id: body
+            width: parent.width
+            model: menu.entries
+            currentIndex: 0
+            onPicked: (index, entry) => menu.run(entry.key)
+            onEscaped: menu.close()
         }
     }
 }
