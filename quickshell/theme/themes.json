@@ -2,7 +2,7 @@
     "default": {
         "base": "#d8d8d8",
         "shadow": "#9b9b9b",
-        "highlight": "#efefef",
+        "highlight": "#fdfdfd",
         "urgent": "#ff723e",
         "accent": "#207874",
         "text": "#000000",
@@ -13,7 +13,7 @@
     "yorha": {
         "base": "#d9caba",
         "shadow": "#baafa1",
-        "highlight": "#f0e2d3",
+        "highlight": "#f4efea",
         "urgent": "#ff854c",
         "accent": "#626335",
         "text": "#3e3d38",
@@ -24,7 +24,7 @@
     "cherry": {
         "base": "#f4c9ef",
         "shadow": "#c7a4cc",
-        "highlight": "#f9d0f7",
+        "highlight": "#fefafd",
         "urgent": "#ff936c",
         "accent": "#c950bb",
         "text": "#321d32",
@@ -46,7 +46,7 @@
     "indigo": {
         "base": "#bac4e6",
         "shadow": "#7e8bad",
-        "highlight": "#d0def9",
+        "highlight": "#e3e7f5",
         "urgent": "#e83939",
         "accent": "#3e7c99",
         "text": "#0d0d19",
@@ -57,7 +57,7 @@
     "gleep": {
         "base": "#bae6c5",
         "shadow": "#93c48c",
-        "highlight": "#ccf9e7",
+        "highlight": "#ffffff",
         "urgent": "#ff7559",
         "accent": "#3e9949",
         "text": "#0d1913",

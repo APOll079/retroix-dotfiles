@@ -210,9 +210,9 @@ Singleton {
     readonly property int unreadDotX: 4
     readonly property int unreadDotY: 3
 
-    // Stronger bevel tones, derived from the active theme so every theme keeps working.
-    // Cherry's own highlight/shadow are too close to its base (1.07:1 / 1.5:1) to read as an edge.
-    readonly property color bevelLight: Qt.tint(Config.colors.base, "#b3ffffff")
+    // Bevel tones. The light edge IS the theme's highlight: theme/apply.py refuses a palette whose
+    // highlight is less than 1.35:1 lighter than base, so it always reads as an edge.
+    readonly property color bevelLight: Config.colors.highlight
     // Glyph of a bar button that is switched on (caffeine): the accent darkened, so it reads on the base face (accent itself is 2-4:1 there)
     readonly property color barOnGlyph: Qt.darker(selectBar, 1.8)
     readonly property color bevelDark: Qt.darker(Config.colors.shadow, 1.7)

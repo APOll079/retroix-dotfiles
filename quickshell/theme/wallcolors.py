@@ -18,6 +18,9 @@ import tempfile
 
 from PIL import Image
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # -I leaves the script's folder off sys.path
+from apply import lift_highlight  # the palette rule lives in apply.py: a palette made here must pass it
+
 Image.MAX_IMAGE_PIXELS = 200_000_000
 USAGE = "usage: wallcolors.py IMAGE [--out FILE]"
 FALLBACK_HUE = 307      # cherry's hue, used when the picture has no colour at all
@@ -80,9 +83,15 @@ def palette(hue, colour):
     if hue is None:
         hue, colour = 220.0, 0.0
     c = max(0.0, min(1.0, colour))
-    base = hsl_rgb(hue, 0.20 + 0.45 * c, 0.85)
+    # Bright hues (green, cyan, yellow) are so luminous at lightness 0.85 that even white is no step
+    # lighter (apply.py's MIN_EDGE): the base goes darker until the bevel's light edge can exist
+    light = 0.85
+    base = hsl_rgb(hue, 0.20 + 0.45 * c, light)
+    while contrast(base, (1, 1, 1)) < 1.5 and light > 0.6:
+        light -= 0.01
+        base = hsl_rgb(hue, 0.20 + 0.45 * c, light)
     highlight = hsl_rgb(hue, 0.30 + 0.45 * c, 0.92)
-    shadow = hsl_rgb(hue, 0.10 + 0.20 * c, 0.68)
+    shadow = hsl_rgb(hue, 0.10 + 0.20 * c, min(0.68, light - 0.17))  # keeps its step below base when base was darkened
     text = hsl_rgb(hue, 0.10 + 0.20 * c, 0.13)
     outline = hsl_rgb(hue, 0.15 + 0.40 * c, 0.08)
     fade = hsl_rgb(hue, 0.10 + 0.20 * c, 0.19)
@@ -107,7 +116,7 @@ def palette(hue, colour):
     return {
         "base": hexs(base),
         "shadow": hexs(shadow),
-        "highlight": hexs(highlight),
+        "highlight": lift_highlight(hexs(base), hexs(highlight)),
         "urgent": urgent,
         "accent": hexs(accent),
         "text": hexs(text),

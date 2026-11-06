@@ -29,6 +29,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # -I leaves the 
 # gtkgen / icongen need Pillow: imported in their own steps, so a missing Pillow only skips those
 
 REQUIRED = ("base", "shadow", "highlight", "accent", "text", "outline")
+# Palette rules (check_palette): highlight is the bevel's light edge and must stand out from the face;
+# text must be readable on every surface it sits on. fall25 is about 1.4:1 here, Win95 1.8:1.
+MIN_EDGE = 1.35
+MIN_TEXT = 4.5
 RELOAD_TIMEOUT = 10  # seconds per reload command
 USAGE = "usage: apply.py <theme> [--no-reload] [--palette FILE]"
 
@@ -89,13 +93,41 @@ def darker(h, f):
     return hexs(c * 255 for c in colorsys.hsv_to_rgb(hh, s, v / f))
 
 
+def lift_highlight(base, highlight, target=1.40):
+    """highlight if its step from base is already enough, else base mixed towards white until the
+    step reaches target (plain white if that is as far as this base goes)."""
+    if contrast(base, highlight) >= MIN_EDGE:
+        return highlight
+    for i in range(101):
+        c = hexs(v + (255 - v) * i / 100 for v in rgb(base))
+        if contrast(base, c) >= target:
+            return c
+    return "#ffffff"
+
+
+def check_palette(roles, name):
+    """Refuse a palette whose bevel or text can't be read, before any file is written."""
+    problems = []
+    edge = contrast(roles["base"], roles["highlight"])
+    if edge < MIN_EDGE:
+        problems.append(f"highlight is only {edge:.2f}:1 lighter than base; the bevel's light edge needs {MIN_EDGE}:1 "
+                        f"(try {lift_highlight(roles['base'], roles['highlight'])})")
+    for surface in ("base", "highlight", "shadow"):
+        c = contrast(roles["text"], roles[surface])
+        if c < MIN_TEXT:
+            problems.append(f"text on {surface} is {c:.2f}:1, it needs {MIN_TEXT}:1")
+    if problems:
+        sys.exit(f"theme {name!r} refused, nothing written:\n  " + "\n  ".join(problems))
+
+
 def derive(p, name):
     missing = [k for k in REQUIRED if not (isinstance(p.get(k), str) and re.fullmatch(r"#[0-9a-fA-F]{6}", p[k]))]
     if missing:
         sys.exit(f"theme {name!r} is missing colour(s): {', '.join(missing)} (each needs #rrggbb in themes.json)")
     roles = {k: v.lower() for k, v in p.items() if isinstance(v, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", v)}
-    # MenuStyle.bevelLight = Qt.tint(base, 70% white), bevelDark = Qt.darker(shadow, 1.7)
-    roles["light"] = hexs(c * 0.3 + 255 * 0.7 for c in rgb(roles["base"]))
+    check_palette(roles, name)
+    # MenuStyle.bevelLight = highlight (checked above to stand out from base), bevelDark = Qt.darker(shadow, 1.7)
+    roles["light"] = roles["highlight"]
     roles["dark"] = darker(roles["shadow"], 1.7)
     # MenuStyle.selectPair: the accent with the best of base/text/outline, else darken the accent
     acc = roles["accent"]
