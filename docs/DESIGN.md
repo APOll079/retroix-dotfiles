@@ -28,6 +28,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `space12` | int | `12` |  |
 | `pad` | int | `space6` |  |
 | `gap` | int | `space4` |  |
+| `tabPagePad` | int | `space4` |  |
 | `spotifyInset` | int | `space2` | padding inside the drawer's sunken fields and tiles |
 | `spotifyColumnGap` | int | `space4` | between the drawer's rows (the rest of the menus use pad) |
 | `spotifyPagePad` | int | `space4` | inside the tab page's bevel |
@@ -91,6 +92,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `scrollRepeatDelay` | int | `300` |  |
 | `scrollRepeatRate` | int | `50` |  |
 | `contextMenuMinWidth` | int | `140` |  |
+| `tabHeight` | int | `28` |  |
 | `launcherWidth` | int | `760` |  |
 | `launcherHeight` | int | `560` |  |
 | `clipPreviewFraction` | real | `0.45` |  |
@@ -121,7 +123,7 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `spotifyTileIcon` | int | `32` | placeholder icon on a cover without art |
 | `spotifyClickGuard` | int | `350` | ms after opening something during which clicks are ignored |
 | `spotifyCompactRow` | int | `24` | the drawer's seek / transport / volume / search rows and its icon buttons |
-| `spotifyTabHeight` | int | `28` | the Win95 tab strip (the selected tab is 1px taller and joins the page) |
+| `spotifyTabHeight` | int | `tabHeight` |  |
 | `spotifyChipHeight` | int | `20` | chips: smaller than tabs and buttons |
 | `spotifyStatusHeight` | int | `18` | the status bar at the bottom of the drawer |
 | `spotifyRecentCount` | int | `3` | the newest, one row, square tiles of about 120 px (collapsible) |

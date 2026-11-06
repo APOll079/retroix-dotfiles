@@ -263,6 +263,14 @@ ShellRoot {
                 Head { text: "ConfirmBar" }
                 Popups.ConfirmBar { Layout.fillWidth: true; message: "Reboot now?"; verb: "Reboot" }
                 Popups.ConfirmBar { Layout.fillWidth: true; message: "End pipewire? It is a core process."; verb: "End anyway"; glyph: "\ue002" }
+                Head { text: "TabPage" }
+                Popups.TabPage {
+                    Layout.fillWidth: true
+                    implicitHeight: MenuStyle.tabHeight + MenuStyle.rowHeight * 2
+                    tabs: [{ key: "home", text: "Home" }, { key: "cal", text: "Calendar" }, { key: "phone", text: "Phone" }]
+                    current: "cal"
+                    Popups.MenuRow { width: parent.width; text: "Page content"; glyph: "\ue935" }
+                }
                 Head { text: "MenuSeparator / Gripper / FocusRect" }
                 Popups.MenuSeparator { Layout.fillWidth: true }
                 Row {
