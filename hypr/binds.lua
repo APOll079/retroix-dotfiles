@@ -97,7 +97,9 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
-local screenshotCmd = "bash -c 'file=$HOME/screenshots/screenshot_$(date +%Y%m%d_%H%M%S).png && mkdir -p $HOME/screenshots && grim $file && wl-copy < $file'"
+-- Named <focused window class>_YYYY-MM-DD_HH-MM by quickshell/scripts/shot-name.sh (screenshot_... if
+-- that script is missing); a taken name gets -2, -3
+local screenshotCmd = [[bash -c 'dir=$HOME/screenshots; mkdir -p "$dir"; n=$(sh "$HOME/.config/quickshell/scripts/shot-name.sh" 2>/dev/null); [ -n "$n" ] || n=screenshot_$(date +%Y-%m-%d_%H-%M); b="$dir/$n"; f="$b.png"; i=2; while [ -e "$f" ]; do f="$b-$i.png"; i=$((i+1)); done; grim "$f" && wl-copy < "$f"']]
 -- Print (and SUPER + SHIFT + S, above) open the quickshell snipping overlay on the focused
 -- monitor: region drag, window, screen, all, history. Shift+Print stays instant
 hl.bind("Print", hl.dsp.exec_cmd(screenshotOverlay))  -- help: Screen | Screenshot overlay

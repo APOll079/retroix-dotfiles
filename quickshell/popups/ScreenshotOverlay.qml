@@ -252,7 +252,7 @@ PanelWindow {
                 continue;
             const score = (o.floating ? 0 : 1e9) + w * h;
             if (!best || score < best.score)
-                best = { x: x, y: y, w: w, h: h, score: score };
+                best = { x: x, y: y, w: w, h: h, score: score, cls: String(o.class || "") };
         }
         return best;
     }
@@ -274,22 +274,36 @@ PanelWindow {
     function runShot() {
         const r = root.focusRect;
         let args;
-        if (root.mode === "all")
+        // How scripts/shot-name.sh gets the class: "q" = it asks Hyprland for the focused window,
+        // "c" = use the class that follows (the picked window's, or "screenshot" for All)
+        let how = "q", cls = "";
+        if (root.mode === "all") {
             args = [];
-        else if (root.mode === "screen")
+            how = "c";
+            cls = "screenshot";
+        } else if (root.mode === "screen") {
             args = ["-o", root.screen.name];
-        else
+        } else {
             args = ["-g", Math.round(r.x + root.screen.x) + "," + Math.round(r.y + root.screen.y) + " " + Math.round(r.width) + "x" + Math.round(r.height)];
-        // $1 dir, then the grim arguments
+            if (root.mode === "window") {
+                how = "c";
+                cls = root.hoverWin ? root.hoverWin.cls : "";
+            }
+        }
+        // $1 dir, $2 shot-name.sh, $3 how, $4 class, then the grim arguments. The name is
+        // <class>_YYYY-MM-DD_HH-MM (no seconds), so the loop below adds -2, -3 when it is taken
         const script = [
-            'dir="$1"; shift; mkdir -p "$dir"; b="$dir/screenshot_$(date +%Y%m%d_%H%M%S)"; f="$b.png"; n=2',
+            'dir="$1"; namer="$2"; how="$3"; cls="$4"; shift 4; mkdir -p "$dir"',
+            'if [ "$how" = c ]; then name=$(sh "$namer" "$cls" 2>/dev/null); else name=$(sh "$namer" 2>/dev/null); fi',
+            '[ -n "$name" ] || name="screenshot_$(date +%Y-%m-%d_%H-%M)"',
+            'b="$dir/$name"; f="$b.png"; n=2',
             'while [ -e "$f" ]; do f="$b-$n.png"; n=$((n+1)); done',
             'err=$(grim "$@" "$f" 2>&1) || { notify-send -a Screenshot "Screenshot failed" "$(printf %s "$err" | head -n 1)"; exit 1; }',
             'wl-copy < "$f"',
             'a=$(notify-send -a Screenshot -h "string:image-path:$f" -A default=Open "Screenshot saved" "$(basename "$f")")',
             '[ "$a" = default ] && xdg-open "$f"'
         ].join("\n");
-        Quickshell.execDetached(["sh", "-c", script, "sh", Quickshell.env("HOME") + "/screenshots"].concat(args));
+        Quickshell.execDetached(["sh", "-c", script, "sh", Quickshell.env("HOME") + "/screenshots", Quickshell.shellDir + "/scripts/shot-name.sh", how, cls].concat(args));
         closeTimer.restart();
     }
 

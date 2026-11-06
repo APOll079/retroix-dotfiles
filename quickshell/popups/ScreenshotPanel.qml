@@ -327,21 +327,32 @@ PanelWindow {
         return p.split("/").pop();
     }
 
-    function dayStamp(daysAgo) {
-        return Qt.formatDate(new Date(Date.now() - daysAgo * 86400000), "yyyyMMdd");
+    // Shots are named screenshot_yyyyMMdd_HHmmss (old) or <class>_yyyy-MM-dd_HH-mm (new);
+    // a date matches both forms so old and new shots stay found
+    function dayStamps(daysAgo) {
+        const d = new Date(Date.now() - daysAgo * 86400000);
+        return [Qt.formatDate(d, "yyyyMMdd"), Qt.formatDate(d, "yyyy-MM-dd")];
     }
 
-    // Quick filter (Today / Week) or the typed date fragment
+    function patterns(stamp) {
+        return ["*" + stamp + "*.png", "*" + stamp + "*.jpg"];
+    }
+
+    // Quick filter (Today / Week) or the typed text (a name part or a date fragment)
     function filters() {
         if (root.quick === "today" || root.quick === "week") {
             const days = root.quick === "today" ? 1 : 7;
             let out = [];
             for (let d = 0; d < days; d++)
-                out.push("*" + root.dayStamp(d) + "*.png", "*" + root.dayStamp(d) + "*.jpg");
+                for (const s of root.dayStamps(d))
+                    out = out.concat(root.patterns(s));
             return out;
         }
         const t = filterInput.text.trim();
-        return ["*" + t + "*.png", "*" + t + "*.jpg"];
+        // A typed 8-digit date (20261103) also finds the dashed form (2026-11-03)
+        if (/^\d{8}$/.test(t))
+            return root.patterns(t).concat(root.patterns(t.slice(0, 4) + "-" + t.slice(4, 6) + "-" + t.slice(6)));
+        return root.patterns(t);
     }
 
     function formatSize(b) {
