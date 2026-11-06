@@ -720,6 +720,11 @@ PanelWindow {
 
     Popups.ContextMenu {
         id: optionsMenu
+        // KEYBOARD: when the menu goes away the search box takes the keys back (needs a live test)
+        onVisibleChanged: {
+            if (!visible && root.visible)
+                searchInput.focusInput();
+        }
     }
 
     // Open (or re-open, for the uninstall confirm and Move up / down) the menu for one app
