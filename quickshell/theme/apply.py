@@ -129,6 +129,11 @@ def derive(p, name):
     # MenuStyle.bevelLight = highlight (checked above to stand out from base), bevelDark = Qt.darker(shadow, 1.7)
     roles["light"] = roles["highlight"]
     roles["dark"] = darker(roles["shadow"], 1.7)
+    # Two-hue screen: the terminal background is the accent's hue turned very dark, and fastfetch's
+    # accent is the accent moved until it reads on that background (4.5:1)
+    hh, _, ss = colorsys.rgb_to_hls(*(v / 255 for v in rgb(roles["accent"])))
+    roles["term_bg"] = hexs(c * 255 for c in colorsys.hls_to_rgb(hh, 0.10, min(max(ss, 0.30), 0.60)))
+    roles["term_accent"] = readable(hh * 360, max(ss, 0.45), roles["term_bg"])
     # MenuStyle.selectPair: the accent with the best of base/text/outline, else darken the accent
     acc = roles["accent"]
     best = max((roles[k] for k in ("base", "text", "outline")), key=lambda c: contrast(c, acc))
