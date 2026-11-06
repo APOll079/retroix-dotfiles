@@ -225,6 +225,12 @@ ShellRoot {
                 Cap { text: "Monaco 16: The quick brown"; font.pixelSize: MenuStyle.lyricsFontSize }
                 Cap { text: "Charcoal title"; font.family: MenuStyle.titleFont; font.bold: true }
                 Cap { text: "Liberation Sans 14 centre"; font.family: MenuStyle.barStrongFont; font.pixelSize: MenuStyle.barStrongFontSize }
+                Row {
+                    spacing: MenuStyle.pad
+                    Cap { text: "icons 16 / 20"; anchors.verticalCenter: parent.verticalCenter }
+                    Cap { text: "\ue8b8"; font.family: MenuStyle.iconFont; font.pixelSize: MenuStyle.iconSize }
+                    Cap { text: "\ue8b8"; font.family: MenuStyle.iconFont; font.pixelSize: MenuStyle.iconSizeLarge }
+                }
                 RetroText { text: "RetroText disabledLook"; disabledLook: true; font.family: MenuStyle.bodyFont; font.pixelSize: MenuStyle.fontSize }
                 Item { Layout.fillHeight: true }
             }

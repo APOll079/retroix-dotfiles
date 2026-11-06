@@ -60,7 +60,7 @@ Button {
                 visible: root.currentGlyph !== ""
                 anchors.verticalCenter: parent.verticalCenter
                 font.family: MenuStyle.iconFont
-                font.pixelSize: root.tucked ? MenuStyle.barStatusIconSize : MenuStyle.iconSize
+                font.pixelSize: MenuStyle.iconSize
                 color: root.contentColor
                 text: root.currentGlyph
             }

@@ -11,7 +11,11 @@ Singleton {
     readonly property string titleFont: charcoal.name
     readonly property string iconFont: icons.name
     readonly property int fontSize: 12
+    // Icon glyphs come in two sizes only: 16 in rows, menus and on the bar, 20 on big buttons
+    // (the Spotify drawer's 30px buttons). Pictures (cover / app images, tray icons, the 32px
+    // placeholder on a cover without art) are not glyphs and have their own sizes.
     readonly property int iconSize: 16
+    readonly property int iconSizeLarge: 20
 
     // The three menu widths
     readonly property int widthSmall: 240
@@ -44,7 +48,6 @@ Singleton {
     // GPU part (hidden when the centre text needs the room) 22 chars = 158.4 + 12
     readonly property int barSysMonWidth: 236
     readonly property int barSysMonNoGpuWidth: 172
-    readonly property int barStatusIconSize: 12
     readonly property int barStatusFontSize: 11
     // Lyrics / now-playing line in the bar centre: Liberation Sans (Arial metrics, the Win95/98
     // UI look), bundled in fonts/ with its OFL licence. Monaco looked wavy at these sizes and
@@ -114,7 +117,7 @@ Singleton {
     readonly property int spotifyFlickGuard: 150    // ms: a click right after a scroll or flick only stops it
     readonly property int spotifyChipUnderline: 2   // the active chip's accent underline
     readonly property int spotifyButton: 30         // every button in the drawer: square icon buttons are this wide and tall; text buttons and the transport columns this tall
-    readonly property int spotifyButtonGlyph: 20    // the icon on those buttons
+    readonly property int spotifyButtonGlyph: iconSizeLarge    // the icon on those buttons
     readonly property real spotifyIdleOpacity: 0.5  // the volume slider while nothing plays here (it shows the last known level)
     readonly property int spotifyTitleSize: 16      // the now-playing title when it fits on one line (Monaco hints cleanly at 16)
     readonly property int spotifyEmptyBigChars: 28  // empty / error messages up to this long use the 16 px size, longer ones 12
