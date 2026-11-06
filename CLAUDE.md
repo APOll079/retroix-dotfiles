@@ -22,7 +22,7 @@
 - Read and edit only inside this repo (qs-test). Never browse outside it (home folders, Steam dirs, mounts, other disks), not even read-only, without asking. Never record my game list, files or disks anywhere. Tests use fake fixtures in the scratch dir.
 - Tests never call the real easyeffects, hyprctl, gsettings, dinitctl, flatpak, `pactl` / `wpctl set` or the real Spotify API; use an isolated PATH with fakes (and `SPOTIFY_FIXTURE`).
 - Plan first for anything bigger than a small fix: list the changes, wait for my OK.
-- Subagents always run on Sonnet 5.5 (`model: "sonnet"`), never Opus or Haiku.
+- Subagents run on Sonnet 5.5 (`model: "sonnet"`) for code and design work, never Opus. The built-in `general-purpose` agent is set to Haiku in `.claude/agents/general-purpose.md` (local, gitignored, not committed) for lookups and research only; never use it for edits.
 - Don't add things I didn't ask for.
 - Never AI-generate images, sounds or similar assets. Human-made only.
 - Search docs before guessing. Never claim a bug without a file and line.
