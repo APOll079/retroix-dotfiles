@@ -6,7 +6,7 @@
 
 hl.bind(mainMod .. " + " .. "D", hl.dsp.exec_cmd(menu))  -- help: Apps | Launcher
 -- Super+Q closes an open quickshell menu first (any monitor); only with no menu open does it close the window
-local closeMenuOrWindow = [[bash -c 'for m in $(hyprctl monitors -j | jq -r ".[].name"); do qs ipc call menus_$m closeAny; done | grep -q true || hyprctl dispatch "hl.dsp.window.close()"']]
+local closeMenuOrWindow = [[bash -c 'for m in $(hyprctl monitors -j | jq -r ".[].name"); do qs ipc call menus_$m closeAny; done | grep -q true || sh "$HOME/.config/hypr/scripts/closewin"']]
 hl.bind(mainMod .. " + " .. "q", hl.dsp.exec_cmd(closeMenuOrWindow))  -- help: Windows | Close menu, else close window
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = 1 }))  -- help: Windows | Maximise
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "F", hl.dsp.window.fullscreen())  -- help: Windows | Fullscreen

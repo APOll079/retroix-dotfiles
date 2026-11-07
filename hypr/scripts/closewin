@@ -1,0 +1,38 @@
+#!/bin/sh
+# Super+Q's last step (binds.lua runs it when no Quickshell menu was open): close the active window, with one exception.
+# If the active window sits on a SPECIAL workspace (Vesktop's scratchpad) and the pointer is over a window on a normal,
+# visible workspace, close THAT window instead. Why: with follow_mouse, hovering Vesktop makes it the active window, and
+# a window opened right afterwards (kitty on the main screen) may not take focus before Super+Q, so Super+Q closed
+# Vesktop although you were pointing at kitty. Everything else is the plain "close the active window".
+# Needs hyprctl and jq. The window is focused first and then closed with the same dispatch as before.
+active=$(hyprctl activewindow -j 2>/dev/null)
+wsname=$(printf '%s' "$active" | jq -r '.workspace.name // ""' 2>/dev/null)
+case $wsname in
+    special:*) ;;
+    *) hyprctl dispatch 'hl.dsp.window.close()' >/dev/null 2>&1; exit 0 ;;
+esac
+pos=$(hyprctl cursorpos -j 2>/dev/null)
+x=$(printf '%s' "$pos" | jq -r '.x // empty' 2>/dev/null)
+y=$(printf '%s' "$pos" | jq -r '.y // empty' 2>/dev/null)
+addr=
+if [ -n "$x" ] && [ -n "$y" ]; then
+    mons=$(hyprctl monitors -j 2>/dev/null)
+    addr=$(hyprctl clients -j 2>/dev/null | jq -r --argjson x "$x" --argjson y "$y" --argjson mons "${mons:-[]}" '
+        ($mons | map(.activeWorkspace.id)) as $visible
+        | [ .[] | select(.mapped == true
+            and ((.workspace.name | startswith("special:")) | not)
+            and (.workspace.id as $w | $visible | index($w)) != null
+            and .at[0] <= $x and $x < (.at[0] + .size[0])
+            and .at[1] <= $y and $y < (.at[1] + .size[1])) ]
+        | .[0].address // empty' 2>/dev/null)
+fi
+case $addr in
+    0x[0-9a-fA-F]*)
+        case $addr in *[!0-9a-fxA-FX]*) addr= ;; esac ;;
+    *) addr= ;;
+esac
+if [ -n "$addr" ]; then
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null 2>&1
+fi
+hyprctl dispatch 'hl.dsp.window.close()' >/dev/null 2>&1
+exit 0
