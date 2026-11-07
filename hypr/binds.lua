@@ -108,7 +108,7 @@ end)
 hl.bind(mainMod .. " + CTRL" .. " + " .. "F", hl.dsp.exec_cmd("qs ipc call find toggle"))  -- help: Desktop | Find files (toggle)
 hl.bind(mainMod .. " + CTRL" .. " + " .. "W", function() require("restore").run() end)  -- help: Desktop | Restore workspaces
 hl.bind(mainMod .. " + CTRL" .. " + " .. "O", hl.dsp.exec_cmd("qs ipc call miniplayer toggle"))  -- help: Media | Mini player (toggle)
-hl.bind(mainMod .. " + SHIFT" .. " + " .. "O", hl.dsp.exec_cmd([[bash -c 'qs ipc call overview_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Windows | Workspace overview
+hl.bind(mainMod .. " + SHIFT" .. " + " .. "O", hl.dsp.exec_cmd("pkill -SIGUSR1 hyprexpose"))  -- help: Windows | Workspace overview
 hl.bind(mainMod .. " + CTRL" .. " + " .. "K", hl.dsp.exec_cmd("qs ipc call screensaver start"))  -- help: Desktop | Start the screensaver
 -- SUPER + CTRL + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
 -- above; started the first time, then toggled. The "dropdown-terminal" rule in windowrules.lua floats and places it

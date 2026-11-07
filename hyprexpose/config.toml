@@ -1,0 +1,24 @@
+# hyprexpose (workspace overview, Super+Shift+O). Copy to ~/.config/hyprexpose/config.toml.
+# Cherry defaults: square corners, a dark neutral scrim (never a white wash), the cherry palette on the cards.
+# These colours are fixed; they do not follow the theme picker yet (see docs/desktop.md).
+
+[appearance]
+font = "Monaco 11"
+label_font = "Charcoal 13"
+card_padding = 24.0
+card_radius = 0.0
+select_border = 3.0
+window_label_position = "below"
+
+[colors]
+background = "#000000b3"
+card = "#f4c9efff"
+selection = "#c950bbff"
+label = "#321d32ff"
+empty_label = "#321d3299"
+window_label = "#321d32ff"
+active_window = "#20091dff"
+
+[behavior]
+allow_mouse = true
+switch_on_move = false
