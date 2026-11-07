@@ -20,6 +20,8 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 
 ## Needs a live test
 Built, not yet confirmed on the desktop. Tick a box when it works; move a broken one to "Next up" with what went wrong.
+- Keys / Network / Services windows (not seen in Hyprland): each floats, centres at 760x560, resizes (min 600x420), drags by its title bar; Super+Q closes the focused one; opening an open one focuses it; Services Details from a toast opens on that log even if already open; Services System action opens the doas terminal above the still-open window and the list refreshes on exit; Network refreshes on open; Keys re-reads binds.lua on open.
+- Super+Q with Vesktop focused in its special workspace: hover Vesktop, move to the main display without moving much, open kitty, press Super+Q. Kitty should close, Vesktop stays (`hypr/scripts/closewin`).
 
 ### Desktop overhaul (merged)
 - [x] Task Manager window (window confirmed working; the rest of this line not individually checked): opens floating and centred, a resize sticks, Super+Q closes it, the title bar drags it, Ctrl+Shift+Esc again focuses it, from a fullscreen game it leaves fullscreen first; End task / Kill on your own apps; core-process confirm; Performance graphs
