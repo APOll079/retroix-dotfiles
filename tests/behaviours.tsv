@@ -31,9 +31,7 @@ quickshell/taskbar/Bar.qml	target: "taskmanager_"	IPC handler taskmanager_<monit
 quickshell/taskbar/Bar.qml	target: "menus_"	IPC handler menus_<monitor> (used by keybinds)
 quickshell/taskbar/Bar.qml	target: "screenshot_"	IPC handler screenshot_<monitor> (used by keybinds)
 quickshell/taskbar/Bar.qml	target: "games_"	IPC handler games_<monitor> (used by keybinds)
-quickshell/taskbar/Bar.qml	target: "cheatsheet_"	IPC handler cheatsheet_<monitor> (used by keybinds)
 quickshell/taskbar/Bar.qml	target: "spotify_"	IPC handler spotify_<monitor> (used by keybinds)
-quickshell/taskbar/Bar.qml	target: "services_"	IPC handler services_<monitor> (used by keybinds)
 quickshell/taskbar/Bar.qml	target: "session_"	IPC handler session_<monitor> (used by keybinds)
 quickshell/taskbar/Bar.qml	target: "notifications_"	IPC handler notifications_<monitor> (used by keybinds)
 hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Launcher	Key: Apps | Launcher
@@ -295,3 +293,10 @@ quickshell/popups/SettingRow.qml	onClicked: root\.actionRequested\(root\.entry\.
 quickshell/popups/AppLauncher.qml	root\.runAction\(id\)	The Settings tab's Open closes the launcher and opens the tool through Bar.qml's toolActions
 quickshell/taskbar/Bar.qml	defaultApps: function\(\)	Bar toolActions: the System tools rows each have a handler
 quickshell/popups/StartMenu.qml	text: "Keys"	Start menu: Keys opens the cheat sheet
+quickshell/shell.qml	target: "cheatsheet_"	IPC handler cheatsheet_<monitor> (used by keybinds)
+quickshell/shell.qml	target: "services_"	IPC handler services_<monitor> (used by keybinds)
+quickshell/shell.qml	target: "network_"	IPC handler network_<monitor> (used by keybinds)
+quickshell/ToolWindows.qml	function showServiceDetails	failed-service toast Details opens the Services window on that log
+quickshell/popups/CheatSheet.qml	Keys.onEscapePressed: root.closeMenu\(\)	Escape closes the Keys window
+quickshell/popups/ServicesPanel.qml	function backOrClose	Escape goes back from a log, then closes
+quickshell/popups/NetworkPage.qml	Keys.onEscapePressed: root.closeMenu\(\)	Escape closes the Network window

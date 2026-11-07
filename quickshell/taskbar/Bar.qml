@@ -105,7 +105,7 @@ bar: taskbar
 menuWidth: startmenuButton.x
 closeCallback: taskbar.closeAllPopups
 openPowerMenuCallback: function() { taskbar.toggleMenu(sessionPanel, Config.SystemPopup.SessionPanel, startmenuButton, "left") }
-openKeysCallback: function() { taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep") }
+openKeysCallback: function() { ToolWindows.toggle("keys") }
 openSettingsCallback: function() { taskbar.openLauncherMode("settings") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 }
@@ -144,13 +144,10 @@ screen: modelData
 historyCallback: function() { taskbar.toggleMenu(screenshotPanel, Config.SystemPopup.Screenshot, null, "keep"); }
 }
 Popups.GamesMenu { screen: root.modelData; bar: taskbar; id: gamesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
-Popups.CheatSheet { screen: root.modelData; bar: taskbar; id: cheatSheet; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.Overview { screen: root.modelData; bar: taskbar; id: overviewPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
-Popups.ServicesPanel { screen: root.modelData; bar: taskbar; id: servicesPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ColorHistoryPanel { screen: root.modelData; bar: taskbar; id: colorHistoryMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
-Popups.NetworkPage { screen: root.modelData; bar: taskbar; id: networkPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ThemeEditor { screen: root.modelData; bar: taskbar; id: themeEditor; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.DefaultAppsPanel { screen: root.modelData; bar: taskbar; id: defaultAppsMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.FixPanel { screen: root.modelData; bar: taskbar; id: fixMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
@@ -163,8 +160,8 @@ Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBro
 // The tools the launcher's Settings tab opens (System tools rows; the ids are in popups/SettingsSchema.js, a test checks each one is here)
 readonly property var toolActions: ({
 defaultApps: function() { taskbar.toggleMenu(defaultAppsMenu, Config.SystemPopup.DefaultApps, null, "keep") },
-network: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") },
-services: function() { taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep") },
+network: function() { ToolWindows.toggle("network") },
+services: function() { ToolWindows.toggle("services") },
 troubleshoot: function() { taskbar.toggleMenu(fixMenu, Config.SystemPopup.Troubleshoot, null, "keep") },
 loginReport: function() { taskbar.toggleMenu(loginReportMenu, Config.SystemPopup.LoginReport, null, "keep") },
 cleanUp: function() { taskbar.toggleMenu(cleanupMenu, Config.SystemPopup.Cleanup, null, "keep") },
@@ -172,7 +169,7 @@ colours: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.Co
 updates: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 })
 
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, cheatSheet, servicesPanel, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, networkPanel, overviewPanel, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, overviewPanel, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -378,13 +375,6 @@ taskbar.toggleMenu(overviewPanel, Config.SystemPopup.Overview, null, "keep");
 }
 
 IpcHandler {
-target: "network_" + root.modelData.name
-function toggle() {
-taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep");
-}
-}
-
-IpcHandler {
 target: "mic_" + root.modelData.name
 function toggle() {
 AudioState.toggleMic();
@@ -423,35 +413,9 @@ RecordState.replaySave();
 }
 
 IpcHandler {
-target: "cheatsheet_" + taskbar.screen.name
-function toggle() {
-taskbar.toggleMenu(cheatSheet, Config.SystemPopup.CheatSheet, null, "keep");
-}
-}
-
-IpcHandler {
 target: "spotify_" + taskbar.screen.name
 function toggle() {
 taskbar.toggleMenu(spotifyPanel, Config.SystemPopup.Spotify, null, "keep");
-}
-}
-
-// A failed-service toast's Details: the Services panel on the focused monitor, on that service's log
-Connections {
-target: ServiceWatch
-function onDetailsRequested(name) {
-if (!Hyprland.focusedMonitor || Hyprland.focusedMonitor.name !== root.modelData.name)
-return;
-if (!servicesPanel.visible)
-taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep");
-servicesPanel.showDetails(name);
-}
-}
-
-IpcHandler {
-target: "services_" + taskbar.screen.name
-function toggle() {
-taskbar.toggleMenu(servicesPanel, Config.SystemPopup.Services, null, "keep");
 }
 }
 
@@ -501,7 +465,7 @@ id: laptopControls
 currentPopup: root.currentPopup
 toggleMenu: taskbar.toggleMenu
 openPhoneTab: function(item) { taskbar.openSidePanel(2, item) }
-openNetwork: function() { taskbar.toggleMenu(networkPanel, Config.SystemPopup.Network, null, "keep") }
+openNetwork: function() { ToolWindows.toggle("network") }
 bluetoothMenuRef: bluetoothMenu
 sysMonMenuRef: sysMonMenu
 showGpu: Media.text === "" || taskbar.centreRoom(taskbar.rightStartWithGpu) >= Math.min(MenuStyle.barMediaMinWidth, nowPlayingMetrics.advanceWidth)

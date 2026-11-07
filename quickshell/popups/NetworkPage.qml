@@ -1,11 +1,12 @@
 import Quickshell
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// The Network page (Start > Network, `qs ipc call network_<mon> toggle`), centred like the Services panel.
+// The Network page (Start > Network, the bar's ETH button, `qs ipc call network_<mon> toggle` or `qs ipc call network toggle`):
+// a real window (an xdg toplevel Hyprland floats, centres and lets you move and resize, see windowrules.lua
+// "network-window"), one for the whole desktop. ToolWindows.qml owns it and opens / toggles / closes it.
 //   This computer   your addresses and the gateway (`ip -j addr / route`)
 //   Ping            one echo at the gateway and one at 1.1.1.1, on a button (`ping -c1 -W2`), the answer in ms
 //   Devices         what the system already knows about the LAN (`ip -j neigh`): address, name if /etc/hosts has one, MAC, state.
@@ -13,14 +14,20 @@ import ".."
 //   Speed test      a button that downloads a fixed test file (settings.networkPage.speedTestUrl, 20 s at most) and shows
 //                   "93.2 Mbit/s". Nothing runs until the button is pressed.
 // The data and the scripts are NetworkState.qml / scripts/lan.sh / scripts/speedtest.sh. A missing tool is a line of text.
-// Escape or a click outside closes it.
-PanelWindow {
+// Escape closes the window; the Devices list takes the extra room when it is resized.
+FloatingWindow {
     id: root
-    // The bar window this popup hangs off (set by Bar.qml)
-    required property var bar
 
-    property int screenHeight: 0
-    property var closeCallback: function () {}
+    // Hyprland matches this title (windowrules.lua "network-window")
+    title: "Network"
+    implicitWidth: MenuStyle.windowWidth
+    implicitHeight: MenuStyle.windowHeight
+    minimumSize: Qt.size(MenuStyle.toolMinWidth, MenuStyle.toolMinHeight)
+    visible: false
+    color: Config.colors.base
+
+    // Closed by Hyprland (Super+Q, the close dispatcher): reset like closeMenu()
+    onClosed: root.visible = false
 
     // (through a var so the singleton's members are not lint errors)
     readonly property var net: NetworkState
@@ -33,43 +40,18 @@ PanelWindow {
     readonly property Item speedButton: speedButton
     readonly property Item refreshButton: refreshButton
 
-    // An Overlay-layer panel, not a popup of the bar (see ServicesPanel.qml)
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qs-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    visible: false
-    color: "transparent"
-
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: root.closeCallback()
-    }
-
     Item {
         id: frame
-        width: MenuStyle.windowWidth
-        height: MenuStyle.windowHeight
-        x: Math.round((root.width - width) / 2)
-        y: Math.round(root.screenHeight / 2 - height / 2)
+        anchors.fill: parent
         focus: true
-        Keys.onEscapePressed: root.closeCallback()
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
-        }
+        Keys.onEscapePressed: root.closeMenu()
 
         PopupWindowFrame {
             windowTitle: "Network"
             windowTitleIcon: "\ue8be"
+            // Dragging the title bar moves the window, like any Win95 window
+            titleDrag: true
+            onTitlePressed: root.startSystemMove()
 
             ColumnLayout {
                 anchors.fill: parent

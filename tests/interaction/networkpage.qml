@@ -1,17 +1,15 @@
 // Tests for the Network page (popups/NetworkPage.qml + NetworkState.qml): the parsers and texts with fixtures, then the page with
-// real clicks. NetworkPage is a layer-shell PanelWindow and can't be created offscreen, so this writes a scratch copy of it (inside the
-// runner's own scratch tree) with PanelWindow turned into FloatingWindow and the layer-shell lines dropped. QS_NO_APPLY is set: no
-// ip, ping or curl runs; NetworkState records the processes it would start in `launched`, and the test hands it the answers.
+// real clicks. The page is a real window (a FloatingWindow) owned by the ToolWindows singleton, so it is created straight from the
+// shell files; the test opens it through ToolWindows. QS_NO_APPLY is set: no ip, ping or curl runs; NetworkState records the
+// processes it would start in `launched`, and the test hands it the answers.
 import QtQuick
 import QtTest
 import Quickshell
-import Quickshell.Io
 
 ShellRoot {
     id: shell
     property var warm: Config.settingsLoaded
     property int failures: 0
-    property int closed: 0
     function check(name, cond) {
         console.log("TEST " + (cond ? "pass " : "FAIL ") + name);
         if (!cond)
@@ -21,30 +19,6 @@ ShellRoot {
         return o;
     }
     function js(v) { return JSON.stringify(v); }
-
-    FileView {
-        id: src
-        path: Quickshell.shellPath("popups/NetworkPage.qml")
-        blockLoading: true
-    }
-    FileView {
-        id: dst
-        path: Quickshell.shellPath("popups/NetworkPageTest.qml")
-        blockWrites: true
-    }
-
-    Component.onCompleted: {
-        let t = src.text();
-        t = t.replace("PanelWindow {", "FloatingWindow {");
-        t = t.replace(/\n    anchors \{[\s\S]*?\n    \}/, "");
-        t = t.split("\n").filter(l => l.indexOf("exclusionMode") < 0 && l.indexOf("WlrLayershell") < 0).join("\n");
-        t = t.replace("property int screenHeight: 0", "property int screenHeight: MenuStyle.windowLargeHeight\n    implicitWidth: MenuStyle.windowLargeWidth\n    implicitHeight: MenuStyle.windowLargeHeight");
-        dst.setText(t);
-        loader.setSource("popups/NetworkPageTest.qml", { bar: null });
-    }
-    Loader {
-        id: loader
-    }
 
     TestCase { id: tc; name: "sim"; when: false }
 
@@ -66,9 +40,9 @@ ShellRoot {
         interval: 1200; running: true
         onTriggered: {
             const N = NetworkState;
-            const panel = shell.asVar(loader.item);
-            shell.check("the scratch copy loaded", panel !== null && panel.openMenu !== undefined);
-            panel.closeCallback = function () { shell.closed++; };
+            const TW = ToolWindows;
+            const panel = shell.asVar(TW.win("network"));
+            shell.check("the Network window exists, is titled Network and starts closed", panel !== null && panel.title === "Network" && !panel.visible && !TW.networkVisible);
 
             // ---- pure functions ----
             const lan = N.parseLan(shell.lanJson);
@@ -91,8 +65,9 @@ ShellRoot {
 
             // ---- the page: nothing runs by itself ----
             const n0 = N.launched.length;
-            panel.openMenu();
+            TW.open("network");
             tc.wait(150);
+            shell.check("ToolWindows.open shows the window", panel.visible && TW.isOpen("network") && TW.networkVisible);
             shell.check("opening reads the addresses once and starts nothing else", N.launched.length === n0 + 1 && shell.js(N.launched[n0].slice(1)).indexOf("lan.sh") > 0 && N.launched[n0].length === 2);
             shell.check("the page shows Reading... and the device list says so", N.loading && panel.emptyDevices.visible && panel.emptyDevices.text === "Reading...");
             shell.check("the speed button says Speed test, Refresh is off while reading", panel.speedButton.text === "Speed test" && panel.speedButton.enabled && !panel.refreshButton.enabled);
@@ -141,13 +116,18 @@ ShellRoot {
             shell.check("ip missing: the status line says so and the lists are empty", N.error === "ip not installed" && panel.deviceList.count === 0 && panel.emptyDevices.visible);
 
             // ---- closing ----
-            const c0 = shell.closed;
+            const n3 = N.launched.length;
+            TW.open("network");
+            shell.check("opening an open window only focuses it: still visible, nothing re-read", panel.visible && N.launched.length === n3);
             tc.keyClick(Qt.Key_Escape);
-            shell.check("Escape closes (closeCallback)", shell.closed === c0 + 1);
-            tc.mouseClick(panel.contentItem, 2, 2);
-            shell.check("a click outside the frame closes", shell.closed === c0 + 2);
-            panel.closeMenu();
-            shell.check("closeMenu hides it", !panel.visible);
+            shell.check("Escape closes the window", !panel.visible && !TW.isOpen("network"));
+            TW.toggle("network");
+            shell.check("toggle opens it again, reading again", panel.visible && N.loading);
+            TW.toggle("network");
+            shell.check("toggle closes it", !panel.visible);
+            TW.close("network");
+            shell.check("close on a closed window is harmless", !panel.visible);
+            shell.check("a window needs no bar: size from the tokens, a minimum size", panel.implicitWidth === MenuStyle.windowWidth && panel.implicitHeight === MenuStyle.windowHeight && panel.minimumSize.width <= panel.implicitWidth);
 
             console.log("TEST done failures=" + shell.failures);
             quitTimer.start();

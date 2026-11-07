@@ -191,6 +191,9 @@ Singleton {
     readonly property int taskWindowHeight: windowHeight
     readonly property int taskMinWidth: 600
     readonly property int taskMinHeight: 420
+    // The Keys / Network / Services windows (ToolWindows.qml) share the Task Manager minimum
+    readonly property int toolMinWidth: taskMinWidth
+    readonly property int toolMinHeight: taskMinHeight
     readonly property int sysMonInterval: 2000      // CPU / RAM / temperature read interval
     readonly property int lyricsTick: 250
     // Motion: two durations and one easing, no bounce. fast = hover highlights and fades, normal =

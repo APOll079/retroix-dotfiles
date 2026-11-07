@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Data of the Network page (popups/NetworkPage.qml). Nothing runs by itself: refresh() (the page calls it when it opens)
+// Data of the Network page (popups/NetworkPage.qml, a window ToolWindows.qml opens). Nothing runs by itself: refresh() (the window calls it when it opens)
 // runs scripts/lan.sh once (your addresses, the gateway and the LAN devices the system already knows: `ip -j addr / route /
 // neigh`, no scanning, no DNS); ping(which) runs one echo (`lan.sh ping <ip>`) at the gateway or at 1.1.1.1; speedTest()
 // runs scripts/speedtest.sh <url> (a download to /dev/null, 20 s at most) and only when its button is pressed. The URL is

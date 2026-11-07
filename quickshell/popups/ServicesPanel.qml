@@ -1,28 +1,40 @@
 import Quickshell
-import Quickshell.Wayland
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// dinit services (Start > Services, `qs ipc call services_<mon> toggle`), centred like the Games
-// menu. Lists `dinitctl list` with state; Start / Stop / Restart act on the selected service.
+// dinit services (Start > Services, `qs ipc call services_<mon> toggle` or `qs ipc call services toggle`): a real window
+// (an xdg toplevel Hyprland floats, centres and lets you move and resize, see windowrules.lua "services-window"), one for
+// the whole desktop. ToolWindows.qml owns it and opens / toggles / closes it. Lists `dinitctl list` with state; Start /
+// Stop / Restart act on the selected service.
 // Two scopes: "User" (your own dinit instance: pipewire, wireplumber, ...) runs straight away;
 // "System" (the machine's dinit) runs `doas dinitctl ...` in a floating terminal (the configured
-// `execCommands.terminal`, named `qs-dialog` through `execCommands.terminalClassFlag`), so the password prompt is the real one and nothing is stored. The panel closes while
-// the terminal is open (it would hold the keyboard over it) and the list refreshes when the
-// terminal exits. User actions refresh the list when they finish.
-// Type to filter, Up / Down select, Escape clears the search, then closes.
+// `execCommands.terminal`, named `qs-dialog` through `execCommands.terminalClassFlag`), so the password prompt is the real one and nothing is stored.
+// The window stays open while the terminal is up (it holds no keyboard grab, unlike the old Overlay panel) and the list
+// refreshes when the terminal exits. User actions refresh the list when they finish.
+// Type to filter, Up / Down select, Escape goes back from the log, then clears the search, then closes the window.
 // `dinitctl list` is expected as "[{+}     ] name (pid: 123)" per line; if your dinit prints it
 // differently, parse() below is the one place to adjust.
-PanelWindow {
+// Under QS_NO_APPLY (the test harness) no dinitctl or terminal runs: the argv lists are recorded in `launched`.
+FloatingWindow {
     id: root
-    // The bar window this popup hangs off (set by Bar.qml)
-    required property var bar
 
-    property int screenHeight: 0
-    property var closeCallback: function () {}
+    // Hyprland matches this title (windowrules.lua "services-window")
+    title: "Services"
+    implicitWidth: MenuStyle.windowWidth
+    implicitHeight: MenuStyle.windowHeight
+    minimumSize: Qt.size(MenuStyle.toolMinWidth, MenuStyle.toolMinHeight)
+    visible: false
+    color: Config.colors.base
+
+    // Closed by Hyprland (Super+Q, the close dispatcher): reset like closeMenu()
+    onClosed: root.visible = false
+
+    readonly property bool live: !Quickshell.env("QS_NO_APPLY")
+    property var launched: []              // argv lists asked for under QS_NO_APPLY (tests)
+    readonly property Item searchItem: searchInput
 
     property var services: []              // { name, state: running|stopped|other, failed, info }
     property string filter: "all"          // all | running | stopped
@@ -50,43 +62,18 @@ PanelWindow {
 
     onShownChanged: root.cursor = Math.max(0, Math.min(root.cursor, root.shown.length - 1))
 
-    // An Overlay-layer panel, not a popup of the bar: the bar sits below fullscreen windows, so a
-    // popup over a fullscreen video showed but its clicks went to the video
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    // Covers the bar strip too: a click on the bar (its own button included) closes it
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qs-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    visible: false
-    color: "transparent"
-
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: root.closeCallback()
-    }
-
     Item {
         id: frame
-        width: MenuStyle.windowWidth
-        height: MenuStyle.windowHeight
-        x: Math.round((root.width - width) / 2)
-        y: Math.round(root.screenHeight / 2 - height / 2)
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
-        }
+        anchors.fill: parent
+        focus: true
+        Keys.onEscapePressed: root.backOrClose()
 
         PopupWindowFrame {
             windowTitle: "Services"
             windowTitleIcon: "\ue8b8"
+            // Dragging the title bar moves the window, like any Win95 window
+            titleDrag: true
+            onTitlePressed: root.startSystemMove()
 
             ColumnLayout {
                 anchors.fill: parent
@@ -96,12 +83,7 @@ PanelWindow {
                     id: searchInput
                     Layout.fillWidth: true
                     placeholder: "Filter services"
-                    onEscaped: {
-                        if (root.logOpen)
-                            root.logOpen = false;
-                        else
-                            root.closeCallback();
-                    }
+                    onEscaped: root.backOrClose()
                     onKeyPressed: event => {
                         if (event.key === Qt.Key_Down) {
                             root.move(1);
@@ -329,8 +311,24 @@ PanelWindow {
             listProc.running = false;
         } else {
             root.listScope = root.scope;
-            listProc.running = true;
+            root.startList();
         }
+    }
+
+    // Starts `dinitctl list` (under QS_NO_APPLY only records it)
+    function startList() {
+        if (root.live)
+            listProc.running = true;
+        else
+            root.launched = root.launched.concat([["dinitctl", root.listScope === "system" ? "--system" : "--user", "list"]]);
+    }
+
+    // Escape: back out of the log first, else close the window
+    function backOrClose() {
+        if (root.logOpen)
+            root.logOpen = false;
+        else
+            root.closeMenu();
     }
 
     // The System-scope terminal command. Pure: verb and name stay separate arguments after the script,
@@ -348,16 +346,25 @@ PanelWindow {
         if (!s || !/^[A-Za-z0-9][A-Za-z0-9@._:+-]*$/.test(s.name))
             return;
         if (root.scope === "system") {
-            termProc.command = root.dialogCommand(Config.settings.execCommands.terminal, Config.settings.execCommands.terminalClassFlag, verb, s.name);
-            termProc.running = true;
-            root.closeCallback();
+            const cmd = root.dialogCommand(Config.settings.execCommands.terminal, Config.settings.execCommands.terminalClassFlag, verb, s.name);
+            if (root.live) {
+                termProc.command = cmd;
+                termProc.running = true;
+            } else {
+                root.launched = root.launched.concat([cmd]);
+            }
         } else {
             root.actionError = "";
             // an intended stop must not raise ServiceWatch's "stopped" toast
             ServiceWatch.expect(s.name);
             actProc.verb = verb;
-            actProc.command = ["dinitctl", "--user", verb, s.name];
-            actProc.running = true;
+            const cmd = ["dinitctl", "--user", verb, s.name];
+            if (root.live) {
+                actProc.command = cmd;
+                actProc.running = true;
+            } else {
+                root.launched = root.launched.concat([cmd]);
+            }
         }
     }
 
@@ -366,25 +373,28 @@ PanelWindow {
         onExited: root.refresh()
     }
 
+    // The answer of `dinitctl list` (tests hand it a fixture)
+    function gotList(text) {
+        if (root.listScope !== root.scope)
+            return;
+        root.services = ServiceWatch.parseList(text, root.listScope);
+        if (root.services.length > 0)
+            root.error = "";
+        if (root.pendingSelect !== "") {
+            const i = root.shown.findIndex(x => x.name === root.pendingSelect);
+            root.pendingSelect = "";
+            if (i >= 0) {
+                root.cursor = i;
+                root.openLog();
+            }
+        }
+    }
+
     Process {
         id: listProc
         command: ["dinitctl", root.listScope === "system" ? "--system" : "--user", "list"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                if (root.listScope !== root.scope)
-                    return;
-                root.services = ServiceWatch.parseList(text, root.listScope);
-                if (root.services.length > 0)
-                    root.error = "";
-                if (root.pendingSelect !== "") {
-                    const i = root.shown.findIndex(x => x.name === root.pendingSelect);
-                    root.pendingSelect = "";
-                    if (i >= 0) {
-                        root.cursor = i;
-                        root.openLog();
-                    }
-                }
-            }
+            onStreamFinished: root.gotList(text)
         }
         stderr: StdioCollector {
             onStreamFinished: {
@@ -396,7 +406,7 @@ PanelWindow {
             if (root.listAgain) {
                 root.listAgain = false;
                 root.listScope = root.scope;
-                listProc.running = true;
+                root.startList();
                 return;
             }
             if (code !== 0 && root.error === "")
@@ -415,12 +425,17 @@ PanelWindow {
         root.logDone = false;
         root.logOpen = true;
         logProc.running = false;
-        logProc.command = ["sh", Quickshell.shellDir + "/scripts/service-log.sh", s.name];
-        logProc.running = true;
+        const cmd = ["sh", Quickshell.shellDir + "/scripts/service-log.sh", s.name];
+        if (root.live) {
+            logProc.command = cmd;
+            logProc.running = true;
+        } else {
+            root.launched = root.launched.concat([cmd]);
+        }
     }
 
-    // The toast's Details action (Bar.qml opens the panel, then calls this): user scope, that service
-    // selected in the list, its log open.
+    // The toast's Details action (ToolWindows.showServiceDetails calls this): user scope, that service
+    // selected in the list, its log open. Opens the window if it is closed.
     function showDetails(name) {
         root.scope = "user";
         root.services = [];

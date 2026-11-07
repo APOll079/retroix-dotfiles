@@ -1,23 +1,32 @@
 import Quickshell
-import Quickshell.Wayland
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// Keybind cheat sheet (Super+F1, `qs ipc call cheatsheet_<mon> toggle`), centred like the Games
-// menu. The list comes from scripts/binds.py, which reads hypr/binds.lua and hypr/inputs.lua next
-// to the shell folder; the label of each bind is its `-- help: Group | Label` comment there.
-// A heading row starts each group. The list scrolls (wheel; Up / Down / PageUp / PageDown in the
-// search box). Type to filter (keys, label or group); Escape clears the search, then closes.
-PanelWindow {
+// Keybind cheat sheet (Super+F1, `qs ipc call cheatsheet_<mon> toggle` or `qs ipc call keys toggle`): a real window
+// (an xdg toplevel Hyprland floats, centres and lets you move and resize, see windowrules.lua "keys-window"), one for the
+// whole desktop. ToolWindows.qml owns it and opens / toggles / closes it. The list comes from scripts/binds.py, which reads
+// hypr/binds.lua and hypr/inputs.lua next to the shell folder; the label of each bind is its `-- help: Group | Label`
+// comment there. A heading row starts each group. The list scrolls (wheel; Up / Down / PageUp / PageDown in the
+// search box). Type to filter (keys, label or group); Escape clears the search, then closes the window.
+FloatingWindow {
     id: root
-    // The bar window this popup hangs off (set by Bar.qml)
-    required property var bar
 
-    property int screenHeight: 0
-    property var closeCallback: function () {}
+    // Hyprland matches this title (windowrules.lua "keys-window")
+    title: "Keys"
+    implicitWidth: MenuStyle.windowWidth
+    implicitHeight: MenuStyle.windowHeight
+    minimumSize: Qt.size(MenuStyle.toolMinWidth, MenuStyle.toolMinHeight)
+    visible: false
+    color: Config.colors.base
+
+    // Closed by Hyprland (Super+Q, the close dispatcher): reset like closeMenu()
+    onClosed: root.visible = false
+
+    readonly property bool live: !Quickshell.env("QS_NO_APPLY")
+    property int bindReads: 0      // how often binds.py was asked for (tests: QS_NO_APPLY does not start it)
     property var binds: []
 
     readonly property var shown: {
@@ -38,44 +47,20 @@ PanelWindow {
         }
         return out;
     }
-
-    // An Overlay-layer panel, not a popup of the bar: the bar sits below fullscreen windows, so a
-    // popup over a fullscreen video showed but its clicks went to the video
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-    margins.top: MenuStyle.barHeight
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "qs-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    visible: false
-    color: "transparent"
-
-    MouseArea {
-        anchors.fill: parent
-        z: -1
-        onClicked: root.closeCallback()
-    }
+    readonly property Item searchItem: searchInput
 
     Item {
         id: frame
-        width: MenuStyle.windowWidth
-        height: MenuStyle.windowHeight
-        x: Math.round((root.width - width) / 2)
-        y: Math.round(root.screenHeight / 2 - height / 2) - MenuStyle.barHeight
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {}
-        }
+        anchors.fill: parent
+        focus: true
+        Keys.onEscapePressed: root.closeMenu()
 
         PopupWindowFrame {
             windowTitle: "Keys"
             windowTitleIcon: "\ue312"
+            // Dragging the title bar moves the window, like any Win95 window
+            titleDrag: true
+            onTitlePressed: root.startSystemMove()
 
             ColumnLayout {
                 anchors.fill: parent
@@ -85,7 +70,7 @@ PanelWindow {
                     id: searchInput
                     Layout.fillWidth: true
                     placeholder: "Filter keybinds"
-                    onEscaped: root.closeCallback()
+                    onEscaped: root.closeMenu()
                     onKeyPressed: event => {
                         const steps = { [Qt.Key_Up]: -3 * MenuStyle.rowHeight, [Qt.Key_Down]: 3 * MenuStyle.rowHeight, [Qt.Key_PageUp]: -list.height, [Qt.Key_PageDown]: list.height };
                         if (event.key in steps) {
@@ -208,7 +193,9 @@ PanelWindow {
 
     function openMenu() {
         searchInput.text = "";
-        bindsProc.running = true;
+        root.bindReads++;
+        if (root.live)
+            bindsProc.running = true;
         root.visible = true;
         searchInput.focusInput();
     }

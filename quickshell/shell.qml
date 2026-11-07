@@ -51,6 +51,49 @@ Scope {
         function open(): void { TaskWindow.open(""); }
         function performance(): void { TaskWindow.open("performance"); }
     }
+    // Keys / Network / Services windows (ToolWindows.qml): `qs ipc call keys toggle` (also open, close). The old per-monitor
+    // names (cheatsheet_<mon>, network_<mon>, services_<mon>) still toggle, for binds that name a monitor.
+    IpcHandler {
+        target: "keys"
+        function toggle(): void { ToolWindows.toggle("keys"); }
+        function open(): void { ToolWindows.open("keys"); }
+        function close(): void { ToolWindows.close("keys"); }
+    }
+    IpcHandler {
+        target: "network"
+        function toggle(): void { ToolWindows.toggle("network"); }
+        function open(): void { ToolWindows.open("network"); }
+        function close(): void { ToolWindows.close("network"); }
+    }
+    IpcHandler {
+        target: "services"
+        function toggle(): void { ToolWindows.toggle("services"); }
+        function open(): void { ToolWindows.open("services"); }
+        function close(): void { ToolWindows.close("services"); }
+    }
+    Variants {
+        model: Quickshell.screens
+        Scope {
+            required property var modelData
+            IpcHandler {
+                target: "cheatsheet_" + modelData.name
+                function toggle(): void { ToolWindows.toggle("keys"); }
+            }
+            IpcHandler {
+                target: "network_" + modelData.name
+                function toggle(): void { ToolWindows.toggle("network"); }
+            }
+            IpcHandler {
+                target: "services_" + modelData.name
+                function toggle(): void { ToolWindows.toggle("services"); }
+            }
+        }
+    }
+    // A failed-service toast's Details: the Services window, on that service's log
+    Connections {
+        target: ServiceWatch
+        function onDetailsRequested(name) { ToolWindows.showServiceDetails(name); }
+    }
     // Lyrics window (popups/LyricsWindow.qml): `qs ipc call lyrics toggle`
     IpcHandler {
         target: "lyrics"

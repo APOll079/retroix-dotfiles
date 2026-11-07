@@ -191,6 +191,43 @@ hl.window_rule({
     persistent_size = true
 })
 
+-- Keys, Network and Services (quickshell/ToolWindows.qml): same rule as the task-manager above, one per title; not seen running here
+hl.window_rule({
+    name  = "keys-window",
+    match = {
+        initial_title = "^Keys$"
+    },
+    float           = true,
+    center          = true,
+    size            = { 760, 560 },
+    min_size        = { 600, 420 },
+    persistent_size = true
+})
+
+hl.window_rule({
+    name  = "network-window",
+    match = {
+        initial_title = "^Network$"
+    },
+    float           = true,
+    center          = true,
+    size            = { 760, 560 },
+    min_size        = { 600, 420 },
+    persistent_size = true
+})
+
+hl.window_rule({
+    name  = "services-window",
+    match = {
+        initial_title = "^Services$"
+    },
+    float           = true,
+    center          = true,
+    size            = { 760, 560 },
+    min_size        = { 600, 420 },
+    persistent_size = true
+})
+
 -- Quickshell's Mini player (popups/MiniPlayer.qml, a FloatingWindow titled "Mini player"): float, pinned, bottom-LEFT
 -- (the Lyrics window sits bottom-right); field names as in the lyrics rule, height measured by its test, never seen running
 hl.window_rule({

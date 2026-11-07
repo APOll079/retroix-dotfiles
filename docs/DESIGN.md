@@ -183,6 +183,8 @@ Every named size, font, motion value and colour. The rules are in `CLAUDE.md` (T
 | `taskWindowHeight` | int | `windowHeight` |  |
 | `taskMinWidth` | int | `600` |  |
 | `taskMinHeight` | int | `420` |  |
+| `toolMinWidth` | int | `taskMinWidth` |  |
+| `toolMinHeight` | int | `taskMinHeight` |  |
 | `sysMonInterval` | int | `2000` | CPU / RAM / temperature read interval |
 | `lyricsTick` | int | `250` |  |
 | `idleDimOpacity` | real | `0.5` |  |
