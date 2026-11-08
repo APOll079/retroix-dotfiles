@@ -83,7 +83,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Themes menu: the Cursor and Icons dropdowns open inside it and a pick changes the GTK and Hyprland cursor (it persists across a Hyprland restart through `~/.local/state/qs-cursor`, read by `hypr/env.lua`; log out and in to confirm); Edit theme... opens the editor, Pick works with the real hyprpicker, Apply switches the live shell to the "custom" palette, Save with a failing contrast is allowed but Apply is off
 - [ ] `settings.ui.cascadingStart: true` (Settings tab > Appearance): Programs appears first in Start, the cascade opens beside it and its keys work, the apps list flips left when there is no room; it uses a popup focus grab (the risky kind), so turn it off again if clicks misbehave
 
-### Round 4, screensaver / mini player / overview (all visual: only seen live)
+### Round 4, screensaver / mini player (all visual: only seen live)
 - [ ] Screensaver: look at starfield, pipes, mystify and random; every screen blanks; cursor jitter at the start doesn't close it, a key / click / mouse move after 0.5 s does; no start with caffeine or a fullscreen video; it fires before the dim (3 min); a static frame under reduce motion (`qs ipc call screensaver preview`, Super+Ctrl+K)
 - [ ] Mini player (Super+Ctrl+O): the LCD and the 32 px digits, the marquee on a long title, play / prev / next / seek / volume with Spotify and with another player, "Nothing playing"; the window rule (size, pinned, bottom-left)
 - [ ] Workspace overview (Super+Shift+O): cards with 1, 3, 6, 12 workspaces on both monitors; do the thumbnails capture (other workspaces too) or fall back to the label; clicks, arrows, Enter, Esc / click outside / second toggle; over a fullscreen window

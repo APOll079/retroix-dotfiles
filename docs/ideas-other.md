@@ -20,6 +20,7 @@ Pure fun: nice to have, nothing depends on them.
 Not now: keep for later, or cut.
 | | Idea | Size |
 |---|---|---|
+| | **hyprexpo** (`sandwichfarm/hyprexpo`, hyprpm plugin) instead of hyprexpose: drag a window onto another workspace, number keys, empty workspaces as drop targets, rows x columns, per-state borders, wallpaper behind the tiles. Costs a rebuild with hyprpm after every Hyprland update (and a relogin so the headers match the running version); Hyprland 0.57.x only | S |
 | | **Minimise**: Win95-style minimise to a hidden workspace, with a "Minimised (3)" list in the Start menu or launcher to bring them back | M |
 | | **Display settings with undo**: change resolution / refresh / position, and it reverts by itself after 15 s unless you click Keep | M |
 | | **Visualizer**: a small live audio graph in the bar centre when there are no lyrics; cava bars, or a single oscilloscope line as the other style | M |

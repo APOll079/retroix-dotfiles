@@ -88,7 +88,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Zoom**: a key that magnifies around the cursor (Hyprland cursor zoom), for small text | S |
 | ★ | **Stay awake while video plays**: idle doesn't dim during a fullscreen video, without turning caffeine on by hand (seen in inhibit-idle-while-watching) | S |
 | ★ | **Restore workspaces at login**: each workspace gets its apps (Zen on 1, VSCodium on 3, ...), reopened and moved back at login or with one click (seen in workspace-restore) | S-M |
-| ★ | **Workspace overview**: a grid of each workspace with its windows (live thumbnails), click to go | L |
 
 ## 7. Audio
 | | Idea | Size |

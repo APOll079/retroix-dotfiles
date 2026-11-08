@@ -271,10 +271,6 @@ quickshell/popups/ScreensaverWindow.qml	WlrKeyboardFocus\.Exclusive	Screensaver 
 quickshell/popups/MiniPlayer.qml	Keys\.onEscapePressed	Mini player: Esc closes
 quickshell/popups/MiniPlayer.qml	Keys\.onSpacePressed	Mini player: Space plays or pauses
 quickshell/popups/MiniPlayer.qml	root\.seekTo\(value\)	Mini player: releasing the seek slider seeks
-quickshell/popups/Overview.qml	Qt\.Key_Return	Overview: Enter switches to the selected workspace
-quickshell/popups/Overview.qml	onClicked: root\.switchTo	Overview: a click on a card switches workspace
-quickshell/popups/Overview.qml	onClicked: root\.focusWindow	Overview: a click on a thumbnail focuses that window
-quickshell/OverviewState.qml	hl\.dsp\.focus\(\{ workspace	Overview: workspace switch uses the same dispatch as Workspaces.qml
 hypr/binds.lua	\-\-\ help:\ Media\ \|\ Mini\ player\ \(toggle\)	Key: Media | Mini player (toggle)
 hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Workspace\ overview	Key: Windows | Workspace overview
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Start\ the\ screensaver	Key: Desktop | Start the screensaver

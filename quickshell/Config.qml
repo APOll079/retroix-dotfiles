@@ -150,7 +150,6 @@ DefaultApps,
 Troubleshoot,
 LoginReport,
 Network,
-Overview,
 ThemeEditor,
 None
 }

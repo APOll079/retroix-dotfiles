@@ -27,7 +27,6 @@ Scope {
     property bool phoneBattery: PhoneBattery.active
     property bool screensaver: ScreensaverState.active
     property var miniPlayerState: MiniPlayerState
-    property var overviewState: OverviewState
     property bool securityAudit: SecurityAudit.active
     property bool mouseState: MouseState.active
     property bool downloadWatch: DownloadWatch.active

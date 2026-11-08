@@ -144,7 +144,6 @@ screen: modelData
 historyCallback: function() { taskbar.toggleMenu(screenshotPanel, Config.SystemPopup.Screenshot, null, "keep"); }
 }
 Popups.GamesMenu { screen: root.modelData; bar: taskbar; id: gamesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
-Popups.Overview { screen: root.modelData; bar: taskbar; id: overviewPanel; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.UpdatesPanel { screen: root.modelData; bar: taskbar; id: updatesMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.CleanupPanel { screen: root.modelData; bar: taskbar; id: cleanupMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 Popups.ColorHistoryPanel { screen: root.modelData; bar: taskbar; id: colorHistoryMenu; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
@@ -169,7 +168,7 @@ colours: function() { taskbar.toggleMenu(colorHistoryMenu, Config.SystemPopup.Co
 updates: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 })
 
-readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, overviewPanel, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
+readonly property var menus: [startMenu, themeMenu, appLauncher, bluetoothMenu, sysMonMenu, sessionPanel, screenshotPanel, gamesMenu, updatesMenu, cleanupMenu, colorHistoryMenu, defaultAppsMenu, fixMenu, loginReportMenu, themeEditor, spotifyPanel, sidePanel, wallpaperBrowser]
 
 function closeAllPopups() {
 for (var m of taskbar.menus)
@@ -364,13 +363,6 @@ IpcHandler {
 target: "themeeditor_" + root.modelData.name
 function toggle() {
 taskbar.toggleMenu(themeEditor, Config.SystemPopup.ThemeEditor, null, "keep");
-}
-}
-
-IpcHandler {
-target: "overview_" + root.modelData.name
-function toggle() {
-taskbar.toggleMenu(overviewPanel, Config.SystemPopup.Overview, null, "keep");
 }
 }
 
