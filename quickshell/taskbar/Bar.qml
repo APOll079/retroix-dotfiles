@@ -207,7 +207,9 @@ menu.anchor.rect.x = Math.max(4, Math.min(x, taskbar.width - menu.implicitWidth 
 }
 menu.anchor.rect.y = taskbar.implicitHeight;
 }
+// opening closes the menus of EVERY monitor, so two bars never show a menu (two Spotify drawers) at once
 taskbar.closeAllPopups();
+MenuState.closeAll();
 root.currentPopup = popup;
 menu.openMenu();
 }
@@ -219,6 +221,7 @@ taskbar.closeAllPopups();
 return;
 }
 taskbar.closeAllPopups();
+MenuState.closeAll();
 root.currentPopup = Config.SystemPopup.AppLauncher;
 appLauncher.open(mode, standalone === true);
 }

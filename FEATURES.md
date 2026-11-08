@@ -9,7 +9,7 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 ## Planned
 
 ### Next up
-- Design pass (`design-pass-prompt.md`): waves 1 and 2 are merged to main; wave 3 (`design-pass-w3`) put the Task Manager tabs on `TabPage` and dropped the grey / tint launcher icon code (colour stays). Left: the live tests below. Follow-ups noticed, none started: the Spotify row menu covers rows under it; the Themes menu has no Reduce motion button (not wanted); the font fallback for CJK is blocked (Qt 6.12 has no QML fallback list, see git log A11). E1 grain, C7 Control Panel, D12 balloons, D13 accelerators (Alt+F was built and dropped), D14 tab order and E2 VGA colours were skipped on purpose.
+- Design pass (`design-pass-prompt.md`): waves 1 and 2 are merged to main; wave 3 (`design-pass-w3`) put the Task Manager tabs on `TabPage` and dropped the grey / tint launcher icon code (colour stays). Left: the live tests below. Follow-ups noticed, none started: the Themes menu has no Reduce motion button (not wanted); the font fallback for CJK is blocked (Qt 6.12 has no QML fallback list, see git log A11). E1 grain, C7 Control Panel, D12 balloons, D13 accelerators (Alt+F was built and dropped), D14 tab order and E2 VGA colours were skipped on purpose.
 - From the old audit: lazy-loaded popups (tried: no way to measure the gain headless; if wanted, start with Spotify, launcher, screenshots, wallpapers, games).
 - spotifyd upgrade: commands and checks are written in `docs/spotify.md`, yours to run.
 
@@ -22,6 +22,7 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 Built, not yet confirmed on the desktop. Tick a box when it works; move a broken one to "Next up" with what went wrong.
 - Workspace overview is now hyprexpose (needs `hyprexpose-git`, a copy of `hyprexpose/config.toml` to `~/.config/hyprexpose/`, and a login or `hyprexpose &` to start the daemon): Super+Shift+O toggles; cards on both monitors, thumbnails, hover/click switches, right-click moves the active window, Escape closes; the scrim is dark, not white. Config key names are from its example file, not run here.
 - Keys / Network / Services / Settings windows (not seen in Hyprland; Settings: Super+Shift+comma toggles it, the search box takes keys, each System tools row opens its tool, the launcher's Settings tab closes the launcher and opens it): each floats, centres at 760x560, resizes (min 600x420), drags by its title bar; Super+Q closes the focused one; opening an open one focuses it; Services Details from a toast opens on that log even if already open; Services System action opens the doas terminal above the still-open window and the list refreshes on exit; Network refreshes on open; Keys re-reads binds.lua on open.
+- One menu at a time across monitors: open the Spotify drawer (Super+S) on DP-1, then on DP-2 (and the same with the Start menu, side panel, launcher): the first one closes.
 - Super+Q with Vesktop focused in its special workspace: hover Vesktop, move to the main display without moving much, open kitty, press Super+Q. Kitty should close, Vesktop stays (`hypr/scripts/closewin`).
 
 ### Desktop overhaul (merged)
@@ -86,7 +87,6 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Round 4, screensaver / mini player (all visual: only seen live)
 - [ ] Screensaver: look at starfield, pipes, mystify and random; every screen blanks; cursor jitter at the start doesn't close it, a key / click / mouse move after 0.5 s does; no start with caffeine or a fullscreen video; it fires before the dim (3 min); a static frame under reduce motion (`qs ipc call screensaver preview`, Super+Ctrl+K)
 - [ ] Mini player (Super+Ctrl+O): the LCD and the 32 px digits, the marquee on a long title, play / prev / next / seek / volume with Spotify and with another player, "Nothing playing"; the window rule (size, pinned, bottom-left)
-- [ ] Workspace overview (Super+Shift+O): cards with 1, 3, 6, 12 workspaces on both monitors; do the thumbnails capture (other workspaces too) or fall back to the label; clicks, arrows, Enter, Esc / click outside / second toggle; over a fullscreen window
 
 ### Round 4, launcher and network (never looked at, fakes only)
 - [ ] `/ name` in the launcher on your real home (fd / plocate / find order, exclusions, real xdg-open); the Find window floats, centres and takes focus (`hyprctl reload` first; Super+Ctrl+F); the AppLauncher result area with the new rows next to the Settings tab (a merge point, never seen rendered)

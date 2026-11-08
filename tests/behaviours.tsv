@@ -300,3 +300,4 @@ quickshell/popups/SettingsWindow.qml	Keys.onEscapePressed: root.closeMenu\(\)	Es
 quickshell/popups/SettingsWindow.qml	onTitlePressed: root\.startSystemMove\(\)	Dragging the Settings title bar moves the window
 quickshell/shell.qml	target: "settings"	IPC handler settings (toggle, open, close)
 quickshell/popups/AppLauncher.qml	root\.openSettings\(\)	The launcher's Settings tab closes the launcher and opens the Settings window
+quickshell/taskbar/Bar.qml	MenuState\.closeAll\(\);	Opening a bar menu or the launcher closes the menus on every monitor
