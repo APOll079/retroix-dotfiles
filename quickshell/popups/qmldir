@@ -23,6 +23,7 @@ ScreenshotOverlay 1.0 ScreenshotOverlay.qml
 GamesMenu 1.0 GamesMenu.qml
 GamesView 1.0 GamesView.qml
 CheatSheet 1.0 CheatSheet.qml
+SettingsWindow 1.0 SettingsWindow.qml
 ServicesPanel 1.0 ServicesPanel.qml
 PhoneTab 1.0 PhoneTab.qml
 SpotifyPanel 1.0 SpotifyPanel.qml

@@ -103,6 +103,34 @@ ShellRoot {
             TW.close("services");
             shell.check("Services: close hides it", !svc.visible && !TW.servicesVisible);
 
+            // ---- settings ----
+            const st = shell.asVar(TW.win("settings"));
+            shell.check("Settings: title, size, minimum size, starts closed",
+                st.title === "Settings" && st.implicitWidth === MenuStyle.windowWidth && st.minimumSize.width === 600 && !TW.settingsVisible && !TW.isOpen("settings"));
+            TW.open("settings");
+            tc.wait(100);
+            shell.check("Settings: open shows the window", st.visible && TW.settingsVisible && st.searchItem.text === "");
+            shell.check("Settings: the search box has the keys (typing reaches it)", st.searchItem.input.activeFocus);
+            st.searchItem.text = "network";
+            tc.wait(50);
+            shell.check("Settings: typing filters the settings", st.view.searching && st.view.shown.length > 0 && st.view.shown.some(x => x.action === "network"));
+            TW.open("settings");
+            shell.check("Settings: opening an open window only focuses it (filter kept)", st.searchItem.text === "network");
+            let tool = "";
+            st.runTool = function (id) { tool = id; };
+            st.view.actionRequested("services");
+            shell.check("Settings: a System tools Open row asks for its tool and keeps the window", tool === "services" && st.visible);
+            tc.keyClick(Qt.Key_Escape);
+            shell.check("Settings: first Escape clears the search, window stays", st.visible && st.searchItem.text === "");
+            tc.keyClick(Qt.Key_Escape);
+            shell.check("Settings: second Escape closes the window", !st.visible);
+            TW.toggle("settings");
+            shell.check("Settings: toggle opens (search reset)", st.visible && st.searchItem.text === "");
+            TW.toggle("settings");
+            shell.check("Settings: toggle closes", !st.visible);
+            TW.close("settings");
+            shell.check("Settings: close on a closed window is harmless", !st.visible);
+
             console.log("TEST done failures=" + shell.failures);
             quitTimer.start();
         }

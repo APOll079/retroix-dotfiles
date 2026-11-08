@@ -232,14 +232,14 @@ quickshell/popups/PhoneTab.qml	Send to phone	Phone tab: Send to phone sends a fi
 quickshell/LaptopControls.qml	onClicked: root\.openPhoneTab\(phoneBtn\)	The bar's phone battery button opens the Phone tab
 quickshell/taskbar/Bar.qml	Media\.likeMenu\(	Bar: right-click on the now-playing text opens Like / Add to playlist
 quickshell/popups/SettingRow.qml	onAccepted: root\.commit	Settings tab: Enter in a field saves it (only if it changed and is in range)
-quickshell/popups/SettingRow.qml	key !== Qt\.Key_Escape	Settings tab: Escape in a field reverts the text; with nothing to revert it gives the keys back to the launcher search
+quickshell/popups/SettingRow.qml	key !== Qt\.Key_Escape	Settings tab: Escape in a field reverts the text; with nothing to revert it gives the keys back to the Settings search box
 quickshell/popups/SettingRow.qml	onActiveFocusChanged: if \(!activeFocus\) root\.commit\(true\)	Settings tab: a field saves when it loses focus
 quickshell/popups/SettingRow.qml	onClicked: root\.write\(!\(root\.current === true\)\)	Settings tab: an On/Off button flips the setting
 quickshell/popups/SettingsView.qml	Qt\.Key_Down && !root\.searching	Settings tab: Up/Down on the category list switch category
 quickshell/popups/SettingsView.qml	xdg-open	Settings tab: Open settings.json opens the file with xdg-open
-quickshell/popups/AppLauncher.qml	key: "settings", text: "Settings"	Launcher: the fourth tab is Settings
-quickshell/popups/StartMenu.qml	text: "Settings"	Start menu: the Settings button opens the launcher on its Settings tab
-quickshell/taskbar/Bar.qml	openLauncherMode\("settings"\)	Bar: Settings opens the launcher on the Settings tab (Start button and the settings IPC)
+quickshell/popups/AppLauncher.qml	key: "settings", text: "Settings"	Launcher: the fourth tab is Settings (it closes the launcher and opens the Settings window)
+quickshell/popups/StartMenu.qml	text: "Settings"	Start menu: the Settings button opens the Settings window
+quickshell/taskbar/Bar.qml	ToolWindows\.toggle\("settings"\)	Bar: Settings opens the Settings window (Start button and the appLauncher settings IPC, Super+Shift+comma)
 hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Settings	Key: Apps | Settings
 quickshell/popups/TaskManager.qml	compareGroups	Task Manager: GPU, VRAM, Read and Write columns sort, null last
 quickshell/popups/GamesView.qml	text: "MangoHud"	Games: MangoHud button flips settings.games.mangohud
@@ -286,7 +286,7 @@ quickshell/popups/PopupCascade.qml	onClicked: root\.launch\(appRow\.index\)	Prog
 quickshell/popups/PopupCascade.qml	Qt\.Key_Left	Programs cascade: Left closes the apps list
 quickshell/popups/PopupCascade.qml	Qt\.Key_Escape	Programs cascade: Escape closes the cascade, not the Start menu
 quickshell/popups/SettingRow.qml	onClicked: root\.actionRequested\(root\.entry\.action\)	Settings > System tools: an Open button opens the tool (Default apps, Network, Services, Troubleshoot, Login report, Clean up, Colours, Updates)
-quickshell/popups/AppLauncher.qml	root\.runAction\(id\)	The Settings tab's Open closes the launcher and opens the tool through Bar.qml's toolActions
+quickshell/ToolWindows.qml	function runTool	The Settings window's System tools Open opens the tool through the focused monitor's Bar.qml toolActions
 quickshell/taskbar/Bar.qml	defaultApps: function\(\)	Bar toolActions: the System tools rows each have a handler
 quickshell/popups/StartMenu.qml	text: "Keys"	Start menu: Keys opens the cheat sheet
 quickshell/shell.qml	target: "cheatsheet_"	IPC handler cheatsheet_<monitor> (used by keybinds)
@@ -296,3 +296,7 @@ quickshell/ToolWindows.qml	function showServiceDetails	failed-service toast Deta
 quickshell/popups/CheatSheet.qml	Keys.onEscapePressed: root.closeMenu\(\)	Escape closes the Keys window
 quickshell/popups/ServicesPanel.qml	function backOrClose	Escape goes back from a log, then closes
 quickshell/popups/NetworkPage.qml	Keys.onEscapePressed: root.closeMenu\(\)	Escape closes the Network window
+quickshell/popups/SettingsWindow.qml	Keys.onEscapePressed: root.closeMenu\(\)	Escape closes the Settings window
+quickshell/popups/SettingsWindow.qml	onTitlePressed: root\.startSystemMove\(\)	Dragging the Settings title bar moves the window
+quickshell/shell.qml	target: "settings"	IPC handler settings (toggle, open, close)
+quickshell/popups/AppLauncher.qml	root\.openSettings\(\)	The launcher's Settings tab closes the launcher and opens the Settings window

@@ -70,6 +70,12 @@ Scope {
         function open(): void { ToolWindows.open("services"); }
         function close(): void { ToolWindows.close("services"); }
     }
+    IpcHandler {
+        target: "settings"
+        function toggle(): void { ToolWindows.toggle("settings"); }
+        function open(): void { ToolWindows.open("settings"); }
+        function close(): void { ToolWindows.close("settings"); }
+    }
     Variants {
         model: Quickshell.screens
         Scope {

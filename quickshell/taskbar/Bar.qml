@@ -14,8 +14,13 @@ id: root
 required property var modelData
 property int currentPopup: Config.SystemPopup.None
 onCurrentPopupChanged: MenuState.setOpen(root.modelData.name, root.currentPopup != Config.SystemPopup.None)
+// The Settings window is not part of any bar: it opens the System tools through the bar of the focused monitor
+Component.onCompleted: ToolWindows.registerTools(root.modelData.name, taskbar.toolActions)
 // An unplugged monitor must not leave its flag set (the other bar's click catcher would stay up)
-Component.onDestruction: MenuState.setOpen(root.modelData.name, false)
+Component.onDestruction: {
+MenuState.setOpen(root.modelData.name, false);
+ToolWindows.unregisterTools(root.modelData.name);
+}
 // A click on any monitor's click catcher closes the menus of every bar
 Connections {
 target: MenuState
@@ -106,7 +111,7 @@ menuWidth: startmenuButton.x
 closeCallback: taskbar.closeAllPopups
 openPowerMenuCallback: function() { taskbar.toggleMenu(sessionPanel, Config.SystemPopup.SessionPanel, startmenuButton, "left") }
 openKeysCallback: function() { ToolWindows.toggle("keys") }
-openSettingsCallback: function() { taskbar.openLauncherMode("settings") }
+openSettingsCallback: function() { ToolWindows.toggle("settings") }
 openUpdatesCallback: function() { taskbar.toggleMenu(updatesMenu, Config.SystemPopup.Updates, null, "keep") }
 }
 Popups.ThemeMenu {
@@ -131,7 +136,7 @@ bar: taskbar
 screen: root.modelData
 closeCallback: taskbar.closeAllPopups
 screenHeight: modelData.height
-runAction: function(id) { if (taskbar.toolActions[id]) taskbar.toolActions[id](); }
+openSettings: function() { ToolWindows.open("settings") }
 }
 
 Popups.BluetoothMenu { bar: taskbar; id: bluetoothMenu; closeCallback: taskbar.closeAllPopups }
@@ -156,7 +161,7 @@ Popups.SidePanel { screen: root.modelData; bar: taskbar; id: sidePanel; closeCal
 Popups.WallpaperBrowser { screen: root.modelData; bar: taskbar; id: wallpaperBrowser; closeCallback: taskbar.closeAllPopups; screenHeight: modelData.height }
 
 // Every menu this bar owns; each has closeMenu()
-// The tools the launcher's Settings tab opens (System tools rows; the ids are in popups/SettingsSchema.js, a test checks each one is here)
+// The tools the Settings window opens (System tools rows, via ToolWindows.runTool; the ids are in popups/SettingsSchema.js, a test checks each one is here)
 readonly property var toolActions: ({
 defaultApps: function() { taskbar.toggleMenu(defaultAppsMenu, Config.SystemPopup.DefaultApps, null, "keep") },
 network: function() { ToolWindows.toggle("network") },
@@ -296,9 +301,9 @@ target: "appLauncher_" + taskbar.screen.name
 function toggleAppLauncher() {
 taskbar.toggleMenu(appLauncher, Config.SystemPopup.AppLauncher, null, "keep");
 }
-// Super+Shift+comma: the launcher on its Settings tab
+// Super+Shift+comma: the Settings window (toggles)
 function settings() {
-taskbar.openLauncherMode("settings");
+ToolWindows.toggle("settings");
 }
 // Super+V: clipboard history in the launcher
 function clipboard() {

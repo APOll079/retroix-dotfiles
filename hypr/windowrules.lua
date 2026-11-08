@@ -191,7 +191,7 @@ hl.window_rule({
     persistent_size = true
 })
 
--- Keys, Network and Services (quickshell/ToolWindows.qml): same rule as the task-manager above, one per title; not seen running here
+-- Keys, Network, Services and Settings (quickshell/ToolWindows.qml): same rule as the task-manager above, one per title; not seen running here
 hl.window_rule({
     name  = "keys-window",
     match = {
@@ -220,6 +220,18 @@ hl.window_rule({
     name  = "services-window",
     match = {
         initial_title = "^Services$"
+    },
+    float           = true,
+    center          = true,
+    size            = { 760, 560 },
+    min_size        = { 600, 420 },
+    persistent_size = true
+})
+
+hl.window_rule({
+    name  = "settings-window",
+    match = {
+        initial_title = "^Settings$"
     },
     float           = true,
     center          = true,
