@@ -166,7 +166,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Laptop profile**: `monitors.local.lua` (gitignored) so the ThinkPad uses its own screen without editing the repo | S |
 | ★ | **CHANGELOG.md** written from the commit messages, and tags for versions | S |
 | ★ | **Uninstall script**: puts the backups from `~/config-backup-*` back | S |
-| ★ | **LICENSE**: MIT (like linux-retroism), so people can reuse it | S |
 | ★ | **Test install in a container**: run `install.sh --dry-run` on a clean Artix image in Docker | M |
 
 ## 15. Gimmicks and fun features

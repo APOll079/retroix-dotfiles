@@ -113,4 +113,5 @@ Windows move with Super+drag or the mouse's side buttons; Super+G turns the side
 
 - The Quickshell shell started from the Quickshell frontend of [linux-retroism](https://github.com/diinki/linux-retroism) by diinki and has since been rebuilt for this desktop.
 - The GTK theme **ClassicPlatinumStreamlined** and the icon theme **RetroismIcons** are from linux-retroism (MIT licence, `themes/LICENSE-linux-retroism`), stored unmodified in `themes/` and `icons/` (upstream commit `255eb6a`). `install.sh` copies them to `~/.local/share`; the theme manager recolours a copy (`QsRetro`), never the original.
+- This repo's own files are MIT (`LICENSE`). Bundled third-party files keep their own licences, listed here.
 - Liberation Sans: SIL Open Font License (`quickshell/fonts/LiberationSans-LICENSE.txt`). Material Symbols: Google, Apache 2.0.
