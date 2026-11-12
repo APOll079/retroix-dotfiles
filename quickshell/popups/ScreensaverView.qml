@@ -24,7 +24,9 @@ Item {
     readonly property int starCount: 160
     readonly property real starSpeed: 0.35                    // z per second
     readonly property int pipeWarm: 60                        // steps painted in the static frame
-    readonly property var palette: [MenuStyle.selectBar, Config.colors.text, Config.colors.highlight]
+    // Drawn on Config.colors.outline (dark in every theme), so no entry may be the text colour (dark too: invisible stars,
+    // pipes and pipe heads); base and highlight are light in every theme
+    readonly property var palette: [MenuStyle.selectBar, Config.colors.base, Config.colors.highlight]
 
     property var rnd: Math.random
     property var scene: null
