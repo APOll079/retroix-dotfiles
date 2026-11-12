@@ -301,3 +301,5 @@ quickshell/popups/SettingsWindow.qml	onTitlePressed: root\.startSystemMove\(\)	D
 quickshell/shell.qml	target: "settings"	IPC handler settings (toggle, open, close)
 quickshell/popups/AppLauncher.qml	root\.openSettings\(\)	The launcher's Settings tab closes the launcher and opens the Settings window
 quickshell/taskbar/Bar.qml	MenuState\.closeAll\(\);	Opening a bar menu or the launcher closes the menus on every monitor
+quickshell/taskbar/Bar.qml	Keys\.onEscapePressed: MenuState\.closeAll\(\)	Escape closes the small bar menus (Start, Themes, Bluetooth, SysMon, Session) through the click catcher
+quickshell/popups/SidePanel.qml	Keys.onEscapePressed	Escape cancels a pending power action, then closes the side panel (Home, Calendar, Phone)

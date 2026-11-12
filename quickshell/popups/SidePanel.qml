@@ -26,7 +26,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     visible: false
     implicitWidth: MenuStyle.widthLarge
     implicitHeight: root.tab === 0 && root.screen ? root.screen.height - MenuStyle.barHeight - MenuStyle.sidePanelBottomMargin : MenuStyle.chromeHeight + column.implicitHeight
@@ -55,7 +55,18 @@ PanelWindow {
     // Shared with the launcher and the session panel (Session.qml), your own actions included
     readonly property var actions: Session.all
 
+    // Escape closes the panel (a pending power action is cancelled first). The frame takes the keyboard when the panel opens.
+    onVisibleChanged: if (root.visible) frame.forceActiveFocus()
+
     PopupWindowFrame {
+        id: frame
+        focus: true
+        Keys.onEscapePressed: {
+            if (root.pending)
+                root.pending = null;
+            else
+                root.closeCallback();
+        }
         windowTitle: root.tab === 0 ? "Home" : root.tab === 1 ? "Calendar" : "Phone"
         windowTitleIcon: root.tab === 0 ? "\ue7f4" : root.tab === 1 ? "\ue935" : "\ue324"
 

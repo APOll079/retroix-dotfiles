@@ -80,7 +80,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 6. Windows, workspaces and monitors
 | | Idea | Size |
 |---|---|---|
-| ★ | **Esc closes every menu**: Start, Theme, Bluetooth, Session and the side panel (a Hyprland focus grab was tried and broke clicks in the Themes menu) | S |
 | ★ | **Modal dialogs float and centre** (window rule) | S |
 | ★ | **Zen Picture-in-Picture**: floats, pinned, in a corner of DP-2 | S |
 | ★ | **Loupe float rule on the class only** | S |

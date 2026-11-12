@@ -497,6 +497,15 @@ visible: root.currentPopup != Config.SystemPopup.None || MenuState.anyOpen
 exclusionMode: ExclusionMode.Ignore
 // Leave the bar itself uncovered so its buttons keep their hover and clicks while a menu is open
 margins.top: MenuStyle.barHeight
+// The small bar menus (Start, Themes, Bluetooth, SysMon, Session) are popups and never get keys, so this catcher takes the
+// keyboard while one of them is open on this monitor and Escape closes it. Every other menu is a panel with its own Escape.
+readonly property bool escapeCloses: [Config.SystemPopup.Startmenu, Config.SystemPopup.ThemePicker, Config.SystemPopup.BluetoothMenu, Config.SystemPopup.SysMonMenu, Config.SystemPopup.SessionPanel].indexOf(root.currentPopup) >= 0
+WlrLayershell.keyboardFocus: overlay.escapeCloses ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+Item {
+anchors.fill: parent
+focus: true
+Keys.onEscapePressed: MenuState.closeAll()
+}
 MouseArea {
 id: popupArea
 anchors.fill: parent
