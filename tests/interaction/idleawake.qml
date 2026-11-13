@@ -18,11 +18,15 @@ ShellRoot {
 
     function run() {
         const I = Idle;
-        check("fullscreen with the setting on stays awake", I.stayAwakeDecision(true, true) === true);
-        check("fullscreen with the setting off does not", I.stayAwakeDecision(true, false) === false);
-        check("no fullscreen never stays awake", I.stayAwakeDecision(false, true) === false);
-        check("a missing setting counts as on", I.stayAwakeDecision(true, undefined) === true);
-        check("a missing fullscreen flag counts as off", I.stayAwakeDecision(undefined, true) === false && I.stayAwakeDecision(null, true) === false);
+        check("fullscreen with the setting on stays awake", I.stayAwakeDecision(true, true, "mpv") === true);
+        check("fullscreen with the setting off does not", I.stayAwakeDecision(true, false, "mpv") === false);
+        check("no fullscreen never stays awake", I.stayAwakeDecision(false, true, "mpv") === false);
+        check("a missing setting counts as on", I.stayAwakeDecision(true, undefined, "mpv") === true);
+        check("a missing fullscreen flag counts as off", I.stayAwakeDecision(undefined, true, "mpv") === false && I.stayAwakeDecision(null, true, "mpv") === false);
+        check("games and players stay awake", I.stayAwakeDecision(true, true, "steam_app_123") && I.stayAwakeDecision(true, true, "Game.exe") && I.stayAwakeDecision(true, true, "zen") && I.stayAwakeDecision(true, true, "gamescope"));
+        check("other fullscreen windows do not", !I.stayAwakeDecision(true, true, "kitty") && !I.stayAwakeDecision(true, true, "nemo") && !I.stayAwakeDecision(true, true, ""));
+        check("custom patterns replace the defaults", I.stayAwakeDecision(true, true, "kitty", ["^kitty$"]) && !I.stayAwakeDecision(true, true, "mpv", ["^kitty$"]));
+        check("a broken pattern is skipped", I.stayAwakeDecision(true, true, "mpv", ["(", "^mpv$"]) === true);
         check("the setting exists and defaults to true", Config.settings.idle.stayAwakeInFullscreen === true);
         check("without a focused fullscreen window videoAwake is false", I.fullscreenFocused === false && I.videoAwake === false);
         const before = I.caffeine;

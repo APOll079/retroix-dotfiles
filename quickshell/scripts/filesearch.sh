@@ -1,5 +1,5 @@
 #!/bin/sh
-# File and folder NAME search for the launcher ("/ report") and the Find window.
+# File and folder NAME search for the launcher (its Files tab and "/ report").
 #   filesearch.sh <query> [folder]
 # Prints up to 50 paths, one per line (a folder has a trailing "/"), found under `folder` (default $HOME) with the
 # first of: fd, plocate, find. Hidden files and folders, node_modules and .git are skipped; matching is case-insensitive

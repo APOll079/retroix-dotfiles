@@ -8,7 +8,8 @@ The text comes from a trailing comment on the line of the bind:
     hl.bind(mainMod .. " + " .. "Q", ...)  -- help: Windows | Close menu or window
 
 "Windows" is the group, "Close menu or window" the label; the group is optional. A bind without
-a help comment is listed under "Other" with a label made from its dispatcher.
+a help comment is listed under "Other" with a label made from its dispatcher. `-- help: hidden` leaves the
+bind out of the list (it still works; e.g. the media Play key, which only a keyboard button sends).
 A `for i = 1, 4 do` loop around a bind turns `i` into "1-4".
 Plain Python, standard library only.
 """
@@ -155,6 +156,8 @@ def parse(path):
         rest = line[m.end():]
         keys = pretty(evaluate(first_arg(rest), loop))
         h = HELP.search(line)
+        if h and not h.group(1) and h.group(2).strip().lower() == "hidden":
+            continue
         group, label = ("Other", dispatcher_label(rest)) if not h else (h.group(1) or "Other", h.group(2))
         binds.append({"keys": keys, "group": group, "label": label})
     return binds

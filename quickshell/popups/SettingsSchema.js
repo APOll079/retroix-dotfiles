@@ -61,12 +61,13 @@ var SCHEMA = [
 
     e("Idle and power", "screensaver.enabled", "bool", "Screensaver", "Blank the screen with a Win95 screensaver when idle"),
     e("Idle and power", "screensaver.minutes", "int", "Screensaver after", "Minutes, 0 = off. Keep it below the dim and lock times", { min: 0, max: 600 }),
-    e("Idle and power", "screensaver.style", "choice", "Screensaver style", "starfield, pipes, mystify or random", { choices: ["starfield", "pipes", "mystify", "random"] }),
+    e("Idle and power", "screensaver.style", "choice", "Screensaver style", "starfield, pipes, mystify or random; pipes3d is the real xscreensaver pipes (needs the xscreensaver package)", { choices: ["starfield", "pipes", "pipes3d", "mystify", "random"] }),
     e("Idle and power", "idle.enabled", "bool", "Idle handling", "Dim, lock and turn the screens off"),
     e("Idle and power", "idle.dimMinutes", "int", "Dim after", "Minutes, 0 = off", { min: 0, max: 600 }),
     e("Idle and power", "idle.lockMinutes", "int", "Lock after", "Minutes, 0 = off", { min: 0, max: 600 }),
     e("Idle and power", "idle.screenOffMinutes", "int", "Screens off after", "Minutes, 0 = off", { min: 0, max: 600 }),
-    e("Idle and power", "idle.stayAwakeInFullscreen", "bool", "Stay awake in fullscreen", "No dim or lock while a fullscreen window is up"),
+    e("Idle and power", "idle.stayAwakeInFullscreen", "bool", "Stay awake in fullscreen", "No dim or lock while a fullscreen video or game is up"),
+    e("Idle and power", "idle.stayAwakeApps", "list", "Fullscreen apps that keep awake", "Comma-separated app id patterns (regex): Steam games, .exe, gamescope, mpv, vlc, zen"),
     e("Idle and power", "session.countdownSeconds", "int", "Reboot countdown", "Seconds before reboot or shutdown, 0 = off", { min: 0, max: 60 }),
     e("Idle and power", "session.customActions", "json-note", "Custom session actions", "A list of name, icon and command"),
 

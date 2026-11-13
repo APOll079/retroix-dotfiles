@@ -71,7 +71,6 @@ SettingsView 1.0 SettingsView.qml
 DefaultAppsPanel 1.0 DefaultAppsPanel.qml
 FixPanel 1.0 FixPanel.qml
 LoginReportPanel 1.0 LoginReportPanel.qml
-FindWindow 1.0 FindWindow.qml
 NetworkPage 1.0 NetworkPage.qml
 MiniPlayer 1.0 MiniPlayer.qml
 ScreensaverWindow 1.0 ScreensaverWindow.qml

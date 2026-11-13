@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// File and folder NAME search for the launcher ("/ report") and the Find window (popups/FindWindow.qml).
+// File and folder NAME search for the launcher (its Files tab and "/ report" in Apps).
 // search(q, folder) waits 250 ms after the last call (a newer query replaces the older one), then runs
 // scripts/filesearch.sh <q> [folder] as the one and only Process (a running search is stopped first; the answer of a
 // stopped one is dropped). The script picks fd, plocate or find, skips hidden files and folders, and prints up to 50 paths
@@ -34,8 +34,7 @@ Singleton {
 
     // ---- pure helpers ----
 
-    // A name to search for: 1 to 100 characters, no leading dash, no control characters (empty is allowed when `allowEmpty`:
-    // the Find window with a Look in folder). The script checks the same again.
+    // A name to search for: 1 to 100 characters, no leading dash, no control characters (empty is allowed when `allowEmpty`). The script checks the same again.
     function validQuery(q, allowEmpty) {
         if (typeof q !== "string")
             return false;
@@ -107,7 +106,7 @@ Singleton {
         debounce.restart();
     }
 
-    // Forget the running search (the Find window's Stop, or the launcher leaving "/")
+    // Forget the running search (the launcher leaving the file search)
     function stop() {
         root.token++;
         debounce.stop();

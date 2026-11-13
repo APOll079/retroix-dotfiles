@@ -51,9 +51,7 @@ hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Task\ Manager	Key: Apps | Task Manager
 hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Spotify\ panel	Key: Apps | Spotify panel
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ This\ cheat\ sheet	Key: Desktop | This cheat sheet
 hypr/binds.lua	\-\-\ help:\ Apps\ \|\ Clipboard\ history	Key: Apps | Clipboard history
-hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Window\ switcher	Key: Windows | Window switcher
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Lock\ screen	Key: Desktop | Lock screen
-hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Side\ panel\ \(notifications\)	Key: Desktop | Side panel (notifications)
 hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ left	Key: Windows | Focus left
 hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ right	Key: Windows | Focus right
 hypr/binds.lua	\-\-\ help:\ Windows\ \|\ Focus\ up	Key: Windows | Focus up
@@ -65,7 +63,7 @@ hypr/binds.lua	\-\-\ help:\ Workspaces\ \|\ Previous\ workspace	Key: Workspaces 
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Vesktop\ scratchpad	Key: Desktop | Vesktop scratchpad
 hypr/binds.lua	\-\-\ help:\ Screen\ \|\ Instant\ full\ screenshot	Key: Screen | Instant full screenshot
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Autoclicker\ \(toggle\)	Key: Desktop | Autoclicker (toggle)
-hypr/binds.lua	\-\-\ help:\ Media\ \|\ Play\ /\ pause\ Spotify	Key: Media | Play / pause Spotify
+hypr/binds.lua	XF86AudioPlay.*\-\-\ help:\ hidden	Key: Media Play pauses Spotify (hidden from the Keys list)
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Drag\ a\ window	Key: Mouse | Drag a window
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Maximise\ window	Key: Mouse | Maximise window
 hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode\ \(side\ buttons\)	Key: Desktop | Game mode (side buttons)
@@ -216,7 +214,7 @@ quickshell/DownloadWatch.qml	-A default=Open -A folder="Show in folder"	Download
 quickshell/popups/MenuRow.qml	property bool hoverLit	MenuRow: lists where the pointer moves the cursor turn the hover bar off (one lit row)
 quickshell/taskbar/Bar.qml	openLauncherMode\("clipboard", true\)	Super+V opens the clipboard on its own, without the launcher tabs
 quickshell/popups/AppLauncher.qml	tabsShown: !root\.standalone	The standalone clipboard window has no Apps / Games tabs
-quickshell/Idle.qml	function stayAwakeDecision	Stay awake: no dim / lock / screen-off while the focused window is fullscreen (idle.stayAwakeInFullscreen)
+quickshell/Idle.qml	function stayAwakeDecision	Stay awake: no dim / lock / screen-off while the focused window is a fullscreen video or game, i.e. its app id matches idle.stayAwakeApps (idle.stayAwakeInFullscreen)
 quickshell/NotificationStore.qml	function muteApp	Muted apps: no toast, history keeps the notification
 quickshell/NotificationStore.qml	priority === true	Priority apps get through Do Not Disturb and the screen-share hold
 quickshell/popups/NotificationDaemon.qml	Don't show toasts from	Toast right-click menu: Hide toast, mute the app, priority app
@@ -252,17 +250,13 @@ quickshell/SecurityAudit.qml	function decide	Security audit: first run only reco
 hypr/autostart.lua	mark\("session-start"\)	Login timestamps for the login report
 quickshell/popups/AppLauncher.qml	q\.startsWith\("/"\)	A query starting with / searches file and folder names
 quickshell/popups/AppLauncher.qml	activateFolder	Shift+Enter on a file row opens its folder
-quickshell/popups/AppLauncher.qml	Open in Find window	The last / row opens the Find window with the typed name
+quickshell/popups/AppLauncher.qml	{ key: "files", text: "Files" }	Files tab in the launcher: the file search without the "/"
 quickshell/popups/AppLauncher.qml	currencyAnswer	Currency row only when Calc and Units have no answer
-quickshell/popups/FindWindow.qml	title: "Find: Files or Folders"	Window title the hypr rule matches
-quickshell/popups/FindWindow.qml	isDefault: true	Find Now is the default button
-quickshell/popups/FindWindow.qml	onDoubleClicked: root\.openCurrent	Double-click opens the file
 quickshell/popups/NetworkPage.qml	root\.net\.speedTest	The speed test runs only from its button
 quickshell/FileSearch.qml	debounceMs: 250	File search: 250 ms debounce, one search at a time
 quickshell/scripts/filesearch.sh	--max-results	fd search is capped at 50
 hypr/restore.lua	"silent"	Restore launches silently on the entry's workspace
 quickshell/LaptopControls.qml	onClicked: root\.openNetwork\(\)	The ETH button opens the Network page
-hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Find\ files\ \(toggle\)	Key: Desktop | Find files (toggle)
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Restore\ workspaces	Key: Desktop | Restore workspaces
 quickshell/ScreensaverState.qml	wakeDecision	Screensaver: keys, clicks and the wheel wake at once, a mouse move only after 500 ms
 quickshell/ScreensaverState.qml	respectInhibitors: true	Screensaver: the idle monitor respects inhibitors (caffeine)

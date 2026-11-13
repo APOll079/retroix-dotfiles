@@ -14,7 +14,9 @@ PanelWindow {
     property int graceMs: 500
     signal wake()
 
-    color: Config.colors.outline
+    // pipes3d: the real pipes window sits under this one, so it is see-through and the drawn view is invisible (it still takes input)
+    readonly property bool seeThrough: root.style === "pipes3d"
+    color: root.seeThrough ? "transparent" : Config.colors.outline
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "qs-screensaver"
@@ -28,6 +30,7 @@ PanelWindow {
 
     ScreensaverView {
         anchors.fill: parent
+        opacity: root.seeThrough ? 0 : 1
         style: root.style
         startedAt: root.startedAt
         graceMs: root.graceMs

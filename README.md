@@ -14,7 +14,7 @@ A retro Hyprland desktop: Win95 bevels and classic-Mac Platinum details on **Art
 |---|---|
 | **Launcher** (Super+D) | Apps (fuzzy, usage-ranked, pins), calculator, session actions, window search, Games tab with cover art, clipboard history with previews |
 | **Spotify panel** (Super+S) | Player, Recent, your whole library with folders and pins, search, queue, synced lyrics. Works with the Spotify app or headless through `spotifyd` |
-| **Side panel** (Super+N) | Power buttons, audio output / EQ presets / mic / per-app volume, full-height notification history, calendar, phone (KDE Connect) |
+| **Side panel** (bell + clock button) | Power buttons, audio output / EQ presets / mic / per-app volume, full-height notification history, calendar, phone (KDE Connect) |
 | **Task Manager** (Ctrl+Shift+Esc) | A real window: Apps, Processes (grouped by program), Performance graphs |
 | **Snipping tool** (Super+Shift+S, Print) | Region, window, screen, all monitors; a history viewer (Super+Shift+H) |
 | **And** | Themed notifications with inline reply, screen-share picker, keybind cheat sheet (Super+F1), Bluetooth menu, dinit services panel, wallpaper browser |
@@ -73,9 +73,7 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 |---|---|
 | Super+D | Launcher |
 | Super+S | Spotify panel |
-| Super+N | Side panel (notifications, audio, calendar, phone) |
 | Super+V | Clipboard history |
-| Super+Tab | Window switcher |
 | Super+Shift+S, Print | Snipping tool (Shift+Print: instant full screenshot) |
 | Super+Shift+R | Record the screen (the snipping overlay with Record on); again stops |
 | Super+Ctrl+R, Super+Ctrl+S | Replay buffer on / off, save the last seconds as a clip |

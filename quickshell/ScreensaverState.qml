@@ -2,10 +2,11 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Io
 
 // Win95-style screensaver (settings.screensaver: enabled, minutes, style). An IdleMonitor (respects idle inhibitors, so
 // caffeine pauses it) fires after `minutes`, which must stay below idle.dimMinutes and idle.lockMinutes so it comes
-// first. No screensaver while Idle.videoAwake (a fullscreen video) or Idle.caffeine. When it runs there is one
+// first. No screensaver while Idle.videoAwake (a fullscreen video or game) or Idle.caffeine. When it runs there is one
 // ScreensaverWindow per screen (popups/ScreensaverWindow.qml). Any key, click, wheel or a mouse move after the grace
 // period (graceMs, so the cursor's own jitter does not close it), or the monitor leaving idle, closes them all at once;
 // the wake key is eaten by the window, not forwarded. `qs ipc call screensaver start|stop|preview`.
@@ -20,6 +21,22 @@ Singleton {
     readonly property var styles: ["starfield", "pipes", "mystify"]
     readonly property int graceMs: 500
 
+    // "pipes3d" is xscreensaver's real 3D pipes, run as an XWayland window under our transparent catcher (which still
+    // takes the wake input). Only offered when the binary exists; it is never part of "random". The hack's window is
+    // made fullscreen by a rule in hypr/windowrules.lua (screensaver-pipes3d). Untested live: see FEATURES.md.
+    readonly property string pipes3dPath: "/usr/lib/xscreensaver/pipes"
+    property bool hasPipes3d: false
+    Process {
+        running: true
+        command: ["test", "-x", root.pipes3dPath]
+        onExited: code => root.hasPipes3d = (code === 0)
+    }
+    Process {
+        id: pipes3dProc
+        running: root.running && root.runStyle === "pipes3d"
+        command: [root.pipes3dPath, "--window", "--no-fps", "--delay", "20000"]
+    }
+
     property bool running: false
     property bool viaIdle: false          // started by the idle monitor (so leaving idle stops it); a preview is not
     property string runStyle: "starfield"
@@ -29,7 +46,7 @@ Singleton {
 
     // The style for this run: a known name, "random" picks one, anything else is starfield
     function pickStyle(setting, rnd) {
-        if (root.styles.indexOf(setting) >= 0)
+        if (root.styles.indexOf(setting) >= 0 || (setting === "pipes3d" && root.hasPipes3d))
             return setting;
         if (setting === "random")
             return root.styles[Math.min(root.styles.length - 1, Math.floor(rnd() * root.styles.length))];

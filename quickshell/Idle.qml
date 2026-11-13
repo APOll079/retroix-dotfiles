@@ -46,11 +46,23 @@ Singleton {
     // foreign-toplevel `fullscreen` flag is live, unlike Hyprland's workspace IPC snapshot. Caffeine is separate:
     // it is the IdleInhibitor in Bar.qml and works whatever this says.
     // Pure: should a fullscreen window keep the screen awake?
-    function stayAwakeDecision(fullscreen, setting) {
-        return fullscreen === true && setting !== false;
+    // Only video and games count: the focused fullscreen window's app id must match one of idle.stayAwakeApps (regexes,
+    // case-insensitive; a missing or empty list uses the defaults). A browser left fullscreen on a page does not hold the screen.
+    readonly property var defaultAwakeApps: ["^steam_app_[0-9]+$", "\\.exe$", "^gamescope$", "^mpv$", "^vlc$", "^zen$"]
+    function stayAwakeDecision(fullscreen, setting, appId, patterns) {
+        if (fullscreen !== true || setting === false)
+            return false;
+        const list = (patterns && patterns.length > 0) ? patterns : root.defaultAwakeApps;
+        for (let i = 0; i < list.length; i++) {
+            try {
+                if (new RegExp(String(list[i]), "i").test(String(appId || "")))
+                    return true;
+            } catch (e) {}
+        }
+        return false;
     }
     readonly property bool fullscreenFocused: ToplevelManager.activeToplevel !== null && ToplevelManager.activeToplevel.fullscreen === true
-    readonly property bool videoAwake: root.stayAwakeDecision(root.fullscreenFocused, cfg.stayAwakeInFullscreen)
+    readonly property bool videoAwake: root.stayAwakeDecision(root.fullscreenFocused, cfg.stayAwakeInFullscreen, ToplevelManager.activeToplevel ? ToplevelManager.activeToplevel.appId : "", cfg.stayAwakeApps)
 
     readonly property bool dimmed: cfg.enabled && cfg.dimMinutes > 0 && !root.videoAwake && dimMonitor.isIdle
 

@@ -23,6 +23,14 @@
             "enabled": true,
             "lockMinutes": 10,
             "screenOffMinutes": 15,
+            "stayAwakeApps": [
+                "^steam_app_[0-9]+$",
+                "\\.exe$",
+                "^gamescope$",
+                "^mpv$",
+                "^vlc$",
+                "^zen$"
+            ],
             "stayAwakeInFullscreen": true
         },
         "militaryTimeClockFormat": true,

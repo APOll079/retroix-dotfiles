@@ -125,6 +125,18 @@ hl.window_rule({
     workspace = "special:spotifyspace silent"
 })
 
+-- The 3D pipes screensaver (settings screensaver.style = "pipes3d") runs xscreensaver's /usr/lib/xscreensaver/pipes in a
+-- window; fullscreen it, no animation, no focus. GUESS, not seen running: the class may be "XScreenSaver" or "pipes".
+hl.window_rule({
+    name  = "screensaver-pipes3d",
+    match = {
+        class = "^(XScreenSaver|pipes)$"
+    },
+    fullscreen = true,
+    no_anim    = true,
+    no_focus   = true
+})
+
 -- Steam games (and Steam shortcuts) run as steam_app_<id> under Proton: open them on workspace 2 (DP-2)
 hl.window_rule({
     name  = "games-workspace",
@@ -253,18 +265,6 @@ hl.window_rule({
     move  = { "16", "monitor_h-window_h-48" }
 })
 
--- Quickshell's Find window (popups/FindWindow.qml, a FloatingWindow titled "Find: Files or Folders"): float, centred,
--- MenuStyle.windowWidth x windowHeight; field names as in the task-manager rule above, not seen running here
-hl.window_rule({
-    name  = "find-window",
-    match = {
-        initial_title = "^Find: Files or Folders$"
-    },
-    float    = true,
-    center   = true,
-    size     = { 760, 560 },
-    min_size = { 480, 320 }
-})
 
 -- Quickshell's Lyrics window (popups/LyricsWindow.qml, a FloatingWindow titled "Lyrics"): float, pinned (stays on
 -- every workspace), bottom-right above the 32px bar. Size = MenuStyle.lyricsWindow*; field names as in the

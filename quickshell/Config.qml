@@ -257,8 +257,9 @@ property bool enabled: true
 property int dimMinutes: 5
 property int lockMinutes: 10
 property int screenOffMinutes: 15
-// no dim / lock / screen-off while a fullscreen window (a video) is on the focused workspace
+// no dim / lock / screen-off while the focused window is fullscreen AND its app id matches stayAwakeApps (video, games)
 property bool stayAwakeInFullscreen: true
+property var stayAwakeApps: ["^steam_app_[0-9]+$", "\\.exe$", "^gamescope$", "^mpv$", "^vlc$", "^zen$"]
 }
 // Spotify extras: a themed "now playing" toast on every song change (off by default)
 property JsonObject spotifyExtras: JsonObject {

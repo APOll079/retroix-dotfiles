@@ -25,10 +25,10 @@ import "." as Popups
 // - emoji: ":" and a word searches the built-in emoji table (Emoji); Enter copies the emoji
 // - files: "/" and part of a name ("/report", "/ report") searches file and folder NAMES under the home folder
 //   (FileSearch -> scripts/filesearch.sh, 250 ms after the last key); Enter opens the file (xdg-open), Shift+Enter its
-//   folder; the last row opens the same search in the Find window (FindWindowState)
+//   folder. The Files tab is the same search without the "/" (every key is part of a name)
 // - currency: "100 eur in sek" -> a top row with the converted amount (Utils.Currency, cached ECB rates); Enter copies the number
 // Tabs along the top switch between Apps, Games (cover grid, GamesView.qml, shared with the
-// standalone Games menu) and Clipboard; Ctrl+Tab cycles them.
+// standalone Games menu), Files and Clipboard (Settings opens the Settings window); Ctrl+Tab cycles them.
 // Right-click an app (or Shift+Enter) for its options in the shared PopupMenu: launch, pin/unpin, move pinned up/down, hide
 // (the "Hidden (n)" chip lists hidden apps) and uninstall (owner found by scripts/app-owner.sh, then
 // `yay -Rns` / `flatpak uninstall` in a terminal after a confirm).
@@ -40,7 +40,7 @@ PanelWindow {
     property int screenHeight: 0
     property var closeCallback: function () {}
 
-    property string mode: "apps"          // apps | windows | games | clipboard
+    property string mode: "apps"          // apps | windows | games | files | clipboard
     // Super+V: the clipboard on its own, without the Apps / Games / Clipboard tabs (those belong to Super+D)
     property bool standalone: false
     // Bar.qml: opens the Settings window (the launcher's Settings tab)
@@ -55,10 +55,11 @@ PanelWindow {
 
     property var clipLines: []
 
-    // files: "/" and part of a name
-    readonly property bool fileMode: root.mode === "apps" && searchInput.text.trim().startsWith("/")
-    readonly property string fileName: root.fileMode ? searchInput.text.trim().slice(1).trim() : ""
-    readonly property int fileRows: root.fileMode ? Math.max(0, root.results.length - 1) : 0    // the last row is "Open in Find window"
+    // files: the Files tab, or "/" and part of a name in Apps
+    readonly property bool fileMode: root.mode === "files" || (root.mode === "apps" && searchInput.text.trim().startsWith("/"))
+    readonly property string fileName: root.mode === "files" ? searchInput.text.trim()
+        : root.fileMode ? searchInput.text.trim().slice(1).trim() : ""
+    readonly property int fileRows: root.fileMode ? root.results.length : 0
     readonly property bool fileEmpty: root.fileMode && root.fileRows === 0
     readonly property string fileEmptyText: FileSearch.error === "notool" ? "fd, plocate or find not available"
         : root.fileName === "" ? "Type part of a file or folder name"
@@ -126,8 +127,8 @@ PanelWindow {
         }
 
         PopupWindowFrame {
-            windowTitle: root.mode === "windows" ? "Windows" : root.mode === "clipboard" ? "Clipboard" : root.mode === "games" ? "Games" : "Search"
-            windowTitleIcon: root.mode === "windows" ? "\ue8f9" : root.mode === "clipboard" ? "\ue14f" : "\ue8b6"
+            windowTitle: root.mode === "windows" ? "Windows" : root.mode === "clipboard" ? "Clipboard" : root.mode === "games" ? "Games" : root.mode === "files" ? "Files" : "Search"
+            windowTitleIcon: root.mode === "windows" ? "\ue8f9" : root.mode === "clipboard" ? "\ue14f" : root.mode === "files" ? "\ue2c7" : "\ue8b6"
 
             RowLayout {
                 anchors.fill: parent
@@ -139,7 +140,7 @@ PanelWindow {
                     Layout.fillHeight: true
                     spacing: MenuStyle.pad
 
-                    // Tabs joined to a raised page (the same three tabs for Apps, Games and Clipboard); the search box,
+                    // Tabs joined to a raised page (the same tabs for Apps, Games, Files and Clipboard); the search box,
                     // filters and list live inside the page. Clipboard has no padding inside the page, so the list and
                     // the preview use the full width.
                     TabPage {
@@ -286,11 +287,10 @@ PanelWindow {
 
                                     ListView {
                                         id: appsView
-                                        // (with no file found only the "Open in Find window" row is left: it sits at the bottom)
                                         x: 0
                                         width: parent.width
-                                        height: root.fileEmpty ? MenuStyle.rowHeight : parent.height
-                                        y: parent.height - height
+                                        height: parent.height
+                                        y: 0
                                         model: root.results
                                         currentIndex: 0
                                         onCurrentIndexChanged: {
@@ -466,6 +466,7 @@ PanelWindow {
     readonly property var tabs: [
         { key: "apps", text: "Apps" },
         { key: "games", text: "Games" },
+        { key: "files", text: "Files" },
         { key: "clipboard", text: "Clipboard" },
         { key: "settings", text: "Settings" }
     ]
@@ -513,6 +514,8 @@ PanelWindow {
         if (root.mode === "games")
             return;
         const q = searchInput.text.trim();
+        if (root.mode === "files")
+            return root.setResults(root.fileItems(q), keep ? appsView.currentIndex : 0);
         if (root.mode === "windows" || q.startsWith(","))
             return root.setResults(root.windowItems(root.mode === "windows" ? q : q.slice(1).trim()), root.mode === "windows" && q === "" ? 1 : 0);
         if (root.mode === "clipboard")
@@ -856,8 +859,7 @@ PanelWindow {
         root.closeCallback();
     }
 
-    // The rows for what FileSearch has found for `name` (it starts the search itself, 250 ms after the last key), then the
-    // "Open in Find window" row
+    // The rows for what FileSearch has found for `name` (it starts the search itself, 250 ms after the last key)
     function fileItems(name) {
         FileSearch.search(name);
         const rows = [];
@@ -873,8 +875,6 @@ PanelWindow {
                 });
             }
         }
-        const open = () => { FindWindowState.open(name); root.closeCallback(); };
-        rows.push({ title: "Open in Find window", glyph: "\ue8b6", key: "files:find", run: open, runFolder: open });
         return rows;
     }
 

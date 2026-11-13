@@ -52,10 +52,8 @@ hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(cheatSheet))  -- help: Desktop | Thi
 -- Clipboard history lives in the quickshell launcher (themed, keyboard-driven)
 hl.bind(mainMod .. " + " .. "V", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") clipboard']]))  -- help: Apps | Clipboard history
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "comma", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") settings']]))  -- help: Apps | Settings
-hl.bind(mainMod .. " + " .. "TAB", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") windows']]))  -- help: Windows | Window switcher
 hl.bind(mainMod .. " + " .. "L", hl.dsp.exec_cmd("hyprlock"))  -- help: Desktop | Lock screen
 hl.bind(mainMod .. " + CTRL" .. " + " .. "L", hl.dsp.exec_cmd("qs ipc call lyrics toggle"))  -- help: Media | Lyrics window (toggle)
-hl.bind(mainMod .. " + " .. "N", hl.dsp.exec_cmd([[bash -c 'qs ipc call notifications_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggle']]))  -- help: Desktop | Side panel (notifications)
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + " .. "left", hl.dsp.focus({ direction = "left" }))  -- help: Windows | Focus left
@@ -105,7 +103,6 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
-hl.bind(mainMod .. " + CTRL" .. " + " .. "F", hl.dsp.exec_cmd("qs ipc call find toggle"))  -- help: Desktop | Find files (toggle)
 hl.bind(mainMod .. " + CTRL" .. " + " .. "W", function() require("restore").run() end)  -- help: Desktop | Restore workspaces
 hl.bind(mainMod .. " + CTRL" .. " + " .. "O", hl.dsp.exec_cmd("qs ipc call miniplayer toggle"))  -- help: Media | Mini player (toggle)
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "O", hl.dsp.exec_cmd("pkill -SIGUSR1 hyprexpose"))  -- help: Windows | Workspace overview
@@ -141,4 +138,4 @@ hl.bind("SHIFT + Print", hl.dsp.exec_cmd(screenshotCmd))  -- help: Screen | Inst
 -- Autoclicker toggle (hypr/scripts/autoclick: ydotool, left button about 20 clicks/s); setup once with scripts/autoclick-setup.sh
 hl.bind("F8", hl.dsp.exec_cmd("fish ~/.config/hypr/scripts/autoclick"))  -- help: Desktop | Autoclicker (toggle)
 
-hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl -p spotify play-pause"), { locked = true })  -- help: Media | Play / pause Spotify
+hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl -p spotify play-pause"), { locked = true })  -- help: hidden

@@ -85,7 +85,7 @@
 | `docs/desktop.md` | Setup facts (workspaces, keys, Task Manager, autoclicker, NFS, deploy) and every area: bar, side panel, launcher, Bluetooth, screenshots, games, cheat sheet / Services / Phone, share picker, notifications, audio, wallpapers, idle / OSD / session, known state |
 | `docs/spotify.md` | The Spotify drawer: layout, sizes, click model, keys, volume, memory, helper, 2026 API limits, tests |
 | `docs/theming.md` | App themes (VSCodium, Zen) and the generated GTK theme / icons |
-| `docs/ideas-starred.md`, `docs/ideas-other.md`, `docs/inspiration.md` | Suggestions from Claude, not requests: the idea lists (top picks, the rest, maybes) with the Rejected list (never suggest those again), and the design plan |
+| `docs/ideas-starred.md`, `docs/ideas-other.md`, `docs/ideas-closed.md` | Suggestions from Claude, not requests: the idea lists (top picks, the rest, maybes) with the Rejected and Done lists in `ideas-closed.md` (never suggest rejected ones again) and the licences of the reference rices |
 | `docs/DESIGN.md` | Generated (never edit): every named size, font, motion value and colour, from `MenuStyle.qml` and `themes.json`. After changing either, run `python3 scripts/gen-design.py`; check.py fails when it is stale |
 | `FEATURES.md` | What exists (one line each), what's planned, and the ONE list of things that still need a live test |
 | `MAINTENANCE.md` | Plain-English upkeep guide for me (updates, rollback, where to look when something breaks) |

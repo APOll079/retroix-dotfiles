@@ -1,7 +1,7 @@
 # Ideas: everything else
 
 Claude's suggestions, **not picked yet**. Nothing here is a request until it moves to FEATURES.md "Planned".
-The top picks (★) are in `ideas-starred.md`. Both files use the same sections. Design ideas are in `inspiration.md`. The rejected list at the bottom covers both files.
+The top picks (★) are in `ideas-starred.md`. Both files use the same sections. The rejected list is in `ideas-closed.md`.
 
 Size: **S** an evening, **M** a session or two, **L** a project. "(seen in ...)" names a Noctalia / DankMaterialShell / Caelestia plugin that does something similar, so you can look at how they did it.
 
@@ -25,9 +25,10 @@ Not now: keep for later, or cut.
 | | **Display settings with undo**: change resolution / refresh / position, and it reverts by itself after 15 s unless you click Keep | M |
 | | **Visualizer**: a small live audio graph in the bar centre when there are no lyrics; cava bars, or a single oscilloscope line as the other style | M |
 
-## Rejected (don't suggest again)
-Case convert, kaomoji, YouTube search, boot-entry picker (no dual boot), unread mail count, Minecraft instances, Docker and lab VMs in Services, Paint, achievements, high-contrast theme, Notepad, Spotify wake-up alarm, "while you were away" summary, playtime on game tiles, web bookmarks in the launcher, keystroke display, proximity lock, wallpaper shuffle, DNS switcher, temperature alert, drop-to-set wallpaper, drop shelf, countdowns, clear clipboard on lock, phone media control, scheduled DND, recent folders in the Start menu, README screenshots, floating terminal apps, stopwatch / world clock, GitHub in the Start menu, turn a monitor off, remote desktop shortcuts, Soloist backend, listening stats, Wallhaven browser, System Properties dialog, live path completion in the launcher, GTK recent files and web-search fallback in the launcher, SSH hosts in the launcher.
-
-QR codes (region scan, clipboard QR), pinned screenshots, upload-and-share links, Win95-framed window shots, a themed password prompt, repo status, launcher command mode, copy-the-2FA-code, password tool, school schedule, ring my phone, Spotify sleep timer, wallpaper of the day, 20-20-20 reminder, internet radio, podcasts, ambient sounds, workspace names / remembered float positions / per-workspace wallpaper, tip of the day, clock properties dialog, CRT mode, Konami code, Minesweeper, Solitaire, Run dialog, seasonal touches, spinning globe, CPU cat, bongo cat, typing sounds, .beat time.
-
-From the desktop-overhaul audit: Super+P pin, Super+right-drag resize, Games chips clip fix, tooltips (ETH / privacy icons / lyric line, BevelButton tooltip + one delay).
+## Reference rices (licences)
+Ideas only, never copy code or assets from these.
+| Source | Licence |
+|---|---|
+| **fall25** by cd3y | CC0: copy freely |
+| **jefrecantuledesma/dotfiles** | GPL-3: ideas only, don't paste code into an MIT repo |
+| **hkrist/dotfiles** | No licence: ideas only. Keep its wallpaper out of this public repo |

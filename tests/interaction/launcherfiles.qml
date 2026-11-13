@@ -1,5 +1,5 @@
 // Launcher additions for the file search ("/ report") and the currency row ("100 eur in sek"): the rows, the states, the
-// 250 ms debounce, Enter / Shift+Enter, the "Open in Find window" row. Same setup as launcher.qml: AppLauncher is a layer-shell
+// 250 ms debounce, Enter / Shift+Enter, the Files tab (the same search without the "/"). Same setup as launcher.qml: AppLauncher is a layer-shell
 // PanelWindow, so a scratch copy turns it into a FloatingWindow. QS_NO_APPLY is set: filesearch.sh never runs (FileSearch only
 // records what it would have run in `launched`; the test hands it answers with gotText / gotExit) and xdg-open is not run
 // (the paths go to the panel's `openLog`).
@@ -107,7 +107,7 @@ ShellRoot {
             FS.gotText(tok, txt);
             FS.gotExit(tok, 0);
             tc.wait(100);
-            shell.check("rows: files, then Open in Find window", panel.results.map(r => r.title).join("|") === "Annual Report.txt|Reports|report.conf|Open in Find window");
+            shell.check("rows: the files, nothing after them", panel.results.map(r => r.title).join("|") === "Annual Report.txt|Reports|report.conf");
             shell.check("rows: the folder is shown with ~, a folder gets the folder glyph", panel.results[0].sub === "~/docs" && panel.results[1].sub === "~" && panel.results[2].sub === "/etc"
                 && panel.results[1].glyph === "\ue2c7" && panel.results[0].glyph === "\ue873");
             shell.check("rows: not empty any more, the list fills the field", !panel.fileEmpty && list.height > 3 * 22);
@@ -132,16 +132,23 @@ ShellRoot {
             FS.gotExit(FS.token, 0);
             tc.wait(100);
 
-            // ---- the Find window row ----
+            // ---- the Files tab: the same search, no "/" ----
+            panel.open("files");
+            tc.wait(50);
+            shell.check("Files tab: the tab exists and is current", panel.tabs.some(t => t.key === "files") && panel.mode === "files" && panel.fileMode);
+            box.text = "report";
+            tc.wait(400);
+            shell.check("Files tab: a plain name starts the file search", FS.query === "report" && panel.fileName === "report");
+            FS.gotText(FS.token, txt);
+            FS.gotExit(FS.token, 0);
+            tc.wait(100);
+            shell.check("Files tab: the same rows", panel.results.map(r => r.title).join("|") === "Annual Report.txt|Reports|report.conf");
+            shell.check("Files tab: a ',' is a name here, not the window search", (() => { box.text = ",x"; tc.wait(100); return panel.fileMode && panel.mode === "files"; })());
             box.focusInput();
-            tc.keyClick(Qt.Key_Up);
-            shell.check("Up from the first row wraps to the Open in Find window row", list.currentIndex === panel.results.length - 1 && panel.results[list.currentIndex].key === "files:find");
-            const closed1 = shell.closed;
-            tc.keyClick(Qt.Key_Return);
-            tc.wait(300);
-            shell.check("Enter on it opens the Find window with the name and closes the launcher", FindWindowState.visible && shell.closed === closed1 + 1 && FindWindowState.win.named === "report");
-            FindWindowState.close();
-            shell.check("closing the Find window removes it", !FindWindowState.visible);
+            tc.keyClick(Qt.Key_Tab, Qt.ControlModifier);
+            shell.check("Ctrl+Tab leaves Files for the next tab", panel.mode === "clipboard");
+            panel.open("apps");
+            tc.wait(50);
 
             // ---- states ----
             box.text = "/nothing here";
@@ -149,8 +156,7 @@ ShellRoot {
             FS.gotText(FS.token, "");
             FS.gotExit(FS.token, 0);
             tc.wait(100);
-            shell.check("no files: No files found, only the Find window row is left", panel.fileEmpty && panel.fileEmptyText === "No files found" && panel.results.length === 1);
-            shell.check("no files: that row sits at the bottom of the field", list.height === 22 && Math.abs(list.y + list.height - list.parent.height) < 1);
+            shell.check("no files: No files found, no rows", panel.fileEmpty && panel.fileEmptyText === "No files found" && panel.results.length === 0);
             box.text = "/no tool";
             tc.wait(400);
             FS.gotText(FS.token, "");
