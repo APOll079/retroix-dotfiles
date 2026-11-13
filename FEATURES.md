@@ -121,7 +121,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Bar: Start and Themes are labelled and wider; no Wallpapers / Services buttons (Wallpapers is in the Themes menu, Services in the Start menu); the right side (caffeine, CPU, ETH, Bluetooth, bell + clock) is raised boxed buttons with gaps, no sunken frame: nothing clipped at 1920 and 1280, the centre text still gets its room (the width bookkeeping now counts the gaps); no stripe down the left of the Start menu and launcher, no dot on the Start button
 - [ ] Updates: System / Flatpak / Update all each open the wider terminal (960x460, the rule isn't reloaded until `hyprctl reload`); after closing the terminal the count drops (and the Start dot goes) within a few seconds
 - [ ] Start > Trash (size) opens the Trash folder in your file manager (`trash:///`); nothing in the shell empties it any more
-- [ ] Launcher answers: "5 km in mi", "#c950bb", "time tokyo" in Super+D (text, glyph, Enter copies and closes), plus one the calculator also knows ("1 mib to kib") and a time in a zone that is in daylight saving now (glyph codepoints unchecked)
+- [ ] Launcher answers: "5 km in mi" in Super+D (text, glyph, Enter copies and closes), plus one the calculator also knows ("1 mib to kib")
 
 ### Network and VPN watch (never looked at)
 - [ ] Pull the cable and plug it back: "Network is down" then "Network is back" once each, about 20 s after the change (a shorter flap toasts nothing); a host added to `networkWatch.hosts` toasts "is down" / "is back" once. Set `hosts` in settings.json to try it (empty by default)

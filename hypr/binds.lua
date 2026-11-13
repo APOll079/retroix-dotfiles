@@ -107,19 +107,6 @@ hl.bind(mainMod .. " + CTRL" .. " + " .. "W", function() require("restore").run(
 hl.bind(mainMod .. " + CTRL" .. " + " .. "O", hl.dsp.exec_cmd("qs ipc call miniplayer toggle"))  -- help: Media | Mini player (toggle)
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "O", hl.dsp.exec_cmd("pkill -SIGUSR1 hyprexpose"))  -- help: Windows | Workspace overview
 hl.bind(mainMod .. " + CTRL" .. " + " .. "K", hl.dsp.exec_cmd("qs ipc call screensaver start"))  -- help: Desktop | Start the screensaver
--- SUPER + CTRL + T: a drop-down terminal (kitty --class dropterm) in its own special workspace, like the Vesktop scratchpad
--- above; started the first time, then toggled. The "dropdown-terminal" rule in windowrules.lua floats and places it
-hl.bind(mainMod .. " + CTRL" .. " + " .. "T", function()  -- help: Desktop | Drop-down terminal
-    local running = false
-    for _, w in ipairs(hl.get_windows()) do
-        if w.class == "dropterm" then running = true end
-    end
-    if not running then
-        hl.dispatch(hl.dsp.exec_cmd("kitty --class dropterm"))
-    end
-    hl.dispatch(hl.dsp.workspace.toggle_special("dropterm"))
-end)
-
 -- SUPER + CTRL + Z: magnify around the cursor (Hyprland's cursor zoom), again to go back. Option name from the
 -- reference stubs (cursor.zoom_factor); the Lua call shape is a guess, not seen running here
 local zoomed = false

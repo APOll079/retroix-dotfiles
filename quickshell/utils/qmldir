@@ -3,6 +3,4 @@ singleton Fuzzy 1.0 Fuzzy.qml
 singleton AppSearch 1.0 AppSearch.qml
 singleton Calc 1.0 Calc.qml
 singleton Units 1.0 Units.qml
-singleton ColorText 1.0 ColorText.qml
-singleton TimeZones 1.0 TimeZones.qml
 singleton Currency 1.0 Currency.qml

@@ -161,17 +161,12 @@ quickshell/popups/UpdatesPanel.qml	text: "Flatpak"	Updates: the Flatpak button o
 quickshell/popups/UpdatesPanel.qml	text: "Update all"	Updates: Update all opens the terminal on yay -Syu and flatpak update
 quickshell/utils/Units.qml	function answer\(	Launcher: "5 km in mi" / "72 f in c" shows a conversion row and Enter copies the number; unknown or mixed units give no row
 quickshell/popups/AppLauncher.qml	Utils\.Units\.answer\(q\)	Launcher: a unit conversion row goes before the calculator row and replaces the calculator's row for the same input
-quickshell/utils/ColorText.qml	function answer\(	Launcher: typing #c950bb, #abc or rgb(201,80,187) shows hex, rgb and hsl; Enter copies the hex
-quickshell/popups/AppLauncher.qml	Utils\.ColorText\.answer\(q\)	Launcher: a colour row is added for a typed colour
-quickshell/utils/TimeZones.qml	function answer\(	Launcher: "time tokyo" shows the city's time and date; Enter copies the time
-quickshell/popups/AppLauncher.qml	Utils\.TimeZones\.answer\(q\)	Launcher: a time zone row is added for "time <city>"
 quickshell/popups/NotificationList.qml	function filterItems\(	Notification history: the search box filters by app, title and body
 quickshell/popups/NotificationList.qml	Search notifications	Notification history: the search box placeholder
 quickshell/popups/NotificationList.qml	No matches	Notification history: an empty search result says No matches
 quickshell/popups/NotificationList.qml	onEscaped: filterBox\.input\.focus = false	Notification history: a second Escape in the search box hands the keyboard back
 quickshell/Weather.qml	function nextHours\(	Weather: the hourly forecast picks the running slot and the next ones
 quickshell/popups/CalendarTab.qml	hourlyRow	Calendar tab: the hourly forecast row
-hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Drop\-down\ terminal	Key: Desktop | Drop-down terminal
 hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Zoom\ around\ the\ cursor	Key: Desktop | Zoom around the cursor (toggle)
 quickshell/popups/SpotifyMoreMenu.qml	onEscaped: panel\.menuOpen = false	Spotify ... menu: Escape closes only the menu
 quickshell/popups/SpotifyMoreMenu.qml	body\.forceActiveFocus	Spotify ... menu takes the keyboard when it opens

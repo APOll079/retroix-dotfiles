@@ -13,7 +13,7 @@
 --
 -- How it launches: hl.exec_cmd(cmd, { workspace = "<ws> silent" }). The second argument is the "exec rules" table of the Lua API
 -- (hl.meta.lua: `exec_cmd fun(cmd: string, rules?: table<string, string|number|boolean>)`); the key and value follow the
--- window-rule effect `workspace = "special:dropterm silent"` used in windowrules.lua. GUESS, not seen running: that this
+-- window-rule effect `workspace = "special:spotifyspace silent"` used in windowrules.lua. GUESS, not seen running: that this
 -- table takes the "workspace" key with the "silent" suffix. If a program lands on the wrong workspace, the fallback is a window
 -- rule per program (hl.window_rule with match = { class = ... } and workspace = "<n> silent") in windowrules.lua.
 local M = {}

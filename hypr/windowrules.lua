@@ -87,18 +87,6 @@ hl.window_rule({
     center = true
 })
 
--- The drop-down terminal (SUPER + CTRL + T in binds.lua): its own special workspace, floating along the top edge
-hl.window_rule({
-    name  = "dropdown-terminal",
-    match = {
-        class = "^dropterm$"
-    },
-    workspace = "special:dropterm silent",
-    float     = true,
-    size      = { "monitor_w*0.8", "monitor_h*0.45" },
-    move      = { "(monitor_w-window_w)/2", "32" }
-})
-
 hl.window_rule({
     name  = "windowrule-zen-download",
     match = {

@@ -14,7 +14,7 @@ import "." as Popups
 // Launcher (Super+D). One result list fed by providers:
 // - apps: fuzzy search, usage-ranked, pinned first when empty, category filter row
 // - calculator: "2+2*3", "10 km to mi" -> top row, Enter copies the result
-// - answers: "5 km in mi" (Units), "#c950bb" (ColorText), "time tokyo" (TimeZones) -> a top row, Enter copies the value
+// - answers: "5 km in mi" (Units) -> a top row, Enter copies the value
 // - session: type lock / logout / reboot / suspend / shutdown (or a custom action's name)
 // - windows: start with "," to search open windows
 // - clipboard: Super+V opens the cliphist history; Enter copies the entry back; right-click a row for Delete
@@ -543,12 +543,6 @@ PanelWindow {
         const calc = unit ? "" : Utils.Calc.evaluate(q);
         if (unit)
             items.push({ title: unit.text, sub: "Enter copies " + unit.number, glyph: "\uea5f", run: () => root.copy(unit.number, q) });
-        const colour = Utils.ColorText.answer(q);
-        if (colour)
-            items.push({ title: colour.hex, sub: colour.sub, glyph: "\ue3b8", run: () => root.copy(colour.hex) });
-        const zone = Utils.TimeZones.answer(q);
-        if (zone)
-            items.push({ title: zone.title, sub: zone.sub, glyph: "\ue8b5", run: () => root.copy(zone.time) });
         if (calc !== "")
             items.push({ title: "= " + calc, sub: "Enter copies the result", glyph: "\uea5f", run: () => root.copy(calc.replace(/ [a-z/]+$/, ""), q) });
         // currency: only when the calculator and the unit conversion have no answer

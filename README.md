@@ -78,7 +78,6 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+Shift+R | Record the screen (the snipping overlay with Record on); again stops |
 | Super+Ctrl+R, Super+Ctrl+S | Replay buffer on / off, save the last seconds as a clip |
 | Super+Ctrl+P | Pause / resume the recording |
-| Super+Ctrl+T | Drop-down terminal |
 | Super+Ctrl+Z | Zoom around the cursor (again to go back) |
 | (snipping overlay) R | Switch between Shot and Record |
 | Super+Ctrl+L | Lyrics window (small, pinned, follows the song) |
