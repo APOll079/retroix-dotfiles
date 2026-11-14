@@ -1,6 +1,6 @@
 ---
 name: retro-design
-description: Use for any Quickshell UI work in this repo that changes how something looks or behaves on screen (bar, menus, panels, popups, toasts, layout, sizes, spacing, icons, text). Render, look, critique, click-test, then commit.
+description: Use for any Quickshell UI work in this repo that changes how something looks or behaves on screen (bar, menus, panels, popups, toasts, layout, sizes, spacing, icons, text). Build from the shared components; render and click-test only when the owner asks.
 ---
 
 # Retro design workflow
@@ -16,9 +16,10 @@ This desktop is a cherry retro shell: Win95 / classic Mac OS Platinum. The rules
 - Shared components only (PopupWindowFrame, MenuRow, BevelButton, SunkenField, SearchBox, RetroSlider, Bevel, BarButton). Config.colors only, sizes from MenuStyle, Monaco 12 or 16 only, glyphs as \u escapes, no rounding / blur / shadows.
 - Win95 / Platinum conventions: labels left-aligned and followed by their control, one consistent padding inside every frame, related controls grouped, a raised button for actions and a sunken one for "on", title bars on windows, nothing floating loose without a frame.
 
-## 3. Render and look (required)
+## 3. Render and look (only when asked)
+- Only when the owner asks, or for a big visual change (a new menu, a layout rework) after saying so first. Never a whole gallery. Otherwise skip to the report and say the change is unseen.
 - Use the repo's offscreen harness if one exists (earlier runs used offscreen qs with fixtures). If not: a scratch copy, `QT_QPA_PLATFORM=offscreen`, fixture data, and `grabToImage` to save a PNG in the scratchpad. Never the live Quickshell.
-- Render every state that matters: empty, normal, full / long text, hovered or selected (forced via a flag in the scratch copy only), open and closed, at the minimum size and at 1920 and 1280 wide where the bar is involved. Render with cherry AND dusty.
+- Render only the states that matter for this change (usually the normal one, cherry; dusty only if colours changed).
 - Open each PNG with the Read tool and actually look at it.
 
 ## 4. Critique against this checklist (write the answers down)
@@ -33,7 +34,8 @@ This desktop is a cherry retro shell: Win95 / classic Mac OS Platinum. The rules
 9. Both themes: does anything vanish or lose contrast in dusty?
 If any answer is bad, fix and render again. At most three rounds; then report what is still off instead of hiding it.
 
-## 5. Click-test (required for anything clickable)
+## 5. Click-test (only when the owner says "run checks")
+Until then, report clickable changes as untested and never claim a toggle works.
 In the offscreen harness, simulate: open via its button, click the button again (must close), Esc, click outside, Super+Q path (IPC `menus_<mon> closeAny`), open another menu while this one is open (this one closes). Keyboard: arrows, Enter, Tab where it has a list. Record each result. Never claim a toggle works without this.
 
 ## 6. Report

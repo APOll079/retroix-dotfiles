@@ -17,7 +17,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 1. Capture
 | | Idea | Size |
 |---|---|---|
-| ★ | **Name shots by window**: `zen_2026-11-03_14-05.png` instead of a plain timestamp | S |
 | ★ | **OBS controls**: start / stop recording, save the replay buffer, from the bar (OBS is installed; an alternative to a separate recorder) (seen in obs-control) | S |
 
 ## 2. System health
@@ -29,8 +28,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 5. Launcher
 | | Idea | Size |
 |---|---|---|
-| ★ | **Folder shortcuts**: the Nemo bookmarks as results (Pictures, NAS, repo) | S |
-| ★ | **Calculator history**: the last results, click to copy | S |
 | ★ | **Services by name**: "/svc spotifyd" to start / stop / restart a dinit service without opening the panel (seen in systemd) | S |
 
 ## 8. Side panel, notifications, calendar and phone
@@ -39,8 +36,7 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Pomodoro / focus timer**: 25 / 5 cycles in the side panel, DND on during focus, a counter in the bar | S |
 | ★ | **Notification sounds**: per-app on/off, one quiet sound (see "Sounds" for the asset rule), and optionally a different sound for messages from chosen people (seen in contact-sounds) | S |
 | ★ | **Act on the latest toast by key**: Super+Shift+N opens / Super+Shift+X dismisses the newest | S |
-| ★ | **Improve the side panel (notifications / calendar / etc.)** (suggestion): a pass over Super+N instead of a separate dashboard. Look at what is cramped or missing in each tab (Home, Calendar, Phone, notification history) and fix the worst: readability, what is shown first, what could sit on the Home tab (now playing summary, CPU / RAM, next calendar item). Starts with a look at the current panel, then a short list for you to pick from (seen in Caelestia's dashboard) | M |
-| ★ | **To-do list**: in the Calendar tab, with due dates shown on the calendar; a plain file so it syncs with your notes | M |
+| ★ | **Improve the side panel (notifications / calendar / etc.)** (suggestion): a pass over the side panel (bell + clock button) instead of a separate dashboard. Look at what is cramped or missing in each tab (Home, Calendar, Phone, notification history) and fix the worst: readability, what is shown first, what could sit on the Home tab (now playing summary, CPU / RAM, next calendar item). Starts with a look at the current panel, then a short list for you to pick from (seen in Caelestia's dashboard) | M |
 
 ## 9. Games
 | | Idea | Size |
@@ -58,7 +54,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 13. Theming and retro look
 | | Idea | Size |
 |---|---|---|
-| ★ | **Monaco 14 / 11 → 16 / 12** in the launcher search and tucked labels (they break the font rule today) | S |
 | ★ | **Character Map**: browse and copy the Material Symbols icons by name, shows the `\uXXXX` code (handy for building the shell itself) | S |
 | ★ | **Win95 lock screen**: a Quickshell lock (WlSessionLock) that looks like the "Welcome to Windows" password box | L |
 | ★ | **Login screen**: a Quickshell greeter for greetd in the same style, so the look starts before you log in | L |

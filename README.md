@@ -8,7 +8,7 @@ A retro Hyprland desktop: Win95 bevels and classic-Mac Platinum details on **Art
 
 ## What's in it
 
-**Bar**: workspaces, Start and Themes menus, Wallpapers / Services buttons, the current Spotify lyric line, CPU / GPU / RAM (click: Task Manager, right click: temperatures), caffeine, Bluetooth, tray, weather + clock (right click: Do Not Disturb).
+**Bar**: workspaces, Start and Themes menus, the current Spotify lyric line, CPU / GPU / RAM (click: Task Manager, right click: temperatures), caffeine, Bluetooth, tray, weather + clock (right click: Do Not Disturb).
 
 | | |
 |---|---|

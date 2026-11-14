@@ -10,10 +10,10 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 
 ### Next up
 - Design pass: waves 1 and 2 are merged to main; wave 3 (`design-pass-w3`) put the Task Manager tabs on `TabPage` and dropped the grey / tint launcher icon code (colour stays). Left: the live tests below. Follow-ups noticed, none started: the Themes menu has no Reduce motion button (not wanted); the font fallback for CJK is blocked (Qt 6.12 has no QML fallback list, see git log A11). E1 grain, C7 Control Panel, D12 balloons, D13 accelerators (Alt+F was built and dropped), D14 tab order and E2 VGA colours were skipped on purpose.
-- From the old audit: lazy-loaded popups (tried: no way to measure the gain headless; if wanted, start with Spotify, launcher, screenshots, wallpapers, games).
 
 ### Small open items
 - Portal float rule (`windowrules.lua`, `windowrule-4`, `^(xdg-desktop-portal.*)$`): check that a Zen file picker floats.
+- Monaco 14 / 11 in the launcher search and tucked labels break the font rule (Monaco 12 or 16 only): move them to 16 / 12.
 
 ## Needs a live test
 Built, not yet confirmed on the desktop. Tick a box when it works; move a broken one to "Next up" with what went wrong.
@@ -30,7 +30,6 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - [ ] Super+Shift+H opens and closes Screenshot History; keypad Enter shoots in the snipping overlay (Screen / All) and confirms in the Task Manager; Esc in the Task Manager filter backs out of an open End / Kill confirm first
 - [ ] Notification history: right-click an entry removes it without opening it; the rest stay, and it is gone after a Quickshell restart
 - [ ] Services: a failing Start / Stop / Restart shows the dinitctl error above the buttons; a `session.customActions` entry shows by name in the side panel power row
-- [ ] Wallpapers / Services buttons: a click opens, the same click closes, any bar click closes
 - [ ] EQ preset row: fill `audio.eqPresets`, a click loads the preset, the sunken one survives a restart
 
 ### Design pass, wave 1 (branch design-pass-w1, rendered offscreen only)
@@ -74,7 +73,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Round 3, launcher / Task Manager / NAS (never looked at, fakes only)
 - [ ] Launcher: hover and the key cursor never light two rows (the pointer-gating with `HoverHandler` + `scenePosition` is untested live: if the cursor stops following the mouse, that is it); `kill zen` lists programs, Enter asks, End task closes with SIGTERM, a core program shows End anyway; `=` lists copied results, `:heart` shows emoji (do they render in the real font?); right-click a Clipboard row, Delete removes it
 - [ ] Task Manager: the Ports tab shows real ports (`ss` output formats: unparsable lines are skipped), End task on your own listener asks first; the NET graph moves with a download
-- [ ] NAS: stop the server: one toast and the bar button; the button remounts (needs the fstab `noauto,user` lines); the Downloads toast with Open / Show in folder
+- [ ] NAS: stop the server: one toast (there is no bar button); the Downloads toast with Open / Show in folder
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
 ### Round 4, themes and the optional cascade (never looked at)
@@ -118,7 +117,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 
 ### Bar, updates and trash changes (never looked at)
 - [ ] CPU button: a left click shows the Task Manager (Performance tab), the next click hides it, and the button looks pushed in while the window is open; Ctrl+Shift+Esc still opens / focuses it
-- [ ] Bar: Start and Themes are labelled and wider; no Wallpapers / Services buttons (Wallpapers is in the Themes menu, Services in the Start menu); the right side (caffeine, CPU, ETH, Bluetooth, bell + clock) is raised boxed buttons with gaps, no sunken frame: nothing clipped at 1920 and 1280, the centre text still gets its room (the width bookkeeping now counts the gaps); no stripe down the left of the Start menu and launcher, no dot on the Start button
+- [ ] Bar: Start and Themes are labelled and wider; no Wallpapers / Services buttons (Wallpapers is in the Themes menu, Services in Settings > System tools); the right side (caffeine, CPU, ETH, Bluetooth, bell + clock) is raised boxed buttons with gaps, no sunken frame: nothing clipped at 1920 and 1280, the centre text still gets its room (the width bookkeeping now counts the gaps); no stripe down the left of the Start menu and launcher, no dot on the Start button
 - [ ] Updates: System / Flatpak / Update all each open the wider terminal (960x460, the rule isn't reloaded until `hyprctl reload`); after closing the terminal the count drops (and the Start dot goes) within a few seconds
 - [ ] Start > Trash (size) opens the Trash folder in your file manager (`trash:///`); nothing in the shell empties it any more
 - [ ] Launcher answers: "5 km in mi" in Super+D (text, glyph, Enter copies and closes), plus one the calculator also knows ("1 mib to kib")
@@ -205,7 +204,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 - **Work pass, wave 1**: R4 removed the unused `MenuStyle.shotHistory*Fraction`; R7 found the broken icon links harmless (`docs/theming.md`); R1 `EmptyState` centres itself; R3 the clock text is built at the source; S3 caffeine survives a reload and restart; S5 Bluetooth battery in the bar; R6 disabled rows stop lighting on hover; R5 the Spotify row menu names its song; S4 Services takes its terminal from settings; P1 F12 became Shift+Print (gives Zen its devtools key back); R2 History action buttons carry labels; S2 shots are named by window; S1 History: type to filter, Ctrl+C / Ctrl+O; S6 low-memory and /tmp toast
 - **Design pass, wave 2** (needs a live test, see above): shared `PopupWindowFrame` left titles, `RetroScrollBar`, `PopupMenu`, `ConfirmBar`, `GroupFrame`, `EmptyState`, `TabPage`, `StatusBar`, `MenuStrip`, `StartBanner`, `BarWell`, Win95 trackbars, window sizes, the Monaco centre title, a darker urgent colour; the bar, side panel, launcher, big windows and Spotify drawer moved onto them; `tests/interaction/` with real simulated input; the Win95 window frames as a written-not-run Hyprland config
 - **Design pass, wave 1** (needs a live test, see above): component gallery (`quickshell/gallery.qml`, `scripts/render-gallery.sh`), palette rule in `apply.py` (bevel edge 1.35:1, text 4.5:1) with lighter highlights, two-ring Win95 buttons, spacing scale, two icon sizes, whole-pixel layout, fixed-width CPU label, two motion durations + Reduce motion, one embossed disabled look, generated `docs/DESIGN.md`, one-hue terminal and fastfetch, `noto-fonts-cjk` in the package list
-- **Bar**: gripper, workspaces, Start / Themes, Wallpapers and Services buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + temperature + clock (right click: DND)
+- **Bar**: gripper, workspaces, Start / Themes buttons; Spotify lyric line; privacy icons, caffeine, CPU / GPU / RAM (click: Task Manager, right click: temperatures), ETH, Bluetooth, tray, bell + temperature + clock (right click: DND)
 - **Side panel** (bell + clock button): power buttons with confirm, output / EQ presets / mic / per-app volume, full-height notification history (each entry a small raised window on a recessed well: title strip with app + time, 16 px title, 3-line body with a chevron), weather and calendar, DND button in the history header (also a right click on the clock); power row includes your custom session actions
 - **Launcher** (Super+D): tabs Apps / Games / Files / Clipboard (Ctrl+Tab), fuzzy apps with usage ranking and categories, calculator, session actions, "," window search, Super+V clipboard with delete and Clear all, options menu (pin, move, Hide / Unhide with a Hidden chip, Uninstall via pacman / flatpak)
 - **Notifications**: toasts with actions, one per app; position / stack / monitor settings; history with one entry per notification that keeps the live notification, progress bars, inline reply, saved across restarts
