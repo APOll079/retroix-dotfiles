@@ -12,14 +12,6 @@ end
 hl.on("hyprland.start", function()
     hl.exec_cmd("sh -c ': > \"$XDG_RUNTIME_DIR/qs-login-times\"'")
     mark("session-start")
-    -- Lock first, before anything else starts (greetd autologin: nothing should be usable unlocked), only if ~/.config/hypr/lock-at-login exists (install.sh creates it
-    -- when you answer yes; delete the file to turn it off)
-    local marker = io.open((os.getenv("HOME") or "") .. "/.config/hypr/lock-at-login", "r")
-    if marker then
-        marker:close()
-        hl.exec_cmd("hyprlock")
-    end
-
     -- Use --all instead of --systemd for Artix/dinit
     hl.exec_cmd("dbus-update-activation-environment --all")
 

@@ -295,8 +295,7 @@ quickshell/taskbar/Bar.qml	Keys\.onEscapePressed: MenuState\.closeAll\(\)	Escape
 quickshell/popups/SidePanel.qml	Keys.onEscapePressed	Escape cancels a pending power action, then closes the side panel (Home, Calendar, Phone)
 quickshell/popups/LoginDialog.qml	if \(event\.key === Qt\.Key_Return \|\| event\.key === Qt\.Key_Enter\)	Lock / login box: Enter submits (OK)
 quickshell/popups/LoginDialog.qml	event\.key === Qt\.Key_Escape	Lock / login box: Escape clears the password, never closes the lock (no Cancel button)
-quickshell/LockScreen.qml	PamContext \{	Win95 lock: the password goes to PAM (hyprlock PAM file)
-quickshell/LockScreen.qml	if \(!root\.useWin95\)	Lock screen setting: hyprlock unless ui.lockScreen is win95
+quickshell/LockScreen.qml	PamContext \{	Win95 lock: the password goes to PAM (/etc/pam.d/login)
 quickshell/shell.qml	target: "lockscreen"	IPC: qs ipc call lockscreen lock
 quickshell/popups/LoginDialog.qml	focus: !\(root\.userEditable && root\.user === ""\)	Lock: the password field has the focus at once (no click)
 quickshell/LockScreen.qml	onClicked: dialog\.focusInput\(\)	Lock: a click anywhere puts the focus back in the password field

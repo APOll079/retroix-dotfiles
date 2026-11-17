@@ -45,14 +45,6 @@ hl.window_rule({
     float = true
 })
 
-hl.window_rule({
-    name  = "windowrule-imageviewer",
-    match = {
-        class = "^(ImageViewer)$"
-    },
-    float = true
-})
-
 -- Make GNOME Image Viewer (Loupe) float: matched on the class only (the title changes with the open file)
 hl.window_rule({
     name = "windowrule-loupe",

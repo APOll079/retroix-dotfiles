@@ -3,12 +3,13 @@
 #
 #   bash install.sh --dry-run    print every step and command, change nothing (start here)
 #   bash install.sh              do it
-#   bash install.sh --login-screen   only the Win95 login screen step, without asking (needs doas)
+#   bash install.sh --login-screen   only the Win95 login screen step, without asking; touches /etc only
+#                                    when something changed (the owner's deploy.sh runs this every time)
 #
 # Idempotent: run it as often as you like. It never deletes anything: files it would overwrite in
 # ~/.config are copied to ~/config-backup-<date>/ first, system files get a .bak-<date> copy.
 # Uses doas (not sudo) and yay. Asks yes/no before the optional steps (Flatpak apps, switching GTK
-# to QsRetro, autologin + lock at boot); the rest runs without asking.
+# to QsRetro, autologin, the login screen); the rest runs without asking.
 #
 # Package lists (plain text, edit by hand): packages/pacman.txt, aur.txt, flatpak.txt,
 # services-dinit.txt. A "#" starts a comment; comment a line out to skip that package.
@@ -294,7 +295,7 @@ deploy() {
                 note "kept your $rel"
                 continue
             fi
-            # Files that need an absolute path (xdph.conf's picker, hyprlock.conf's images) have
+            # Files that need an absolute path (xdph.conf's picker) have
             # @HOME@ in the repo; compare and copy the filled-in version, so an unchanged file
             # stays unchanged
             if grep -qsI '@HOME@' "$f"; then
@@ -432,10 +433,9 @@ gtk_theme() {
 }
 
 autologin() {
-    say "Autologin (greetd) + lock at login (hyprlock)"
-    warn "This changes how you log in. The hyprlock design is UNTESTED: test it first with"
-    warn "'hyprlock' from a second TTY (Ctrl+Alt+F2) and make sure you can unlock."
-    ask "Set up autologin with greetd and lock the session at login?" n || { note "skipped"; return; }
+    say "Autologin (greetd)"
+    warn "This changes how you log in: no password at boot (the Win95 login screen step below replaces it)."
+    ask "Set up autologin with greetd?" n || { note "skipped"; return; }
 
     # greetd: start Hyprland as you on tty1, no greeter. start-hyprland is the launcher with Hyprland's watchdog (plain `Hyprland` runs without it)
     local conf=/etc/greetd/config.toml user
@@ -455,29 +455,6 @@ EOF
     fi
     enable_service system greetd
     have ly && warn "ly is installed too; only one login manager should run (check /etc/dinit.d/boot.d)"
-
-    # Lock at login: only once hyprlock can't lock you out with missing colours
-    local lockconf="$CONFIG/hypr/hyprlock.conf" colours="$CONFIG/hypr/hyprlock-colors.conf"
-    if ! have hyprlock || { [[ ! -f "$lockconf" ]] && (( ! DRY )); }; then
-        warn "hyprlock or $lockconf missing: not turning on lock at login"
-        return
-    fi
-    if [[ ! -f "$colours" ]]; then
-        # hyprlock.conf sets cherry colours before it sources this file, so it works without it,
-        # but generate it anyway so the lock screen matches the theme
-        note "generating $colours"
-        run python3 -I "$CONFIG/quickshell/theme/apply.py" "$(theme_name)" --no-reload
-    fi
-    if (( ! DRY )) && ! grep -q '^\$' "$lockconf"; then
-        warn "$lockconf has no fallback colour variables; not turning on lock at login"
-        return
-    fi
-    if [[ -e "$CONFIG/hypr/lock-at-login" ]]; then
-        note "lock at login already on"
-    else
-        run touch "$CONFIG/hypr/lock-at-login"
-        note "lock at login on (delete $CONFIG/hypr/lock-at-login to turn it off)"
-    fi
 }
 
 # Win95 login screen: a Quickshell greeter for greetd (greeter/). Optional, default no. It replaces autologin: the
@@ -487,17 +464,19 @@ EOF
 # dies, greetd falls back to the plain text greeter agreety; Ctrl+Alt+F2 always gives a text login.
 login_screen() {
     say "Login screen (greetd + Quickshell greeter)"
-    warn "This changes how you log in: you type your password at every boot instead of autologin."
-    warn "A broken greeter shows agreety (text login) or a black screen; Ctrl+Alt+F2 gives a text login to put"
-    warn "/etc/greetd/config.toml.bak-* back. Needs the greetd, quickshell and hyprland packages."
-    (( ONLY_LOGIN )) || ask "Set up the Win95 login screen?" n || { note "skipped"; return; }
+    if (( ! ONLY_LOGIN )); then
+        warn "This changes how you log in: you type your password at every boot instead of autologin."
+        warn "A broken greeter shows agreety (text login) or a black screen; Ctrl+Alt+F2 gives a text login to put"
+        warn "/etc/greetd/config.toml.bak-* back. Needs the greetd, quickshell and hyprland packages."
+        ask "Set up the Win95 login screen?" n || { note "skipped"; return; }
+    fi
     have agreety || { warn "agreety (part of greetd) is missing: the fallback would not work, not setting it up"; return; }
     id greeter >/dev/null 2>&1 || warn "no 'greeter' user: greetd's package normally creates it; check 'id greeter' first"
 
-    local stage dest=/etc/greetd/qs-greeter user theme conf=/etc/greetd/config.toml
+    local stage dest=/etc/greetd/qs-greeter user theme conf=/etc/greetd/config.toml want
     user="$(id -un)"
     theme="$(theme_name)"
-    stage="$(mktemp -d)"
+    stage="$(mktemp -d -p "$TMPDIR_RUN")"
     cp -r "$REPO/quickshell/." "$stage/"
     cp "$REPO/greeter/shell.qml" "$stage/shell.qml"
     cp "$REPO/greeter/hypr-greeter.lua" "$stage/hypr-greeter.lua"
@@ -505,26 +484,33 @@ login_screen() {
     printf '%s\n' "$user" > "$stage/user.txt"
     python3 -I -c 'import json,sys; json.dump({"settings": {"currentTheme": sys.argv[1]}}, open(sys.argv[2], "w"), indent=4)' "$theme" "$stage/settings.json"
     rm -rf "$stage/scripts" "$stage/gallery.qml"
-    note "greeter files: $stage -> $dest (theme: $theme, user: $user)"
 
-    run doas mkdir -p "$dest"
-    run doas cp -r "$stage/." "$dest/"
-    run doas chown -R root:root "$dest"
-    run doas chmod -R a+rX "$dest"
-    (( DRY )) || rm -rf "$stage"
+    # Only touch /etc when something differs, so a deploy with nothing new never asks for doas
+    if [[ -d "$dest" ]] && diff -rq "$stage" "$dest" >/dev/null 2>&1; then
+        note "greeter files up to date ($dest)"
+    else
+        note "greeter files: $stage -> $dest (theme: $theme, user: $user)"
+        run doas mkdir -p "$dest"
+        run doas cp -r "$stage/." "$dest/"
+        run doas chown -R root:root "$dest"
+        run doas chmod -R a+rX "$dest"
+    fi
 
-    [[ -f "$conf" ]] && run doas cp -a "$conf" "$conf.bak-$STAMP"
-    write_file root "$conf" <<TOML
-[terminal]
+    want="[terminal]
 vt = 1
 
 [default_session]
-command = "sh -c 'start-hyprland -- --config $dest/hypr-greeter.lua || agreety --cmd start-hyprland'"
-user = "greeter"
-TOML
+command = \"sh -c 'start-hyprland -- --config $dest/hypr-greeter.lua || agreety --cmd start-hyprland'\"
+user = \"greeter\""
+    if [[ -f "$conf" ]] && [[ "$(cat "$conf" 2>/dev/null)" == "$want" ]]; then
+        note "greetd already starts the greeter"
+    else
+        [[ -f "$conf" ]] && run doas cp -a "$conf" "$conf.bak-$STAMP"
+        printf '%s\n' "$want" | write_file root "$conf"
+        note "greetd now starts the greeter (old config: $conf.bak-$STAMP); reboot to see it"
+    fi
     enable_service system greetd
     have ly && warn "ly is installed too; only one login manager should run (check /etc/dinit.d/boot.d)"
-    note "done: log out or reboot to see it. Put $conf.bak-$STAMP back to return to autologin."
 }
 
 # The active theme from quickshell's settings.json (cherry if unknown)

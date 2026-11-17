@@ -6,7 +6,7 @@ Singleton {
 id: root
 // Palettes live in theme/themes.json (one source for quickshell and every themed app).
 // Add a theme there and it shows up in the Themes menu. When the theme changes (and once at
-// start) theme/apply.py renders the app colour files: kitty, Hyprland borders, hyprlock,
+// start) theme/apply.py renders the app colour files: kitty, Hyprland borders,
 // fastfetch, btop, fish and the emoji picker.
 property var colors: themes[settings.currentTheme] || themes["cherry"] || themes[Object.keys(themes)[0]]
 // Built-in cherry so the shell still draws if themes.json is missing or broken
@@ -250,14 +250,12 @@ property bool dither: true
 // a Programs button in the Start menu that opens categories and apps as cascading menus
 property bool cascadingStart: false
 property bool reduceMotion: false
-// "win95" (default): the Quickshell lock (LockScreen.qml); "hyprlock": hyprlock.conf
-property string lockScreen: "win95"
 }
 // Game mode (Super+G, steam games; the Hyprland half is hypr/inputs.lua): programs paused while it is on (SIGSTOP, resumed after), e.g. ["ollama"]
 property JsonObject gameMode: JsonObject {
 property var pause: []
 }
-// Idle: dim, then lock (hyprlock), then screens off; minutes, 0 = off for that step
+// Idle: dim, then lock, then screens off; minutes, 0 = off for that step
 property JsonObject idle: JsonObject {
 property bool enabled: true
 property int dimMinutes: 5

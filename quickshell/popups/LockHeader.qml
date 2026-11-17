@@ -3,7 +3,7 @@ import QtQuick.Layouts
 
 import ".."
 
-// The top half of the win95 lock screen (LockScreen.qml): hyprlock.conf's "Locked" panel, kept low: one row with the
+// The top half of the win95 lock screen (LockScreen.qml): the "Locked" panel, kept low: one row with the
 // big clock on the left and the date on the right, in a sunken well (like the tray clock) in a PopupWindowFrame. No avatar. The Win95 logon box
 // (LoginDialog.qml) sits under it as its own whole window.
 Item {

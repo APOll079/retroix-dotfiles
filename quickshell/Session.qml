@@ -13,7 +13,7 @@ Singleton {
     // confirm: asks first; verb: the confirm button; prompt: the question
     readonly property var builtins: [
         { name: "Suspend", icon: "\uef44", cmd: "loginctl suspend", confirm: true, countdown: false, verb: "Suspend", prompt: "Suspend now?" },
-        { name: "Lock", icon: "\ue897", cmd: "pidof hyprlock || hyprlock", confirm: false, countdown: false, verb: "Lock", prompt: "" },
+        { name: "Lock", icon: "\ue897", cmd: "qs ipc call lockscreen lock", confirm: false, countdown: false, verb: "Lock", prompt: "" },
         { name: "Log out", icon: "\ue9ba", cmd: "hyprctl dispatch 'hl.dsp.exit()'", confirm: true, countdown: false, verb: "Log out", prompt: "Log out of Hyprland?" },
         { name: "Reboot", icon: "\ue5d5", cmd: "loginctl reboot", confirm: true, countdown: true, verb: "Reboot", prompt: "Reboot now?" },
         { name: "Shutdown", icon: "\uf418", cmd: "loginctl poweroff", confirm: true, countdown: true, verb: "Shut down", prompt: "Shut down the computer?" }
@@ -28,7 +28,7 @@ Singleton {
 
     function run(action) {
         if (action.name === "Lock" && action.cmd === root.builtins[1].cmd) {
-            LockScreen.lockNow();   // hyprlock or the win95 lock, by settings.ui.lockScreen
+            LockScreen.lockNow();   // the win95 lock
             return;
         }
         Quickshell.execDetached(["sh", "-c", action.cmd]);

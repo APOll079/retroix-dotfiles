@@ -50,7 +50,6 @@ CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
 OUTPUTS = {
     "kitty-colors.conf": ("kitty/theme-colors.conf", "kitty"),
     "hypr-theme_colors.lua": ("hypr/theme_colors.lua", "hyprland"),
-    "hyprlock-colors.conf": ("hypr/hyprlock-colors.conf", None),
     "fastfetch.jsonc": ("fastfetch/config.jsonc", None),
     "btop.theme": ("btop/themes/current.theme", None),
     "fish-colors.fish": ("fish/conf.d/theme-colors.fish", "fish"),

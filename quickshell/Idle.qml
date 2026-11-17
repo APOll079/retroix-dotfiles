@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Idle handling (settings.json "idle"): dim, then lock with hyprlock, then screens off.
+// Idle handling (settings.json "idle"): dim, then lock (LockScreen.qml), then screens off.
 // All three respect idle inhibitors, so caffeine (or a fullscreen video that inhibits) pauses
 // them. A step with 0 minutes is off.
 Singleton {

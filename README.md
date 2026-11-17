@@ -19,7 +19,7 @@ A retro Hyprland desktop: Win95 bevels and classic-Mac Platinum details on **Art
 | **Snipping tool** (Super+Shift+S, Print) | Region, window, screen, all monitors; a history viewer (Super+Shift+H) |
 | **And** | Themed notifications with inline reply, screen-share picker, keybind cheat sheet (Super+F1), Bluetooth menu, dinit services panel, wallpaper browser |
 
-**Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland, hyprlock, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), Qt apps (through qt6ct), VSCodium and Zen in one go. It can also build a palette from your wallpaper.
+**Theme manager**: one palette file (`quickshell/theme/themes.json`) recolours kitty, Hyprland, fish, btop, fastfetch, the emoji picker, GTK apps (theme and icons), Qt apps (through qt6ct), VSCodium and Zen in one go. It can also build a palette from your wallpaper.
 
 ## Before you install
 
@@ -53,7 +53,7 @@ bash install.sh --login-screen   # only the Win95 login screen (greetd), no ques
 7. recolours the GTK theme into `QsRetro` / `QsRetroIcons` and writes the other colour files (`apply.py`);
 8. reminds you to run `spotifyd authenticate` once.
 
-It asks before installing Flatpak apps, pointing GTK at the theme, and setting up greetd autologin (starting Hyprland through `start-hyprland`) with a lock at login, and the Win95 login screen instead of autologin (default **no**) (default **no**; test `hyprlock` from a second TTY first).
+It asks before installing Flatpak apps, pointing GTK at the theme, and setting up greetd autologin (starting Hyprland through `start-hyprland`), and the Win95 login screen instead of autologin (both default **no**).
 
 The lists in `packages/` are plain text: comment a line out with `#` to skip it. Each has an "apps I use" section you can trim.
 
@@ -63,7 +63,7 @@ The lists in `packages/` are plain text: comment a line out with `#` to skip it.
 
 Not in this repo (proprietary):
 
-- **Monaco**: put `Monaco.ttf` in `~/.config/quickshell/fonts/` *and* `~/.local/share/fonts/` (kitty and hyprlock use it too). `install.sh` doesn't check for it.
+- **Monaco**: put `Monaco.ttf` in `~/.config/quickshell/fonts/` *and* `~/.local/share/fonts/` (kitty uses it too). `install.sh` doesn't check for it.
 - **Charcoal**: put `Charcoal.ttf` in `~/.config/quickshell/fonts/` (menu titles).
 
 Included: Liberation Sans (with its licence) and Material Symbols (the icons).

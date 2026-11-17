@@ -7,17 +7,16 @@ import Quickshell.Wayland
 import Quickshell.Services.Pam
 import "popups" as Popups
 
-// The lock screen. settings.ui.lockScreen picks it: "win95" (default) locks with
-// Quickshell's own WlSessionLock ("hyprlock" runs hyprlock as before): every screen shows its wallpaper (WallpaperState), the monitor that had focus when it
-// locked shows the "Welcome to ..." password box (popups/LoginDialog.qml). The password goes to PAM through the
-// hyprlock PAM file (/etc/pam.d/hyprlock, already there), so it unlocks with the same rules hyprlock uses.
+// The lock screen: Quickshell's own WlSessionLock (the only lock; hyprlock is gone). Every screen shows its wallpaper
+// (WallpaperState), the monitor that had focus when it locked shows the "Welcome to ..." password box
+// (popups/LoginDialog.qml). The password goes to PAM through /etc/pam.d/login (util-linux, always there; the
+// same auth stack hyprlock used: its own PAM file was just `auth include login`).
 // lockNow() is the one entry point (Start / launcher / side panel Lock via Session.qml, idle via Idle.qml, IPC
 // `qs ipc call lockscreen lock`). If Quickshell dies while locked, Hyprland keeps the screen locked (red screen):
 // recovery is in MAINTENANCE.md. Never locks under QS_NO_APPLY (tests).
 Singleton {
     id: root
 
-    readonly property bool useWin95: (Config.settings.ui.lockScreen || "win95") === "win95"
     property bool locked: false
     property bool busy: false
     property string status: ""
@@ -35,10 +34,6 @@ Singleton {
     }
 
     function lockNow() {
-        if (!root.useWin95) {
-            Quickshell.execDetached(["sh", "-c", "pidof hyprlock || hyprlock"]);
-            return;
-        }
         if (Quickshell.env("QS_NO_APPLY") || root.locked)
             return;
         root.status = "";
@@ -74,7 +69,7 @@ Singleton {
 
     PamContext {
         id: pam
-        config: "hyprlock"
+        config: "login"
         onResponseRequiredChanged: {
             if (responseRequired) {
                 respond(root.pending);
@@ -160,7 +155,7 @@ Singleton {
                 }
             }
 
-            // Fusion with hyprlock.conf's look: its "Locked" panel (avatar, big clock, date) on top, the Win95 logon box
+            // The "Locked" panel (avatar, big clock, date) on top, the Win95 logon box
             // below it as one whole; same width, one gap between.
             Column {
                 anchors.centerIn: parent

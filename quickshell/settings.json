@@ -131,8 +131,7 @@
         "ui": {
             "cascadingStart": false,
             "dither": true,
-            "reduceMotion": false,
-            "lockScreen": "win95"
+            "reduceMotion": false
         },
         "weather": {
             "location": "",

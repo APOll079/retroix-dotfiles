@@ -25,7 +25,7 @@ Singleton {
     readonly property int defragCell: 8           // one block of the clean-up block grid
     readonly property int defragRows: 3           // its height in blocks
     readonly property int lockWidth: 544           // the lock / login boxes: a bit wider than widthLarge
-    readonly property int lockClockSize: 40        // the win95 lock's big clock (hyprlock.conf's size; Monaco is even at this size)
+    readonly property int lockClockSize: 40        // the win95 lock's big clock (Monaco is even at this size)
 
     // Spacing scale: the only paddings and gaps in the shell are these five steps. Every *Pad / *Gap /
     // *Inset / *Spacing below is one of them (keep to these). Sizes of things

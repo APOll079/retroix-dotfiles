@@ -113,7 +113,7 @@ Scope {
         function set(on: bool): void { GameModeState.set(on); }
         function toggle(): void { GameModeState.toggle(); }
     }
-    // Lock screen: `qs ipc call lockscreen lock` (hyprlock or the win95 lock, by settings.ui.lockScreen)
+    // Lock screen: `qs ipc call lockscreen lock` (the win95 lock, LockScreen.qml)
     IpcHandler {
         target: "lockscreen"
         function lock(): void { LockScreen.lockNow(); }

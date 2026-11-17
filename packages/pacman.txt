@@ -4,7 +4,6 @@
 
 # --- desktop core ---
 hyprland
-hyprlock
 hyprpaper
 hyprpicker                  # Super+Shift+C colour picker
 xdg-desktop-portal-hyprland # screen sharing (custom picker in hypr/xdph.conf)

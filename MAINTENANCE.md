@@ -7,7 +7,7 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 - **This folder is a working copy.** `bash install.sh` (fills in `@HOME@`, backs up what it overwrites, keeps an existing `quickshell/settings.json`) copies it into `~/.config`; your own `~/Desktop/deploy.sh` also works but always overwrites `settings.json`. Nothing here changes your desktop until you copy it over and reload (`hyprctl reload` for Hyprland, restart Quickshell for the shell).
 - **Hyprland** (`hypr/*.lua`): window manager, keybinds, window rules, monitors. Lua, not the old config language.
 - **Quickshell** (`quickshell/`): everything you see besides windows: the bar, menus, launcher, notifications, side panel, screenshots, games. QML files. `shell.qml` is the entry point, `taskbar/Bar.qml` creates one bar plus its popups per monitor.
-- **Theme**: `quickshell/theme/themes.json` holds the palettes. `quickshell/theme/apply.py` turns them into colour files for kitty, Hyprland, hyprlock, fastfetch, btop, fish and the emoji picker (it writes into `~/.config`, never into this folder). Quickshell runs it when you pick a theme and at start. You can also run it by hand: `python3 ~/.config/quickshell/theme/apply.py dusty`.
+- **Theme**: `quickshell/theme/themes.json` holds the palettes. `quickshell/theme/apply.py` turns them into colour files for kitty, Hyprland, fastfetch, btop, fish and the emoji picker (it writes into `~/.config`, never into this folder). Quickshell runs it when you pick a theme and at start. You can also run it by hand: `python3 ~/.config/quickshell/theme/apply.py dusty`.
 - **Helpers** in `quickshell/scripts/` (plain Python / sh, standard tools only): `games.py` (lists games), `spotify.py` (Spotify login and API), `binds.py` (cheat sheet), `procs.py` (Task Manager), `app-owner.sh` (launcher Uninstall), `share-picker.sh` (screen-share dialog, started by the portal).
 - **Docs for the next assistant**: `CLAUDE.md` (rules, and a table of which doc covers what), `docs/` (how each part works: `desktop.md`, `spotify.md`, `theming.md`) and `FEATURES.md` (feature list, what still needs a live test). Any AI assistant can read them; paste `CLAUDE.md` in first.
 
@@ -17,11 +17,11 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 |---|---|
 | Black screen or text login at boot after the login-screen step | The Quickshell greeter died (agreety is the text fallback). Ctrl+Alt+F2, log in, `doas cp /etc/greetd/config.toml.bak-<newest> /etc/greetd/config.toml` (back to autologin), reboot. Logs: run `quickshell -p /etc/greetd/qs-greeter/shell.qml` from a TTY inside a Hyprland session to see errors. |
 | Keybind does nothing | `hypr/binds.lua` |
-| Stuck on a red screen / the win95 lock is gone but the screen stays locked | Quickshell died while locked (`settings.ui.lockScreen` "win95"). Ctrl+Alt+F2, log in, then `hyprctl --instance 0 'keyword misc:allow_session_lock_restore 1'` and `hyprctl --instance 0 dispatch 'hl.dsp.exec_cmd("hyprlock")'` (the Lua-mode call shape is a guess), unlock there, Ctrl+Alt+F1. Set the setting back to "hyprlock" if it happens again. |
+| Stuck on a red screen / the win95 lock is gone but the screen stays locked | Quickshell died while locked (there is no second lock any more; hyprlock was removed). Ctrl+Alt+F2, log in, `pkill -x Hyprland` (open windows are lost), Ctrl+Alt+F1 and log in again. |
 | Window opens in the wrong place / floats wrongly | `hypr/windowrules.lua` |
 | Monitors, scaling | `hypr/monitors.lua` |
 | Limine waits at its menu / wrong default | `/boot/limine.conf` is hand-managed (no package owns it; `/etc/limine-entry-tool.conf` only generates the `//linux-cachyos` entry below it). Global lines at the top: `timeout`, `default_entry` (1-based, nested entries count). Back it up first (`doas cp /boot/limine.conf /boot/limine.conf.mine`). |
-| Something not starting at login | `hypr/autostart.lua` (greetd starts `start-hyprland` as you: `/etc/greetd/config.toml`; the lock at login is on while `~/.config/hypr/lock-at-login` exists, delete it to turn it off) |
+| Something not starting at login | `hypr/autostart.lua` (greetd starts `start-hyprland` as you: `/etc/greetd/config.toml`) |
 | A menu looks broken or is missing | the file in `quickshell/popups/` with its name |
 | Bar items | `quickshell/taskbar/Bar.qml` and the file named after the item |
 | Sizes and spacing | `quickshell/MenuStyle.qml` (all named sizes live here) |
@@ -60,7 +60,6 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 1. **Hyprland's Lua API** (new, still changing). Symptom: error bar on reload, or a bind that does nothing. Read the release notes before updating Hyprland: github.com/hyprwm/Hyprland/releases.
 2. **Quickshell** (version 0.x, can rename or remove things between minor versions). Symptom: a popup missing, errors in the `qs` log. Changelog: github.com/quickshell-mirror/quickshell (CHANGELOG.md), docs at quickshell.org.
 3. **Steam's file layout** (cover art folder, shortcuts file). Symptom: games show as letter tiles or some are missing. Only `scripts/games.py` needs fixing.
-4. **hyprlock** config syntax. Symptom: lock screen looks wrong. It falls back to built-in colours if the generated colour file is missing; test from a second TTY, not your only session.
 
 What hasn't been seen working on the real desktop yet: `FEATURES.md`, "Needs a live test".
 
