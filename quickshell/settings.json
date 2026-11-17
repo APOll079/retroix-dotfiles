@@ -18,6 +18,9 @@
             "terminal": "kitty",
             "terminalClassFlag": "--class"
         },
+        "gameMode": {
+            "pause": []
+        },
         "idle": {
             "dimMinutes": 5,
             "enabled": true,

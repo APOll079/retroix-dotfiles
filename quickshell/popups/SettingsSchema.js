@@ -62,6 +62,7 @@ var SCHEMA = [
 
     e("Idle and power", "screensaver.enabled", "bool", "Screensaver", "Blank the screen with a Win95 screensaver when idle"),
     e("Idle and power", "screensaver.minutes", "int", "Screensaver after", "Minutes, 0 = off. Keep it below the dim and lock times", { min: 0, max: 600 }),
+    e("Idle and power", "gameMode.pause", "list", "Pause in game mode", "Programs (process names, one per entry) stopped while game mode is on and resumed after, e.g. ollama"),
     e("Idle and power", "screensaver.style", "choice", "Screensaver style", "starfield, pipes, mystify or random; pipes3d is the real xscreensaver pipes (needs the xscreensaver package)", { choices: ["starfield", "pipes", "pipes3d", "mystify", "random"] }),
     e("Idle and power", "idle.enabled", "bool", "Idle handling", "Dim, lock and turn the screens off"),
     e("Idle and power", "idle.dimMinutes", "int", "Dim after", "Minutes, 0 = off", { min: 0, max: 600 }),

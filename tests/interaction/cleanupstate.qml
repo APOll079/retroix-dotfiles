@@ -67,6 +67,7 @@ ShellRoot {
         shell.check("run under QS_NO_APPLY only records the id", J(S.runLog) === J(["flatpak-unused"]) && !S.loading);
         S.load();
         shell.check("load starts nothing under QS_NO_APPLY", !S.loading);
+        shell.check("defragStep creeps up and never reaches 1 by itself", S.defragStep(0) > 0 && S.defragStep(0.9) > 0.9 && S.defragStep(0.95) === 0.95 && S.defragStep(1) === 0.95 && !S.cleaning);
         console.log("TEST done failures=" + shell.failures);
         quitTimer.start();
     }

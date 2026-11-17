@@ -25,7 +25,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 5. Launcher
 | | Idea | Size |
 |---|---|---|
-| ★ | **Services by name**: "/svc spotifyd" to start / stop / restart a dinit service without opening the panel (seen in systemd) | S |
 
 ## 8. Side panel, notifications, calendar and phone
 | | Idea | Size |
@@ -36,7 +35,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 ## 9. Games
 | | Idea | Size |
 |---|---|---|
-| ★ | **Real game mode**: Super+G already frees the side buttons; also turn on caffeine, DND, turn off Hyprland animations, show "GAME" in the bar, and pause chosen programs (Ollama, Docker, sync) until it ends (seen in gamer-mode). Steam games switch it on by themselves (window class `steam_app_*`) | S |
 
 ## 12. Your apps and hardware
 | | Idea | Size |
@@ -59,4 +57,3 @@ These three are your requests, not my suggestions. Details are what I could gues
 Pure fun: nice to have, nothing depends on them.
 | | Idea | Size |
 |---|---|---|
-| ★ | **Defrag clean-up**: the Clean-up action shows a Win95 defrag-style block grid while it works | S-M |

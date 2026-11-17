@@ -3,6 +3,7 @@
 #
 #   bash install.sh --dry-run    print every step and command, change nothing (start here)
 #   bash install.sh              do it
+#   bash install.sh --login-screen   only the Win95 login screen step, without asking (needs doas)
 #
 # Idempotent: run it as often as you like. It never deletes anything: files it would overwrite in
 # ~/.config are copied to ~/config-backup-<date>/ first, system files get a .bak-<date> copy.
@@ -19,6 +20,7 @@ CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
 STAMP="$(date +%F-%H%M%S)"
 BACKUP="$HOME/config-backup-$STAMP"
 DRY=0
+ONLY_LOGIN=0
 TMPDIR_RUN="$(mktemp -d)"          # scratch for filled-in templates; removed on exit (our own temp only)
 trap 'rm -rf "$TMPDIR_RUN"' EXIT
 
@@ -32,6 +34,7 @@ DEPLOY_DIRS=(hypr quickshell kitty fish btop gtk-3.0 gtk-4.0 nwg-look xsettingsd
 for arg in "$@"; do
     case "$arg" in
         -n|--dry-run) DRY=1 ;;
+        --login-screen) ONLY_LOGIN=1 ;;
         -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
         *) echo "unknown option: $arg (try --help)" >&2; exit 2 ;;
     esac
@@ -487,7 +490,7 @@ login_screen() {
     warn "This changes how you log in: you type your password at every boot instead of autologin."
     warn "A broken greeter shows agreety (text login) or a black screen; Ctrl+Alt+F2 gives a text login to put"
     warn "/etc/greetd/config.toml.bak-* back. Needs the greetd, quickshell and hyprland packages."
-    ask "Set up the Win95 login screen?" n || { note "skipped"; return; }
+    (( ONLY_LOGIN )) || ask "Set up the Win95 login screen?" n || { note "skipped"; return; }
     have agreety || { warn "agreety (part of greetd) is missing: the fallback would not work, not setting it up"; return; }
     id greeter >/dev/null 2>&1 || warn "no 'greeter' user: greetd's package normally creates it; check 'id greeter' first"
 
@@ -540,6 +543,10 @@ summary() {
 }
 
 main() {
+    if (( ONLY_LOGIN )); then
+        login_screen
+        return
+    fi
     preflight
     install_pacman
     install_aur

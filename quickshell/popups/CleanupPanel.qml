@@ -154,6 +154,18 @@ PanelWindow {
                     }
                 }
 
+                // the Win95 defrag block grid while a clean runs
+                SunkenField {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: MenuStyle.defragRows * (MenuStyle.defragCell + 1) - 1 + 2 * padding
+                    padding: 2
+                    visible: CleanupState.cleaning
+                    DefragGrid {
+                        anchors.fill: parent
+                        value: CleanupState.defrag
+                    }
+                }
+
                 StatusBar {
                     kind: CleanupState.result !== "" && !CleanupState.resultOk ? "error" : (CleanupState.result !== "" ? "message" : "state")
                     text: CleanupState.result !== "" ? CleanupState.result

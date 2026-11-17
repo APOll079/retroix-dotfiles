@@ -15,6 +15,8 @@ From the desktop-overhaul audit: Super+P pin, Super+right-drag resize, Games chi
 
 **Theming:** Win95 lock screen (opt-in later the default); Login screen (greeter, optional install step)
 
+**Launcher / games / fun:** Services by name; Real game mode; Defrag clean-up
+
 **Fixes you asked for:** Start Hyprland through `start-hyprland` (install.sh writes it; the greetd edit is yours), Lock screen at login (was already built, needs the `lock-at-login` marker). Limine boots by itself (`default_entry` / `timeout` in `/boot/limine.conf`, yours to apply).
 
 **Capture:** Name shots by window; Screenshot History: type to filter; Text from a region (OCR); Colour picker in the shell; GIF from a recording; Screen recording; Record the last 30 s (replay buffer)

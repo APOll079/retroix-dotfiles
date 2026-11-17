@@ -22,6 +22,8 @@ Singleton {
     readonly property int widthMedium: 320
     readonly property int widthLarge: 480
     readonly property int loginGlyphSize: 32       // the key on the lock / login box
+    readonly property int defragCell: 8           // one block of the clean-up block grid
+    readonly property int defragRows: 3           // its height in blocks
     readonly property int lockWidth: 544           // the lock / login boxes: a bit wider than widthLarge
     readonly property int lockClockSize: 40        // the win95 lock's big clock (hyprlock.conf's size; Monaco is even at this size)
 

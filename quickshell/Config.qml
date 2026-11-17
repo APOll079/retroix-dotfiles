@@ -253,6 +253,10 @@ property bool reduceMotion: false
 // "win95" (default): the Quickshell lock (LockScreen.qml); "hyprlock": hyprlock.conf
 property string lockScreen: "win95"
 }
+// Game mode (Super+G, steam games; the Hyprland half is hypr/inputs.lua): programs paused while it is on (SIGSTOP, resumed after), e.g. ["ollama"]
+property JsonObject gameMode: JsonObject {
+property var pause: []
+}
 // Idle: dim, then lock (hyprlock), then screens off; minutes, 0 = off for that step
 property JsonObject idle: JsonObject {
 property bool enabled: true

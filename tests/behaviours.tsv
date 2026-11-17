@@ -66,7 +66,7 @@ hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Autoclicker\ \(toggle\)	Key: Desktop | 
 hypr/binds.lua	XF86AudioPlay.*\-\-\ help:\ hidden	Key: Media Play pauses Spotify (hidden from the Keys list)
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Drag\ a\ window	Key: Mouse | Drag a window
 hypr/inputs.lua	\-\-\ help:\ Mouse\ \|\ Maximise\ window	Key: Mouse | Maximise window
-hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode\ \(side\ buttons\)	Key: Desktop | Game mode (side buttons)
+hypr/inputs.lua	\-\-\ help:\ Desktop\ \|\ Game\ mode	Key: Desktop | Game mode (side buttons, animations, caffeine, DND, pause list) (side buttons)
 quickshell/popups/PopupMenuBody.qml	event\.key === Qt\.Key_Escape	Context menus: Escape closes
 quickshell/popups/PopupMenu.qml	grabFocus: true	Context menus: a click outside closes them
 quickshell/popups/RetroScrollBar.qml	root\.decrease\(\)	Scrollbars: arrow buttons scroll
@@ -302,3 +302,10 @@ quickshell/popups/LoginDialog.qml	focus: !\(root\.userEditable && root\.user ===
 quickshell/LockScreen.qml	onClicked: dialog\.focusInput\(\)	Lock: a click anywhere puts the focus back in the password field
 greeter/shell.qml	Greetd\.launch\(\["start-hyprland"\]\)	Login screen: a good password starts the session through start-hyprland
 greeter/shell.qml	Greetd\.createSession\(user\)	Login screen: the user name starts a greetd session
+quickshell/popups/AppLauncher.qml	function serviceItems\(rest\)	Launcher: /svc <name> [start|stop|restart] lists user service actions, second Enter runs
+quickshell/popups/AppLauncher.qml	ServiceWatch\.expect\(s\.name\)	Launcher /svc: a deliberate stop does not toast
+quickshell/GameModeState.qml	function restoreOf\(saved\)	Game mode: leaving puts caffeine and DND back as they were (a caffeine already on stays on)
+hypr/inputs.lua	window\.open	Game mode: a Steam game switches it on by itself
+quickshell/LaptopControls.qml	id: gameInd	Bar: GAME shows while game mode is on
+quickshell/CleanupState.qml	function defragStep\(f\)	Clean up: the defrag block grid creeps up while a clean runs
+quickshell/popups/CleanupPanel.qml	visible: CleanupState\.cleaning	Clean up: the block grid shows only while cleaning

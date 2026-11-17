@@ -39,6 +39,7 @@ git clone https://github.com/APOll079/retroix-dotfiles.git
 cd retroix-dotfiles
 bash install.sh --dry-run   # read what it would do first
 bash install.sh
+bash install.sh --login-screen   # only the Win95 login screen (greetd), no questions
 ```
 
 `install.sh` is safe to re-run and never deletes anything. It:
@@ -88,7 +89,7 @@ Included: Liberation Sans (with its licence) and Material Symbols (the icons).
 | Super+Q | Close the open menu, else the window |
 | Super+F1 | Every key (read from `hypr/binds.lua`) |
 
-Windows move with Super+drag or the mouse's side buttons; Super+G turns the side buttons off for games.
+Windows move with Super+drag or the mouse's side buttons; Super+G is game mode: side buttons off, animations off, caffeine and Do Not Disturb on, `gameMode.pause` programs paused, GAME in the bar (a Steam game switches it on by itself).
 
 ## Extras outside this repo
 

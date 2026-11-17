@@ -21,6 +21,7 @@ import "." as Popups
 // - kill: "kill zen" (or "kill" alone: the biggest) lists your process groups (scripts/procs.py --once, grouped like the
 //   Task Manager) with their memory; Enter asks (ConfirmBar, verb End task, SIGTERM only through scripts/endtask.sh,
 //   "End anyway" for core processes), the pids are read again at the confirm
+// - services: "/svc", "/svc spo", "/svc spotifyd restart": Start / Stop / Restart rows for user dinit services (ServiceWatch's list), second Enter confirms
 // - history: "=" alone (or "hist") lists the last 10 calculator / conversion results that were copied (CalcHistory)
 // - emoji: ":" and a word searches the built-in emoji table (Emoji); Enter copies the emoji
 // - files: "/" and part of a name ("/report", "/ report") searches file and folder NAMES under the home folder
@@ -56,7 +57,9 @@ PanelWindow {
     property var clipLines: []
 
     // files: the Files tab, or "/" and part of a name in Apps
-    readonly property bool fileMode: root.mode === "files" || (root.mode === "apps" && searchInput.text.trim().startsWith("/"))
+    // "/svc ..." in Apps is the service commands (user dinit), not a file search
+    readonly property bool svcMode: root.mode === "apps" && /^\/svc(\s|$)/i.test(searchInput.text.trim())
+    readonly property bool fileMode: root.mode === "files" || (root.mode === "apps" && !root.svcMode && searchInput.text.trim().startsWith("/"))
     readonly property string fileName: root.mode === "files" ? searchInput.text.trim()
         : root.fileMode ? searchInput.text.trim().slice(1).trim() : ""
     readonly property int fileRows: root.fileMode ? root.results.length : 0
@@ -281,8 +284,8 @@ PanelWindow {
                                     EmptyState {
                                         anchors.fill: parent
                                         visible: root.results.length === 0 || root.fileEmpty
-                                        glyph: root.fileMode ? "\ue2c7" : root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
-                                        text: root.fileMode ? root.fileEmptyText : root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
+                                        glyph: root.svcMode ? "\ue8b8" : root.fileMode ? "\ue2c7" : root.mode === "clipboard" ? (root.clipMissing ? "\ue002" : "\ue14f") : "\ue8b6"
+                                        text: root.svcMode ? (ServiceWatch.unavailable ? "dinitctl not available" : "No matching user service (the list refreshes every 10 s)") : root.fileMode ? root.fileEmptyText : root.mode === "clipboard" ? (root.clipMissing ? "cliphist not installed" : "Clipboard history is empty") : "No matches"
                                     }
 
                                     ListView {
@@ -521,6 +524,11 @@ PanelWindow {
         if (root.mode === "clipboard")
             return root.setResults(root.clipItems(q), keep ? appsView.currentIndex : 0);
 
+        if (root.svcMode) {
+            if (FileSearch.requested !== "")
+                FileSearch.stop();
+            return root.setResults(root.serviceItems(q.slice(4).trim()), keep ? appsView.currentIndex : 0);
+        }
         if (q.startsWith("/"))
             return root.setResults(root.fileItems(q.slice(1).trim()), keep ? appsView.currentIndex : 0);
         if (FileSearch.requested !== "")
@@ -628,6 +636,52 @@ PanelWindow {
                     root.closeCallback();
                 }
             }));
+    }
+
+    // "/svc [name-start] [start|stop|restart]": one row per possible action on the matching user dinit services (from
+    // ServiceWatch's last `dinitctl --user list`), each needs a second Enter. System services stay in Settings > Services.
+    readonly property var svcVerbs: ["start", "stop", "restart"]
+    property var svcLog: []
+    function serviceItems(rest) {
+        const words = rest.split(/\s+/).filter(w => w !== "");
+        let verb = "";
+        if (words.length > 0 && root.svcVerbs.indexOf(words[words.length - 1].toLowerCase()) >= 0)
+            verb = words.pop().toLowerCase();
+        const prefix = (words[0] || "").toLowerCase();
+        const items = [];
+        for (const s of ServiceWatch.prev || []) {
+            if (!ServiceWatch.safeName(s.name) || (prefix !== "" && !s.name.toLowerCase().startsWith(prefix)))
+                continue;
+            const verbs = s.state === "running" ? ["restart", "stop"] : ["start"];
+            for (const v of verbs) {
+                if (verb !== "" && v !== verb)
+                    continue;
+                const key = "svc-" + v + "-" + s.name;
+                const label = v.charAt(0).toUpperCase() + v.slice(1);
+                items.push({
+                    title: root.confirmKey === key ? label + " " + s.name + " now? Enter again · Esc cancels" : label + " " + s.name,
+                    sub: s.state === "running" ? "Running" : s.failed ? "Failed" : "Stopped",
+                    glyph: "\ue8b8",
+                    key: key,
+                    run: () => {
+                        if (root.confirmKey !== key) {
+                            root.arm(key);
+                            return;
+                        }
+                        root.confirmKey = "";
+                        ServiceWatch.expect(s.name);   // an intended stop must not raise the "stopped" toast
+                        if (Quickshell.env("QS_NO_APPLY"))
+                            root.svcLog = root.svcLog.concat([["dinitctl", "--user", v, s.name].join(" ")]);   // tests: record, never run dinitctl
+                        else
+                            Quickshell.execDetached(["dinitctl", "--user", v, s.name]);
+                        root.closeCallback();
+                    }
+                });
+                if (items.length >= 12)
+                    return items;
+            }
+        }
+        return items;
     }
 
     function windowItems(q) {

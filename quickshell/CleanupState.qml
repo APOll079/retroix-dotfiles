@@ -18,6 +18,11 @@ Singleton {
 
     property var rows: []                 // [{ id, label, bytes, count, needsRoot, note }] from `sizes`
     property bool loading: false
+    // the block grid in the panel while a clean runs: no real progress comes from the script, so the value creeps toward 1
+    // (defragStep) and jumps to 1 when it ends, then clears
+    property real defrag: 0
+    readonly property bool cleaning: runProc.running || root.defrag >= 1
+    function defragStep(f) { return Math.min(0.95, f + (1 - f) * 0.05); }
     property string result: ""            // the last run's message
     property bool resultOk: true
     property var runLog: []               // ids passed to run() under QS_NO_APPLY
@@ -161,6 +166,7 @@ Singleton {
         if (runProc.running)
             return;
         root.result = "";
+        root.defrag = 0;
         runProc.command = ["sh", root.script, "run", id];
         runProc.running = true;
     }
@@ -192,7 +198,22 @@ Singleton {
                 }
             }
         }
-        onExited: root.load()
+        onExited: {
+            root.defrag = 1;
+            doneTimer.restart();
+            root.load();
+        }
+    }
+    Timer {
+        interval: 140
+        repeat: true
+        running: runProc.running && root.defrag < 1
+        onTriggered: root.defrag = root.defragStep(root.defrag)
+    }
+    Timer {
+        id: doneTimer
+        interval: 700
+        onTriggered: root.defrag = 0
     }
 
     Process {

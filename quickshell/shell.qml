@@ -107,6 +107,12 @@ Scope {
         function close(): void { LyricsWindowState.close(); }
     }
     // Screensaver: `qs ipc call screensaver start|stop|preview`; Mini player: `qs ipc call miniplayer toggle|open|close`
+    // Game mode: `qs ipc call gamemode set true|false` (hypr/inputs.lua calls it from Super+G and for Steam games)
+    IpcHandler {
+        target: "gamemode"
+        function set(on: bool): void { GameModeState.set(on); }
+        function toggle(): void { GameModeState.toggle(); }
+    }
     // Lock screen: `qs ipc call lockscreen lock` (hyprlock or the win95 lock, by settings.ui.lockScreen)
     IpcHandler {
         target: "lockscreen"
