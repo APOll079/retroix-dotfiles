@@ -23,7 +23,7 @@ Singleton {
     readonly property int widthLarge: 480
 
     // Spacing scale: the only paddings and gaps in the shell are these five steps. Every *Pad / *Gap /
-    // *Inset / *Spacing below is one of them (scripts/check.py warns about any other). Sizes of things
+    // *Inset / *Spacing below is one of them (keep to these). Sizes of things
     // (rows 22, title bar 20, buttons) are not spacing and have their own names.
     readonly property int space2: 2
     readonly property int space4: 4

@@ -14,7 +14,7 @@
         },
         "currentTheme": "dusty",
         "execCommands": {
-            "files": "nemo",
+            "files": "luciole",
             "terminal": "kitty",
             "terminalClassFlag": "--class"
         },

@@ -27,7 +27,7 @@ trap 'rm -rf "$TMPDIR_RUN"' EXIT
 RETROISM_REV=255eb6a7b5a0d26413eea8dc5f47e8d67bb4b1ff
 
 # Folders of this repo that go to ~/.config/<name> (plus hyfetch.json)
-DEPLOY_DIRS=(hypr quickshell kitty fish btop gtk-3.0 gtk-4.0 nwg-look xsettingsd spotifyd spicetify dinit.d)
+DEPLOY_DIRS=(hypr quickshell kitty fish btop gtk-3.0 gtk-4.0 nwg-look xsettingsd spotifyd spicetify dinit.d xdg-desktop-portal)
 
 for arg in "$@"; do
     case "$arg" in

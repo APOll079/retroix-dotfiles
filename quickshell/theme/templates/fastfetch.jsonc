@@ -8,7 +8,6 @@
   "modules": [
     {
       "type": "custom",
-      "key": "",
       "format": "─── System ─────────────────────────────",
       "outputColor": "38;2;{{term_accent.rgb}}"
     },
@@ -57,7 +56,6 @@
     },
     {
       "type": "custom",
-      "key": "",
       "format": "─── Hardware ───────────────────────────",
       "outputColor": "38;2;{{term_accent.rgb}}"
     },
@@ -86,7 +84,6 @@
     },
     {
       "type": "custom",
-      "key": "",
       "format": "────────────────────────────────────────",
       "outputColor": "38;2;{{term_accent.rgb}}"
     },

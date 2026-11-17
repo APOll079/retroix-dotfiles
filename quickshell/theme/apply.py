@@ -60,6 +60,8 @@ OUTPUTS = {
     "vscodium-package.json": ("~/.vscode-oss/extensions/qs.qs-retro-theme-1.0.0/package.json", None, "~/.vscode-oss/extensions"),
     "vscodium-theme.json": ("~/.vscode-oss/extensions/qs.qs-retro-theme-1.0.0/themes/qs-retro-color-theme.json", None, "~/.vscode-oss/extensions"),
     "zen.css": ("zen-qs/theme.css", None, "~/.zen"),
+    # Luciole reloads its colors.toml by itself when the file is written
+    "luciole-colors.toml": ("luciole/colors.toml", None, "luciole"),
     # Qt apps through qt6ct (colours only, qt6ct.conf is never touched)
     "qt6ct-colors.conf": ("qt6ct/colors/qsretro.conf", None, "qt6ct"),
 }
@@ -147,6 +149,8 @@ def derive(p, name):
     # MenuStyle.bevelLight = highlight (checked above to stand out from base), bevelDark = Qt.darker(shadow, 1.7)
     roles["light"] = roles["highlight"]
     roles["dark"] = darker(roles["shadow"], 1.7)
+    # a soft light face: the base nudged a third of the way to the highlight, for big areas that pure highlight (near white) blinds
+    roles["soft"] = hexs(round(a + (b - a) / 3) for a, b in zip(rgb(roles["base"]), rgb(roles["highlight"])))
     # Two-hue screen: the terminal background is the accent's hue turned very dark, and fastfetch's
     # accent is the accent moved until it reads on that background (4.5:1)
     hh, _, ss = colorsys.rgb_to_hls(*(v / 255 for v in rgb(roles["accent"])))

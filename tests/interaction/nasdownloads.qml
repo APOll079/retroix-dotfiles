@@ -65,24 +65,33 @@ ShellRoot {
 
         // ---- DownloadWatch ----
         const D = DownloadWatch;
-        function drive(polls) {   // [[{name,size}...]...] -> per poll the toasted names, joined
+        // polls: [[{name,size}...]...]; parts: the partial file names per poll (missing = none) -> per poll the toasted names, joined
+        function drive(polls, parts) {
             let st = D.newState();
-            return polls.map(files => {
-                const r = D.step(st, files, 2);
+            return polls.map((files, i) => {
+                const r = D.step(st, files, 2, (parts || [])[i] || []);
                 st = r.state;
                 return r.fire.join("+");
             }).join("|");
         }
         const f = (n, s) => ({ name: n, size: s });
         shell.check("files already there at start never toast", drive([[f("old.zip", 100)], [f("old.zip", 100)], [f("old.zip", 100)], [f("old.zip", 100)]]) === "|||");
-        shell.check("steady for two polls exactly: toast on the third sighting", drive([[], [f("a.iso", 10)], [f("a.iso", 10)], [f("a.iso", 10)], [f("a.iso", 10)]]) === "|||a.iso|");
-        shell.check("a growing file toasts once it has stopped", drive([[], [f("a", 1)], [f("a", 2)], [f("a", 3)], [f("a", 3)], [f("a", 3)], [f("a", 3)]]) === "|||||a|");
-        shell.check("an empty file does not toast", drive([[], [f("z", 0)], [f("z", 0)], [f("z", 0)], [f("z", 0)]]) === "||||");
-        shell.check("a file that vanishes and comes back toasts again", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)], [], [f("a", 5)], [f("a", 5)], [f("a", 5)]]) === "|||a||||a");
-        shell.check("two files finishing together toast both", drive([[], [f("a", 5), f("b", 6)], [f("a", 5), f("b", 6)], [f("a", 5), f("b", 6)]]) === "|||a+b");
-        shell.check("a base file that changes later never toasts", drive([[f("old", 5)], [f("old", 6)], [f("old", 6)], [f("old", 6)], [f("old", 6)]]) === "||||");
-        shell.check("rewriting a toasted file toasts it again when it is steady", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)], [f("a", 9)], [f("a", 9)], [f("a", 9)]]) === "|||a|||a");
+        shell.check("steady for two polls exactly: toast on the third sighting", drive([[], [f("a.iso", 10)], [f("a.iso", 10)], [f("a.iso", 10)], [f("a.iso", 10)]], [[], ["x.part"]]) === "|||a.iso|");
+        shell.check("a growing file toasts once it has stopped", drive([[], [f("a", 1)], [f("a", 2)], [f("a", 3)], [f("a", 3)], [f("a", 3)], [f("a", 3)]], [[], ["x.part"]]) === "|||||a|");
+        shell.check("an empty file does not toast", drive([[], [f("z", 0)], [f("z", 0)], [f("z", 0)], [f("z", 0)]], [[], ["x.part"]]) === "||||");
+        shell.check("a file that vanishes and comes back toasts again", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)], [], [f("a", 5)], [f("a", 5)], [f("a", 5)]], [[], ["x.part"], [], [], ["y.part"]]) === "|||a||||a");
+        shell.check("two files finishing together toast both", drive([[], [f("a", 5), f("b", 6)], [f("a", 5), f("b", 6)], [f("a", 5), f("b", 6)]], [[], ["x.part"]]) === "|||a+b");
+        shell.check("a base file that changes later never toasts", drive([[f("old", 5)], [f("old", 6)], [f("old", 6)], [f("old", 6)], [f("old", 6)]], [[], ["x.part"]]) === "||||");
+        shell.check("rewriting a toasted file toasts again only after a new partial", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)], [f("a", 9)], [f("a", 9)], [f("a", 9)]], [[], ["x.part"], [], ["y.part"]]) === "|||a|||a");
+        shell.check("rewriting a toasted file with no partial does not toast again", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)], [f("a", 5)], [f("a", 5)], [f("a", 9)], [f("a", 9)], [f("a", 9)]], [[], ["x.part"]]) === "|||a|||||");
         shell.check("junk entries are ignored", drive([[], [f("a", 5), null, { name: 3 }, { name: "", size: 1 }, { name: "x" }]]) === "|");
+        shell.check("no partial seen: a new file never toasts (upload, unzip, copy)", drive([[], [f("up.png", 5)], [f("up.png", 5)], [f("up.png", 5)], [f("up.png", 5)]]) === "||||");
+        shell.check("Zen: placeholder + .part, then the .part goes and the file fills: one toast", drive([[], [f("m.mkv", 0)], [f("m.mkv", 0)], [f("m.mkv", 500)], [f("m.mkv", 500)], [f("m.mkv", 500)], [f("m.mkv", 500)]], [[], ["m.mkv.part"], ["m.mkv.part"]]) === "|||||m.mkv|");
+        shell.check("Chromium: Unconfirmed .crdownload renamed to the real name: one toast", drive([[], [], [f("movie.mkv", 9)], [f("movie.mkv", 9)], [f("movie.mkv", 9)]], [[], ["Unconfirmed 1.crdownload"]]) === "||||movie.mkv");
+        shell.check("a file next to a partial that is still downloading does not toast", drive([[], [f("a", 5)], [f("a", 5)], [f("a", 5)]], [[], ["x.part"], ["x.part"], ["x.part"]]) === "|||");
+        shell.check("an old partial past the window arms nothing", drive([[], [], [], [], [], [f("late", 5)], [f("late", 5)], [f("late", 5)]], [[], ["x.part"]]) === "|||||||");
+        shell.check("parseFiles: the files of the new object", shell.js(D.parseFiles('{"files":[{"name":"a","size":1},{"name":2}],"partials":["a.part"]}')) === shell.js([{ name: "a", size: 1 }]));
+        shell.check("parsePartials: names from the object, [] for the old list and junk", shell.js(D.parsePartials('{"files":[],"partials":["a.part",3]}')) === shell.js(["a.part"]) && shell.js(D.parsePartials('[{"name":"a","size":1}]')) === "[]" && shell.js(D.parsePartials("oops")) === "[]");
         shell.check("parseFiles: a list, junk filtered", shell.js(D.parseFiles('[{"name":"a","size":1},{"name":2,"size":1},5]')) === shell.js([{ name: "a", size: 1 }]));
         shell.check("parseFiles: not a list is null (the poll failed)", D.parseFiles("") === null && D.parseFiles("oops") === null && D.parseFiles("{}") === null && shell.js(D.parseFiles("[]")) === "[]");
         const cmd = D.toastCommand("evil'; touch x; '.iso", "/home/u/Downloads");

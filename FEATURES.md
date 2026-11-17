@@ -13,10 +13,10 @@ Style: cherry retro, bevels, no rounding / blur / shadows, `Config.colors` only.
 
 ### Small open items
 - Portal float rule (`windowrules.lua`, `windowrule-4`, `^(xdg-desktop-portal.*)$`): check that a Zen file picker floats.
-- Monaco 14 / 11 in the launcher search and tucked labels break the font rule (Monaco 12 or 16 only): move them to 16 / 12.
 
 ## Needs a live test
 Built, not yet confirmed on the desktop. Tick a box when it works; move a broken one to "Next up" with what went wrong.
+- Luciole (after `xdg-mime default dev.noctalia.luciole.desktop inode/directory`, `mkdir -p ~/.config/luciole`, a sync, `apply.py <theme>` and a log out / in for the portal): Super+E, Start > Files and Start > Trash (`trash:///`) open it; a Zen "Save as" and a Discord upload open the Luciole picker (does it float? its window class / title is unknown); the colours follow a theme switch live, and selection / hover read as the solid accent bar. Which colour role paints what is a guess.
 - Workspace overview is now hyprexpose (needs `hyprexpose-git`, a copy of `hyprexpose/config.toml` to `~/.config/hyprexpose/`, and a login or `hyprexpose &` to start the daemon): Super+Shift+O toggles; cards on both monitors, thumbnails, hover/click switches, right-click moves the active window, Escape closes; the scrim is dark, not white. Config key names are from its example file, not run here.
 - Services / Settings / Keys / Network, beyond what you confirmed (open, float, centre, drag, min 600x420, Super+Q, focus-not-duplicate all work): **Keys** re-reads `binds.lua` on open (add a dummy bind, reopen). **Network** refreshes on open; the speed test runs only from its button. **Services**: Details on a service toast opens on that log even if Services is already open; a System action opens the doas terminal above the window and the list refreshes when it closes. **Settings**: Super+Shift+comma toggles; typing goes to the search box; each System tools row opens its tool; Super+D > Settings tab closes the launcher and opens Settings.
 - Stay awake for video and games only (`idle.stayAwakeApps`): a fullscreen mpv / Zen video or a Steam / wine game stops dim, lock and screensaver; a fullscreen kitty or Nemo does not. If a game or player doesn't hold the screen, check its app id with `hyprctl activewindow` and add a pattern.
@@ -73,7 +73,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Round 3, launcher / Task Manager / NAS (never looked at, fakes only)
 - [ ] Launcher: hover and the key cursor never light two rows (the pointer-gating with `HoverHandler` + `scenePosition` is untested live: if the cursor stops following the mouse, that is it); `kill zen` lists programs, Enter asks, End task closes with SIGTERM, a core program shows End anyway; `=` lists copied results, `:heart` shows emoji (do they render in the real font?); right-click a Clipboard row, Delete removes it
 - [ ] Task Manager: the Ports tab shows real ports (`ss` output formats: unparsable lines are skipped), End task on your own listener asks first; the NET graph moves with a download
-- [ ] NAS: stop the server: one toast (there is no bar button); the Downloads toast with Open / Show in folder
+- [ ] NAS: stop the server: one toast (there is no bar button); the Downloads toast with Open / Show in folder for a Zen download, and none for an upload, an unzip or a copy into Downloads
 - [ ] Games: click a cover, the grid must not jump; Remove asks; Bluetooth and Updates panels don't resize while scanning or loading; History Escape clears the filter then closes; Prev / Next fit
 
 ### Round 4, themes and the optional cascade (never looked at)
@@ -113,7 +113,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Round 3, my share (never looked at)
 - [ ] After `hyprctl reload`: Loupe floats for any image; Zen Picture-in-Picture floats pinned bottom-right (is the title "Picture-in-Picture"?); file dialogs float and centre (does the title match list catch yours?); Super+Ctrl+T drops the terminal down and hides it again; Super+Ctrl+Z zooms (the `hl.config` call shape and `cursor.zoom_factor` are guesses)
 - [ ] Clock width stays put when the weather arrives; the launcher search is Monaco 16 and nothing in it clips; selected text in a search box is readable; buttons shift their content by exactly 1 px when pressed
-- [ ] `bash scripts/install-hooks.sh` once, then a commit runs `check.py`; `bash uninstall.sh` (dry run) lists the newest backup
+- [ ] `bash uninstall.sh` (dry run) lists the newest backup
 
 ### Bar, updates and trash changes (never looked at)
 - [ ] CPU button: a left click shows the Task Manager (Performance tab), the next click hides it, and the button looks pushed in while the window is open; Ctrl+Shift+Esc still opens / focuses it
@@ -192,7 +192,7 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 
 ### Theming and wallpapers
 - [ ] Qt theme: install qt6ct, log out and in, pick Style "Fusion" and Color scheme "qsretro" in qt6ct; VLC (and another Qt app) takes the colours, a theme switch shows after restarting the app. Check that Quickshell itself looks unchanged with `QT_QPA_PLATFORMTHEME=qt6ct` set (text fields, scrollbars). The 21-entry palette order and the disabled / link colours are unverified
-- [ ] GTK theme: restart Quickshell once (it writes QsRetro), then `gsettings set org.gnome.desktop.interface gtk-theme QsRetro`: Nemo, a GTK 4 app, a theme switch re-colouring open windows (the Adwaita flip), buttons / checkboxes / selections in every theme
+- [ ] GTK theme: restart Quickshell once (it writes QsRetro), then `gsettings set org.gnome.desktop.interface gtk-theme QsRetro`: a GTK 4 app, a theme switch re-colouring open windows (the Adwaita flip), buttons / checkboxes / selections in every theme
 - [ ] App themes: each app's one-time setup (`docs/theming.md`), then a theme switch. Does Zen's `@import` take effect? (VSCodium works; it needs Reload Window after a switch)
 - [ ] Wallpaper colours: "Set + colours" on a real wallpaper, the Themes menu card "wallpaper", plain Set while that theme is active, the palette surviving a restart
 - [ ] Wallpaper browser: Set on DP-1 / DP-2 / All, each fit mode, the choice coming back after a Quickshell restart and after a reboot

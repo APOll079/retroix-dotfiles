@@ -1,0 +1,35 @@
+# Generated from the quickshell theme ({{theme}}). Edit quickshell/theme/templates/luciole-colors.toml, never this file.
+# Luciole (file manager and file picker) reads ~/.config/luciole/colors.toml and reloads it as soon as it is written.
+# Keys from /usr/share/luciole/templates/colors.toml (Material-style roles). Retro mapping: hover and selection are the
+# solid accent bar with its text colour, the file list sits on `soft` (the base a third of the way to the highlight; plain highlight is near white), chrome on the base face, crisp
+# outline. Which role paints which part of Luciole is a guess until seen live.
+
+[colors]
+primary = "{{select_bar}}"
+on_primary = "{{select_text}}"
+primary_container = "{{select_bar}}"
+on_primary_container = "{{select_text}}"
+secondary = "{{dark}}"
+on_secondary = "{{base}}"
+secondary_container = "{{shadow}}"
+on_secondary_container = "{{text}}"
+tertiary = "{{accent}}"
+on_tertiary = "{{select_text}}"
+tertiary_container = "{{soft}}"
+on_tertiary_container = "{{text}}"
+error = "{{urgent}}"
+on_error = "{{base}}"
+error_container = "{{urgent}}"
+on_error_container = "{{base}}"
+surface = "{{base}}"
+on_surface = "{{text}}"
+on_surface_variant = "{{text}}"
+surface_container_low = "{{soft}}"
+surface_container = "{{base}}"
+surface_container_high = "{{base}}"
+surface_container_highest = "{{shadow}}"
+outline_variant = "{{outline}}"
+shadow = "{{outline}}"
+scrim = "{{outline}}"
+hover = "{{select_bar}}"
+on_hover = "{{select_text}}"

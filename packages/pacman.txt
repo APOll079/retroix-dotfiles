@@ -8,7 +8,7 @@ hyprlock
 hyprpaper
 hyprpicker                  # Super+Shift+C colour picker
 xdg-desktop-portal-hyprland # screen sharing (custom picker in hypr/xdph.conf)
-xdg-desktop-portal-gtk      # file pickers
+xdg-desktop-portal-gtk      # settings and the other portals (file pickers are Luciole, xdg-desktop-portal/hyprland-portals.conf)
 quickshell                  # bar, menus, launcher, notifications, everything
 qt6-wayland                 # ? quickshell may pull it in already
 qt6ct                       # Qt apps (VLC etc.) follow the theme: colour scheme qsretro (docs/theming.md, Qt theme)
@@ -19,7 +19,6 @@ greetd                      # login: starts Hyprland on tty1 (see install.sh aut
 # --- tools the configs call ---
 kitty
 fish
-nemo                        # file manager (Super+E, settings.json execCommands.files)
 btop                        # installed, not bound
 fastfetch
 hyfetch                     # kitty starts it

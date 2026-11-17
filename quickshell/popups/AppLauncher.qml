@@ -819,7 +819,7 @@ PanelWindow {
     }
 
     // Currency (utils/Currency.qml). Through try / catch so a utils/qmldir without the Currency line costs the currency row only,
-    // not every keystroke in the launcher (check.py fails on the missing line)
+    // not every keystroke in the launcher (a behaviours.tsv line guards it)
     function currencyAnswer(q) {
         try {
             return Utils.Currency.answer(q);

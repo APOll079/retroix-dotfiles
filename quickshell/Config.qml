@@ -172,7 +172,7 @@ property string systemProfileImageSource: ""
 property string currentTheme: "default"
 property JsonObject execCommands: JsonObject {
 property string terminal: "kitty"
-property string files: "nemo"
+property string files: "luciole"
 // How the terminal names its window for the qs-dialog float rule: kitty / alacritty "--class", foot "--app-id", "" = don't name it (no float rule)
 property string terminalClassFlag: "--class"
 }

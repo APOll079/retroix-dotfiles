@@ -5,7 +5,7 @@
 mainMod = "SUPER"
 menu = [[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") toggleAppLauncher']]
 terminal = "kitty"
-fileManager = "nemo"
+fileManager = "luciole"
 
 require("autostart")
 require("monitors")

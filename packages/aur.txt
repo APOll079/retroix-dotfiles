@@ -9,6 +9,7 @@ spicetify-cli               # Spotify theme + the qs-folders extension
 vesktop                     # Discord (Super+C scratchpad)
 
 # --- apps I use (trim freely) ---
+luciole-git                 # file manager and file picker (Super+E, execCommands.files, xdg-desktop-portal/)
 zen-browser-bin             # in some repos (CachyOS), else the AUR
 localsend-bin
 obsidian-bin

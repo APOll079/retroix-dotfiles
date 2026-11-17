@@ -85,7 +85,7 @@ var SCHEMA = [
     e("Watchers", "nas.enabled", "bool", "NAS watch", "Show NAS mount state in the bar"),
     e("Watchers", "nas.mounts", "list", "NAS mounts", "Comma-separated mount paths"),
     e("Watchers", "nas.intervalSeconds", "int", "NAS check every", "Seconds", { min: 5, max: 3600 }),
-    e("Watchers", "downloads.enabled", "bool", "Download toast", "Toast when a download finishes"),
+    e("Watchers", "downloads.enabled", "bool", "Download toast", "Toast when a browser download finishes (not uploads, unzips or copies)"),
     e("Watchers", "downloads.intervalSeconds", "int", "Download check every", "Seconds", { min: 1, max: 300 }),
     e("Watchers", "networkWatch.enabled", "bool", "Network toasts", "Link up / down and ping results"),
     e("Watchers", "networkWatch.hosts", "list", "Ping hosts", "Comma-separated names or IPs; empty = link only"),
