@@ -250,6 +250,8 @@ property bool dither: true
 // a Programs button in the Start menu that opens categories and apps as cascading menus
 property bool cascadingStart: false
 property bool reduceMotion: false
+// "win95" (default): the Quickshell lock (LockScreen.qml); "hyprlock": hyprlock.conf
+property string lockScreen: "win95"
 }
 // Idle: dim, then lock (hyprlock), then screens off; minutes, 0 = off for that step
 property JsonObject idle: JsonObject {

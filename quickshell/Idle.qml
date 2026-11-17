@@ -80,7 +80,7 @@ Singleton {
         timeout: root.cfg.lockMinutes * 60
         onIsIdleChanged: {
             if (isIdle)
-                Quickshell.execDetached(["sh", "-c", "pidof hyprlock || hyprlock"]);
+                LockScreen.lockNow();
         }
     }
 

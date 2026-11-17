@@ -27,6 +27,10 @@ Singleton {
     readonly property var all: builtins.concat(custom)
 
     function run(action) {
+        if (action.name === "Lock" && action.cmd === root.builtins[1].cmd) {
+            LockScreen.lockNow();   // hyprlock or the win95 lock, by settings.ui.lockScreen
+            return;
+        }
         Quickshell.execDetached(["sh", "-c", action.cmd]);
     }
 }

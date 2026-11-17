@@ -107,6 +107,11 @@ Scope {
         function close(): void { LyricsWindowState.close(); }
     }
     // Screensaver: `qs ipc call screensaver start|stop|preview`; Mini player: `qs ipc call miniplayer toggle|open|close`
+    // Lock screen: `qs ipc call lockscreen lock` (hyprlock or the win95 lock, by settings.ui.lockScreen)
+    IpcHandler {
+        target: "lockscreen"
+        function lock(): void { LockScreen.lockNow(); }
+    }
     IpcHandler {
         target: "screensaver"
         function start(): void { ScreensaverState.start(); }

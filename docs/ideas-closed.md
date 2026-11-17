@@ -7,11 +7,15 @@ Case convert, kaomoji, YouTube search, boot-entry picker (no dual boot), unread 
 
 QR codes (region scan, clipboard QR), pinned screenshots, upload-and-share links, Win95-framed window shots, a themed password prompt, repo status, launcher command mode, copy-the-2FA-code, password tool, school schedule, ring my phone, Spotify sleep timer, wallpaper of the day, 20-20-20 reminder, internet radio, podcasts, ambient sounds, workspace names / remembered float positions / per-workspace wallpaper, tip of the day, clock properties dialog, CRT mode, Konami code, Minesweeper, Solitaire, Run dialog, seasonal touches, spinning globe, CPU cat, bongo cat, typing sounds, .beat time.
 
-Launcher timers, time zones, drop-down terminal, Ask Claude from the launcher, Ollama manager, Claude Code usage in the bar, launcher colour preview, Folder shortcuts (removed). Recent files in the launcher, wallpaper slideshow, sticky notes, idle BSOD screensaver, a bar-clock calendar popup (the bell + clock button already opens the side panel). DND by hours.
+Launcher timers, time zones, drop-down terminal, Ask Claude from the launcher, Ollama manager, Claude Code usage in the bar, launcher colour preview, Folder shortcuts (removed). Recent files in the launcher, wallpaper slideshow, sticky notes, idle BSOD screensaver, a bar-clock calendar popup (the bell + clock button already opens the side panel). DND by hours. "It's now safe to turn off your computer" screen, act on the latest toast by key, Obsidian quick capture. Pomodoro / focus timer.
 
 From the desktop-overhaul audit: Super+P pin, Super+right-drag resize, Games chips clip fix, tooltips (ETH / privacy icons / lyric line, BevelButton tooltip + one delay).
 
 ## Done (were top picks, now built; see FEATURES.md for how each works)
+
+**Theming:** Win95 lock screen (opt-in later the default); Login screen (greeter, optional install step)
+
+**Fixes you asked for:** Start Hyprland through `start-hyprland` (install.sh writes it; the greetd edit is yours), Lock screen at login (was already built, needs the `lock-at-login` marker). Limine boots by itself (`default_entry` / `timeout` in `/boot/limine.conf`, yours to apply).
 
 **Capture:** Name shots by window; Screenshot History: type to filter; Text from a region (OCR); Colour picker in the shell; GIF from a recording; Screen recording; Record the last 30 s (replay buffer)
 

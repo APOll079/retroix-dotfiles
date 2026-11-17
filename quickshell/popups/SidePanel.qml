@@ -17,7 +17,7 @@ PanelWindow {
     // The power action waiting for its verb button (Session.qml policy)
     property var pending: null
 
-    // An Overlay-layer panel (not a popup of the bar), so Super+N over a fullscreen app gets the clicks
+    // An Overlay-layer panel (not a popup of the bar), so the side panel over a fullscreen app gets the clicks
     anchors {
         top: true
         right: true

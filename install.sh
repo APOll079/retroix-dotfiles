@@ -434,11 +434,11 @@ autologin() {
     warn "'hyprlock' from a second TTY (Ctrl+Alt+F2) and make sure you can unlock."
     ask "Set up autologin with greetd and lock the session at login?" n || { note "skipped"; return; }
 
-    # greetd: start Hyprland as you on tty1, no greeter
+    # greetd: start Hyprland as you on tty1, no greeter. start-hyprland is the launcher with Hyprland's watchdog (plain `Hyprland` runs without it)
     local conf=/etc/greetd/config.toml user
     user="$(id -un)"
-    if [[ -f "$conf" ]] && grep -q "command = \"Hyprland\"" "$conf" && grep -q "user = \"$user\"" "$conf"; then
-        note "greetd already starts Hyprland as $user"
+    if [[ -f "$conf" ]] && grep -q "command = \"start-hyprland\"" "$conf" && grep -q "user = \"$user\"" "$conf"; then
+        note "greetd already starts Hyprland (start-hyprland) as $user"
     else
         [[ -f "$conf" ]] && run doas cp -a "$conf" "$conf.bak-$STAMP"
         write_file root "$conf" <<EOF
@@ -446,7 +446,7 @@ autologin() {
 vt = 1
 
 [default_session]
-command = "Hyprland"
+command = "start-hyprland"
 user = "$user"
 EOF
     fi
@@ -477,6 +477,53 @@ EOF
     fi
 }
 
+# Win95 login screen: a Quickshell greeter for greetd (greeter/). Optional, default no. It replaces autologin: the
+# greetd config is rewritten to start the greeter (in its own small Hyprland, as the `greeter` user) and the greeter
+# starts your session through start-hyprland. Everything the greeter needs is COPIED to /etc/greetd/qs-greeter/ (the
+# greeter user can't read your home), so a theme change reaches it only when you run this step again. If the greeter
+# dies, greetd falls back to the plain text greeter agreety; Ctrl+Alt+F2 always gives a text login.
+login_screen() {
+    say "Login screen (greetd + Quickshell greeter)"
+    warn "This changes how you log in: you type your password at every boot instead of autologin."
+    warn "A broken greeter shows agreety (text login) or a black screen; Ctrl+Alt+F2 gives a text login to put"
+    warn "/etc/greetd/config.toml.bak-* back. Needs the greetd, quickshell and hyprland packages."
+    ask "Set up the Win95 login screen?" n || { note "skipped"; return; }
+    have agreety || { warn "agreety (part of greetd) is missing: the fallback would not work, not setting it up"; return; }
+    id greeter >/dev/null 2>&1 || warn "no 'greeter' user: greetd's package normally creates it; check 'id greeter' first"
+
+    local stage dest=/etc/greetd/qs-greeter user theme conf=/etc/greetd/config.toml
+    user="$(id -un)"
+    theme="$(theme_name)"
+    stage="$(mktemp -d)"
+    cp -r "$REPO/quickshell/." "$stage/"
+    cp "$REPO/greeter/shell.qml" "$stage/shell.qml"
+    cp "$REPO/greeter/hypr-greeter.lua" "$stage/hypr-greeter.lua"
+    cp "$REPO/icons/RetroismIcons/apps/16/keyring-manager.png" "$stage/key.png"
+    printf '%s\n' "$user" > "$stage/user.txt"
+    python3 -I -c 'import json,sys; json.dump({"settings": {"currentTheme": sys.argv[1]}}, open(sys.argv[2], "w"), indent=4)' "$theme" "$stage/settings.json"
+    rm -rf "$stage/scripts" "$stage/gallery.qml"
+    note "greeter files: $stage -> $dest (theme: $theme, user: $user)"
+
+    run doas mkdir -p "$dest"
+    run doas cp -r "$stage/." "$dest/"
+    run doas chown -R root:root "$dest"
+    run doas chmod -R a+rX "$dest"
+    (( DRY )) || rm -rf "$stage"
+
+    [[ -f "$conf" ]] && run doas cp -a "$conf" "$conf.bak-$STAMP"
+    write_file root "$conf" <<TOML
+[terminal]
+vt = 1
+
+[default_session]
+command = "sh -c 'start-hyprland -- --config $dest/hypr-greeter.lua || agreety --cmd start-hyprland'"
+user = "greeter"
+TOML
+    enable_service system greetd
+    have ly && warn "ly is installed too; only one login manager should run (check /etc/dinit.d/boot.d)"
+    note "done: log out or reboot to see it. Put $conf.bak-$STAMP back to return to autologin."
+}
+
 # The active theme from quickshell's settings.json (cherry if unknown)
 theme_name() {
     local t
@@ -505,6 +552,7 @@ main() {
     generate_theme
     gtk_theme
     autologin
+    login_screen
     summary
 }
 

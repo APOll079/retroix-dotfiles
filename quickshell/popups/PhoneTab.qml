@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import ".."
 
-// Phone tab of the side panel (Super+N > Phone): KDE Connect through `kdeconnect-cli`. Lists the phones
+// Phone tab of the side panel (bell + clock button > Phone): KDE Connect through `kdeconnect-cli`. Lists the phones
 // kdeconnectd knows, with Pair / Unpair, Ping, Send clipboard and Send file (a typed path; there is
 // no file picker). Phone notifications arrive on their own through the notification daemon, and
 // clipboard sync is a per-device plugin switch in the phone app. "Send to phone" sends a typed file path or an

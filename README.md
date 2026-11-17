@@ -52,7 +52,7 @@ bash install.sh
 7. recolours the GTK theme into `QsRetro` / `QsRetroIcons` and writes the other colour files (`apply.py`);
 8. reminds you to run `spotifyd authenticate` once.
 
-It asks before installing Flatpak apps, pointing GTK at the theme, and setting up greetd autologin with a lock at login (default **no**; test `hyprlock` from a second TTY first).
+It asks before installing Flatpak apps, pointing GTK at the theme, and setting up greetd autologin (starting Hyprland through `start-hyprland`) with a lock at login, and the Win95 login screen instead of autologin (default **no**) (default **no**; test `hyprlock` from a second TTY first).
 
 The lists in `packages/` are plain text: comment a line out with `#` to skip it. Each has an "apps I use" section you can trim.
 

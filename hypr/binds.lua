@@ -52,7 +52,7 @@ hl.bind(mainMod .. " + F1", hl.dsp.exec_cmd(cheatSheet))  -- help: Desktop | Thi
 -- Clipboard history lives in the quickshell launcher (themed, keyboard-driven)
 hl.bind(mainMod .. " + " .. "V", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") clipboard']]))  -- help: Apps | Clipboard history
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "comma", hl.dsp.exec_cmd([[bash -c 'qs ipc call appLauncher_$(hyprctl monitors -j | jq -r ".[] | select(.focused) | .name") settings']]))  -- help: Apps | Settings
-hl.bind(mainMod .. " + " .. "L", hl.dsp.exec_cmd("hyprlock"))  -- help: Desktop | Lock screen
+hl.bind(mainMod .. " + " .. "L", hl.dsp.exec_cmd("sh -c 'qs ipc call lockscreen lock || hyprlock'"))  -- help: Desktop | Lock screen
 hl.bind(mainMod .. " + CTRL" .. " + " .. "L", hl.dsp.exec_cmd("qs ipc call lyrics toggle"))  -- help: Media | Lyrics window (toggle)
 
 -- Move focus with mainMod + arrow keys

@@ -312,7 +312,7 @@ ToolWindows.toggle("settings");
 function clipboard() {
 taskbar.openLauncherMode("clipboard", true);
 }
-// Super+Tab: open windows in the launcher (type to filter, Enter focuses)
+// `qs ipc call appLauncher_<monitor> windows`: open windows in the launcher (type to filter, Enter focuses; the "," search in Super+D does the same)
 function windows() {
 taskbar.openLauncherMode("windows");
 }

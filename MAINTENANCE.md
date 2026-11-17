@@ -15,10 +15,13 @@ Written for you, in plain English, for the day nobody is helping with it. Skim "
 
 | Symptom | Open |
 |---|---|
+| Black screen or text login at boot after the login-screen step | The Quickshell greeter died (agreety is the text fallback). Ctrl+Alt+F2, log in, `doas cp /etc/greetd/config.toml.bak-<newest> /etc/greetd/config.toml` (back to autologin), reboot. Logs: run `quickshell -p /etc/greetd/qs-greeter/shell.qml` from a TTY inside a Hyprland session to see errors. |
 | Keybind does nothing | `hypr/binds.lua` |
+| Stuck on a red screen / the win95 lock is gone but the screen stays locked | Quickshell died while locked (`settings.ui.lockScreen` "win95"). Ctrl+Alt+F2, log in, then `hyprctl --instance 0 'keyword misc:allow_session_lock_restore 1'` and `hyprctl --instance 0 dispatch 'hl.dsp.exec_cmd("hyprlock")'` (the Lua-mode call shape is a guess), unlock there, Ctrl+Alt+F1. Set the setting back to "hyprlock" if it happens again. |
 | Window opens in the wrong place / floats wrongly | `hypr/windowrules.lua` |
 | Monitors, scaling | `hypr/monitors.lua` |
-| Something not starting at login | `hypr/autostart.lua` |
+| Limine waits at its menu / wrong default | `/boot/limine.conf` is hand-managed (no package owns it; `/etc/limine-entry-tool.conf` only generates the `//linux-cachyos` entry below it). Global lines at the top: `timeout`, `default_entry` (1-based, nested entries count). Back it up first (`doas cp /boot/limine.conf /boot/limine.conf.mine`). |
+| Something not starting at login | `hypr/autostart.lua` (greetd starts `start-hyprland` as you: `/etc/greetd/config.toml`; the lock at login is on while `~/.config/hypr/lock-at-login` exists, delete it to turn it off) |
 | A menu looks broken or is missing | the file in `quickshell/popups/` with its name |
 | Bar items | `quickshell/taskbar/Bar.qml` and the file named after the item |
 | Sizes and spacing | `quickshell/MenuStyle.qml` (all named sizes live here) |

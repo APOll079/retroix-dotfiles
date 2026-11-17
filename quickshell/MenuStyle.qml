@@ -21,6 +21,9 @@ Singleton {
     readonly property int widthSmall: 240
     readonly property int widthMedium: 320
     readonly property int widthLarge: 480
+    readonly property int loginGlyphSize: 32       // the key on the lock / login box
+    readonly property int lockWidth: 544           // the lock / login boxes: a bit wider than widthLarge
+    readonly property int lockClockSize: 40        // the win95 lock's big clock (hyprlock.conf's size; Monaco is even at this size)
 
     // Spacing scale: the only paddings and gaps in the shell are these five steps. Every *Pad / *Gap /
     // *Inset / *Spacing below is one of them (keep to these). Sizes of things

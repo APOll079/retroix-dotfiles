@@ -42,6 +42,7 @@ var SCHEMA = [
     e("Appearance", "ui.cascadingStart", "bool", "Cascading Start menu", "Adds a Programs button to the Start menu that opens categories and apps as cascading menus"),
     e("Appearance", "ui.dither", "bool", "Dither on meters", "Off gives flat empty tracks"),
     e("Appearance", "ui.reduceMotion", "bool", "Reduce motion", "Turns every animation off"),
+    e("Appearance", "ui.lockScreen", "choice", "Lock screen", "win95 (the Locked panel + Welcome-to box) or hyprlock", { choices: ["hyprlock", "win95"] }),
 
     e("Notifications", "notifications.position", "choice", "Toast position", "Where toasts appear", { choices: ["top-right", "top-left", "top", "bottom-right", "bottom-left", "bottom"] }),
     e("Notifications", "notifications.maxVisible", "int", "Toasts at once", "Stack limit", { min: 1, max: 20 }),

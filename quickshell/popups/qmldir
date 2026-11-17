@@ -77,3 +77,5 @@ ScreensaverWindow 1.0 ScreensaverWindow.qml
 ScreensaverView 1.0 ScreensaverView.qml
 ThemeEditor 1.0 ThemeEditor.qml
 PopupCascade 1.0 PopupCascade.qml
+LoginDialog 1.0 LoginDialog.qml
+LockHeader 1.0 LockHeader.qml
