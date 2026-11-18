@@ -11,11 +11,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 | | Idea | Size |
 |---|---|---|
 
-## 1. Capture
-| | Idea | Size |
-|---|---|---|
-| ★ | **OBS controls**: start / stop recording, save the replay buffer, from the bar (OBS is installed; an alternative to a separate recorder) (seen in obs-control) | S |
-
 ## 2. System health
 | | Idea | Size |
 |---|---|---|
@@ -42,16 +37,6 @@ These three are your requests, not my suggestions. Details are what I could gues
 | ★ | **Home Assistant panel**: lights and scenes as buttons in the side panel through HA's REST API (a long-lived token in the state dir, never in the repo) | M |
 | ★ | **3D printer**: progress and time left in the bar while the K2 prints (only if it exposes a Moonraker / HTTP API; check first) | M |
 | ★ | **Discord voice**: who's in your voice channel, who's speaking, mute / deafen from the bar (check that Vesktop exposes it first) (seen in discord-voice) | M |
-
-## 13. Theming and retro look
-| | Idea | Size |
-|---|---|---|
-| ★ | **Character Map**: browse and copy the Material Symbols icons by name, shows the `\uXXXX` code (handy for building the shell itself) | S |
-
-## 14. The repo itself
-| | Idea | Size |
-|---|---|---|
-| ★ | **Test install in a container**: run `install.sh --dry-run` on a clean Artix image in Docker | M |
 
 ## 15. Gimmicks and fun features
 Pure fun: nice to have, nothing depends on them.
