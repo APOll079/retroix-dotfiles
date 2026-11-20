@@ -158,7 +158,7 @@ Row {
         toggledIconFontValue: ""   // pushed in (menu or Task Manager open) must not swap the icon: the button would grow
         // No icon: the CPU/RAM labels say what it is (BarButton defaults to the Start grid icon)
         iconFontValue: ""
-        label: root.sysLabel(Math.round(SysMon.cpuLoad * 100), SysMon.cpuTemp, SysMon.gpuEdge, SysMon.memPercent, root.showGpu)
+        label: root.sysLabel(Math.round(SysMon.cpuLoad * 100), SysMon.cpuTemp, SysMon.gpuEdge, SysMon.memPercent, root.showGpu && SysMon.hasGpu)
         isToggled: root.currentPopup === Config.SystemPopup.SysMonMenu || TaskWindow.visible
         tooltip: "Left click: show / hide the Task Manager \u00b7 Right click: temperatures"
         onClicked: TaskWindow.toggle("performance")

@@ -28,6 +28,7 @@ Singleton {
 
     property string cpuHwmon: ""
     property string gpuHwmon: ""
+    readonly property bool hasGpu: gpuHwmon !== ""   // no readable GPU temperature on this machine: the bar and menu hide the GPU part
 
     // Previous /proc/stat totals, for the load delta
     property real lastIdle: 0
@@ -35,16 +36,27 @@ Singleton {
 
     Process {
         running: true
-        command: ["sh", "-c", "for h in /sys/class/hwmon/hwmon*; do echo \"$h $(cat $h/name) $([ -e $h/temp2_input ] && echo multi)\"; done"]
+        command: ["sh", "-c", "for h in /sys/class/hwmon/hwmon*; do echo \"$h $(cat $h/name) $([ -e $h/temp2_input ] && echo multi || echo single) $([ -e $h/temp1_input ] && echo temp1)\"; done"]
         stdout: StdioCollector {
             onStreamFinished: {
+                // CPU: k10temp (AMD), coretemp (Intel), zenpower, cpu_thermal (ARM). GPU: an amdgpu with the full set
+                // of temperatures first, else the first amdgpu / nouveau / i915 / xe with a temp1 (the bar shows only that one)
+                const cpuNames = ["k10temp", "coretemp", "zenpower", "cpu_thermal"];
+                const gpuNames = ["amdgpu", "nouveau", "i915", "xe"];
+                let gpuAny = "";
                 for (const line of text.trim().split("\n")) {
                     const parts = line.split(" ");
-                    if (parts[1] === "k10temp" && root.cpuHwmon === "")
+                    if (cpuNames.indexOf(parts[1]) >= 0 && root.cpuHwmon === "")
                         root.cpuHwmon = parts[0];
-                    else if (parts[1] === "amdgpu" && parts[2] === "multi" && root.gpuHwmon === "")
-                        root.gpuHwmon = parts[0];
+                    else if (gpuNames.indexOf(parts[1]) >= 0) {
+                        if (parts[1] === "amdgpu" && parts[2] === "multi" && root.gpuHwmon === "")
+                            root.gpuHwmon = parts[0];
+                        else if (gpuAny === "" && parts[3] === "temp1")
+                            gpuAny = parts[0];
+                    }
                 }
+                if (root.gpuHwmon === "")
+                    root.gpuHwmon = gpuAny;
             }
         }
     }

@@ -47,11 +47,11 @@ PopupWindow {
                 value: SysMon.memLoad
             }
 
-            MenuSeparator { Layout.fillWidth: true }
+            MenuSeparator { Layout.fillWidth: true; visible: SysMon.hasGpu }
 
-            StatRow { name: "GPU edge"; value: SysMon.tempText(SysMon.gpuEdge) }
-            StatRow { name: "GPU hotspot"; value: SysMon.tempText(SysMon.gpuJunction) }
-            StatRow { name: "GPU memory"; value: SysMon.tempText(SysMon.gpuMem) }
+            StatRow { name: "GPU edge"; value: SysMon.tempText(SysMon.gpuEdge); visible: SysMon.hasGpu }
+            StatRow { name: "GPU hotspot"; value: SysMon.tempText(SysMon.gpuJunction); visible: SysMon.hasGpu }
+            StatRow { name: "GPU memory"; value: SysMon.tempText(SysMon.gpuMem); visible: SysMon.hasGpu }
 
             BevelButton {
                 Layout.fillWidth: true
