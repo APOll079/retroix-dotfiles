@@ -91,7 +91,6 @@ Built, not yet confirmed on the desktop. Tick a box when it works; move a broken
 ### Round 4, launcher and network (never looked at, fakes only)
 - [ ] File search on your real home: the launcher's Files tab and `/ name` in Apps (fd / plocate / find order, exclusions, real xdg-open); the five tabs Apps / Games / Files / Clipboard / Settings fit in the launcher
 - [ ] The ETH button opens the Network page (ip, ping and curl real; the speed test only on the button); `100 eur in sek` with a real frankfurter answer (does api.frankfurter.app still answer or redirect?)
-- [ ] Restore workspaces (Super+Ctrl+W and 8 s after login): are Zen on 1 and VSCodium on 3 right (edit `hypr/restore.lua`), does `hl.exec_cmd(cmd, { workspace = "1 silent" })` work (the call shape is a guess; the fallback is one window rule per program)
 
 ### Round 4, tools (never looked at, fakes only)
 - [ ] Solaar: `dinitctl --user enable solaar` (copy `dinit.d/solaar` first, your sync does it), it stays running and the mouse battery shows; if it can't open a display the user dinit lacks the Wayland environment; the mic, screen-share and REPLAY indicators are flat icons with no bevel; the mouse battery % shows beside Solaar's tray icon (no separate item) and a click on it opens Solaar, only clickable things look like buttons

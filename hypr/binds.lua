@@ -103,7 +103,6 @@ hl.bind(mainMod .. " + " .. "C", function()  -- help: Desktop | Vesktop scratchp
     hl.dispatch(hl.dsp.workspace.toggle_special("spotifyspace"))
 end)
 
-hl.bind(mainMod .. " + CTRL" .. " + " .. "W", function() require("restore").run() end)  -- help: Desktop | Restore workspaces
 hl.bind(mainMod .. " + CTRL" .. " + " .. "O", hl.dsp.exec_cmd("qs ipc call miniplayer toggle"))  -- help: Media | Mini player (toggle)
 hl.bind(mainMod .. " + SHIFT" .. " + " .. "O", hl.dsp.exec_cmd("pkill -SIGUSR1 hyprexpose"))  -- help: Windows | Workspace overview
 hl.bind(mainMod .. " + CTRL" .. " + " .. "K", hl.dsp.exec_cmd("qs ipc call screensaver start"))  -- help: Desktop | Start the screensaver

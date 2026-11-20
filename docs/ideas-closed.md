@@ -29,7 +29,7 @@ From the desktop-overhaul audit: Super+P pin, Super+right-drag resize, Games chi
 
 **Launcher:** Calculator history ("=" or "hist"); Conversions in the calculator; Emoji in the launcher; Kill from the launcher; Spotify from the launcher; File search
 
-**Windows, workspaces and monitors:** Modal dialogs float and centre; Zen Picture-in-Picture; Loupe float rule on the class only; Zoom; Stay awake while video plays; Restore workspaces at login
+**Windows, workspaces and monitors:** Modal dialogs float and centre; Zen Picture-in-Picture; Loupe float rule on the class only; Zoom; Stay awake while video plays
 
 **Audio:** Noise suppression; Mic mute key + OSD; Output switch toast; Hear yourself; Remember app volumes; Move an app to another output; Other players on the bar
 

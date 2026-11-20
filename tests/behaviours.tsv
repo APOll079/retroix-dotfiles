@@ -251,9 +251,7 @@ quickshell/popups/AppLauncher.qml	currencyAnswer	Currency row only when Calc and
 quickshell/popups/NetworkPage.qml	root\.net\.speedTest	The speed test runs only from its button
 quickshell/FileSearch.qml	debounceMs: 250	File search: 250 ms debounce, one search at a time
 quickshell/scripts/filesearch.sh	--max-results	fd search is capped at 50
-hypr/restore.lua	"silent"	Restore launches silently on the entry's workspace
 quickshell/LaptopControls.qml	onClicked: root\.openNetwork\(\)	The ETH button opens the Network page
-hypr/binds.lua	\-\-\ help:\ Desktop\ \|\ Restore\ workspaces	Key: Desktop | Restore workspaces
 quickshell/ScreensaverState.qml	wakeDecision	Screensaver: keys, clicks and the wheel wake at once, a mouse move only after 500 ms
 quickshell/ScreensaverState.qml	respectInhibitors: true	Screensaver: the idle monitor respects inhibitors (caffeine)
 quickshell/popups/ScreensaverView.qml	Keys\.onPressed	Screensaver: the wake key is eaten, not forwarded
