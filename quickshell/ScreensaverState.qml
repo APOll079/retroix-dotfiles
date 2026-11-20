@@ -23,7 +23,7 @@ Singleton {
 
     // "pipes3d" is xscreensaver's real 3D pipes, run as an XWayland window under our transparent catcher (which still
     // takes the wake input). Only offered when the binary exists; it is never part of "random". The hack's window is
-    // made fullscreen by a rule in hypr/windowrules.lua (screensaver-pipes3d). Untested live: see FEATURES.md.
+    // made fullscreen by a rule in hypr/windowrules.lua (screensaver-pipes3d).
     readonly property string pipes3dPath: "/usr/lib/xscreensaver/pipes"
     property bool hasPipes3d: false
     Process {

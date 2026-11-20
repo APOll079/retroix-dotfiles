@@ -25,16 +25,6 @@ hl.window_rule({
     no_focus = true
 })
 
--- Float Nemo dialogs
-hl.window_rule({
-    name  = "windowrule-3",
-    match = {
-        class = "^nemo$",
-        title = "^(.*Properties.*)$"
-    },
-    float = true
-})
-
 -- Make portal dialogs float (file pickers, screen-share picker). Classes are e.g.
 -- xdg-desktop-portal-gtk / xdg-desktop-portal-hyprland, so match the prefix
 hl.window_rule({
@@ -106,7 +96,7 @@ hl.window_rule({
 })
 
 -- The 3D pipes screensaver (settings screensaver.style = "pipes3d") runs xscreensaver's /usr/lib/xscreensaver/pipes in a
--- window; fullscreen it, no animation, no focus. GUESS, not seen running: the class may be "XScreenSaver" or "pipes".
+-- window; fullscreen it, no animation, no focus. Matches both classes the hack may use ("XScreenSaver", "pipes"); works live.
 hl.window_rule({
     name  = "screensaver-pipes3d",
     match = {
