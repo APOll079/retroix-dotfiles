@@ -1,7 +1,7 @@
 // The Win95 login screen: a Quickshell greeter for greetd (see greeter/hypr-greeter.lua and install.sh "Login screen").
 // Runs in its own throwaway Hyprland as the `greeter` user, from /etc/greetd/qs-greeter/ (install.sh copies this file next to
 // copies of Config.qml, MenuStyle.qml and popups/; nothing is read from your home). Every screen shows the dithered
-// background, the focused one the "Locked"-style panel (here "Welcome") and the logon box (popups/LoginDialog.qml in
+// background, the one at position 0,0 the "Locked"-style panel (here "Welcome") and the logon box (popups/LoginDialog.qml in
 // greeter mode), with Shut down / Restart under it. Logic: Greetd.createSession(user) -> authMessage -> respond(password)
 // -> readyToLaunch -> Greetd.launch(["start-hyprland"]). A wrong password says so and starts over.
 import QtQuick
@@ -22,6 +22,18 @@ ShellRoot {
     property string pendingPassword: ""
     property string pendingUser: ""
     property string confirming: ""                 // "", "Shut down" or "Restart"
+    // the screen that carries the logon box: the one at position 0,0 (the main monitor in hypr/monitors.lua), else the first
+    function isMainScreen(name) {
+        const screens = Quickshell.screens;
+        let main = null;
+        for (let i = 0; i < screens.length; i++) {
+            if (screens[i].x === 0 && screens[i].y === 0)
+                main = screens[i];
+        }
+        if (!main && screens.length > 0)
+            main = screens[0];
+        return main !== null && name === main.name;
+    }
 
     // the user name to prefill: the owner who ran install.sh (user.txt next to this file), nothing if it is missing
     FileView {
@@ -129,8 +141,8 @@ ShellRoot {
             Column {
                 anchors.centerIn: parent
                 spacing: MenuStyle.space12
-                // the focused screen (the first one when none says so)
-                visible: Quickshell.screens.length > 0 && win.modelData.name === Quickshell.screens[0].name
+                // the main screen (position 0,0; the first one when none is)
+                visible: root.isMainScreen(win.modelData.name)
 
                 Popups.LoginDialog {
                     id: dialog

@@ -3,6 +3,10 @@
 -- =========================
 -- MONITORS
 -- =========================
+-- mainMonitor / topMonitor are the output names that binds.lua puts the workspaces on (and the main one is the monitor at
+-- position 0x0, where the login screen puts its box). On a machine with other screens set them in monitors_local.lua.
+mainMonitor = "DP-2"
+topMonitor = "DP-1"
 
 hl.monitor({
     output   = "DP-1",

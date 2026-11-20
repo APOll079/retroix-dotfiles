@@ -480,6 +480,8 @@ login_screen() {
     cp -r "$REPO/quickshell/." "$stage/"
     cp "$REPO/greeter/shell.qml" "$stage/shell.qml"
     cp "$REPO/greeter/hypr-greeter.lua" "$stage/hypr-greeter.lua"
+    cp "$REPO/hypr/monitors.lua" "$stage/monitors.lua"
+    [[ -f "$REPO/hypr/monitors_local.lua" ]] && cp "$REPO/hypr/monitors_local.lua" "$stage/monitors_local.lua"
     cp "$REPO/icons/RetroismIcons/apps/16/keyring-manager.png" "$stage/key.png"
     printf '%s\n' "$user" > "$stage/user.txt"
     python3 -I -c 'import json,sys; json.dump({"settings": {"currentTheme": sys.argv[1]}}, open(sys.argv[2], "w"), indent=4)' "$theme" "$stage/settings.json"

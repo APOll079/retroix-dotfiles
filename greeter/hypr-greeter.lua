@@ -2,10 +2,16 @@
 -- Minimal Hyprland config for the login screen (greetd runs `start-hyprland -- --config <this file>` as the `greeter`
 -- user, see install.sh "Login screen"). No binds, no animations, no wallpaper; it starts the Quickshell greeter and
 -- leaves Hyprland when the greeter quits (after a successful login or a crash, so greetd can start your session or
--- fall back to agreety). Monitors and keyboard as in hypr/monitors.lua / inputs.lua; edit them here if they change.
+-- fall back to agreety). Monitors come from hypr/monitors.lua (and monitors_local.lua when it exists), which install.sh copies
+-- next to this file; if they can't be loaded, every screen is configured by its preferred mode. The keyboard is as in inputs.lua.
 
-hl.monitor({ output = "DP-1", mode = "1920x1080@60", position = "0x-1080", scale = 1 })
-hl.monitor({ output = "DP-2", mode = "1920x1080@165", position = "0x0", scale = 1 })
+local dir = "/etc/greetd/qs-greeter/"
+local ok = pcall(dofile, dir .. "monitors.lua")
+if ok then
+    pcall(dofile, dir .. "monitors_local.lua")
+else
+    hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
+end
 
 hl.config({
     input = { kb_layout = "se", follow_mouse = 1 },

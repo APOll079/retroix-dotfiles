@@ -67,7 +67,7 @@ for i = 1, 4 do
     hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))  -- help: Workspaces | Move window to workspace
     hl.workspace_rule({
         workspace = tostring(i),
-        monitor = "DP-2",
+        monitor = mainMonitor,
         default = (i == 1)
     })
 end
@@ -75,7 +75,7 @@ end
 -- Top monitor: one fixed workspace that none of the number binds ever switch
 hl.workspace_rule({
     workspace = "11",
-    monitor = "DP-1",
+    monitor = topMonitor,
     default = true,
     persistent = true
 })

@@ -2,6 +2,9 @@
 
 -- Copy this file to monitors_local.lua (gitignored) on a machine whose screens differ from monitors.lua, e.g. a laptop.
 -- It is loaded after monitors.lua, so a monitor named here wins; unknown outputs in monitors.lua are ignored by Hyprland.
+mainMonitor = "eDP-1"   -- the output the workspaces 1-4 live on (binds.lua); topMonitor = nil puts workspace 11 nowhere special
+topMonitor = nil
+
 hl.monitor({
     output   = "eDP-1",
     mode     = "preferred",
